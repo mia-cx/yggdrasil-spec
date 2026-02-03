@@ -1,0 +1,24 @@
+{
+  "name": "@yggdrasil/util",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "ygg-util": "./dist/cli.js"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./wikilinks": "./dist/wikilinks/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "glob": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  }
+}
