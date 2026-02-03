@@ -16,7 +16,7 @@ Identity provider for SSO across all services, deployed in a dedicated LXC indep
 | vCPUs | 2 |
 | RAM | 1-2GB |
 | Disk | 10GB |
-| Domain | auth.yggdrasil.mia.cx |
+| Domain | id.mia.cx |
 
 ## Why LXC?
 

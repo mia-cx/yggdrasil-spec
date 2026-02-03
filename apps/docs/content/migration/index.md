@@ -10,14 +10,14 @@ Phased migration from single-VM Docker Compose to multi-node K3s on Proxmox.
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| [[#Phase 0|Phase 0]] | Pre-migration (free up drives) | Pending |
-| [[#Phase 1|Phase 1]] | Foundation (Proxmox, K3s, storage) | Pending |
-| [[#Phase 2|Phase 2]] | NFS storage for K3s | Pending |
-| [[#Phase 3|Phase 3]] | Core infrastructure (Auth, Network) | Pending |
-| [[#Phase 4|Phase 4]] | Service migrations | Pending |
-| [[#Phase 4B|Phase 4B]] | Workstation VM | Pending |
-| [[#Phase 5|Phase 5]] | Retire old server | Pending |
-| [[#Phase 6|Phase 6]] | Mini-PCs | Pending |
+| [Phase 0](#phase-0) | Pre-migration (free up drives) | Pending |
+| [Phase 1](#phase-1) | Foundation (Proxmox, K3s, storage) | Pending |
+| [Phase 2](#phase-2) | NFS storage for K3s | Pending |
+| [Phase 3](#phase-3) | Core infrastructure (Auth, Network) | Pending |
+| [Phase 4](#phase-4) | Service migrations | Pending |
+| [Phase 4B](#phase-4b) | Workstation VM | Pending |
+| [Phase 5](#phase-5) | Retire old server | Pending |
+| [Phase 6](#phase-6) | Mini-PCs | Pending |
 
 ---
 
@@ -80,7 +80,7 @@ systemctl enable --now mnt-nvme.mount
 7. Configure LoadBalancer IP pool
 8. Install Longhorn, cert-manager, ClusterIssuer
 
-See: [[../infrastructure/storage|Storage LXC]], [[../infrastructure/kubernetes|Kubernetes]]
+See: [Storage LXC](../infrastructure/storage.md), [Kubernetes](../infrastructure/kubernetes.md)
 
 ---
 
@@ -110,7 +110,7 @@ Create PersistentVolumes for:
 6. Configure Traefik forward auth
 7. Migrate Jellyfin (practice with SSO)
 
-See: [[../infrastructure/authentik|Authentik]], [[../infrastructure/netbird|Netbird]], [[../services/janus|Janus]]
+See: [Authentik](../infrastructure/authentik.md), [Netbird](../infrastructure/netbird.md), [Janus](../services/janus.md)
 
 ---
 

@@ -80,7 +80,7 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 
 ### Cloudflare ClusterIssuer
 
-For DNS-01 wildcard certificates - see [[../services/traefik|Traefik configuration]].
+For DNS-01 wildcard certificates - see [Traefik configuration](../services/traefik.md).
 
 ## NFS PersistentVolumes
 

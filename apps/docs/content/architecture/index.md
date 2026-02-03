@@ -65,6 +65,6 @@ Download disks, will join Proxmox cluster after migration.
 
 ## Related
 
-- [[naming|Naming Scheme]]
-- [[network|Network Allocation]]
-- [[decisions|Key Decisions]]
+- [Naming Scheme](./naming.md)
+- [Network Allocation](./network.md)
+- [Key Decisions](./decisions.md)

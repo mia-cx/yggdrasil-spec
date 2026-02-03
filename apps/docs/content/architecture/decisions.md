@@ -19,7 +19,9 @@ title: Key Decisions
 | Media storage | MergerFS in LXC | Mix disk sizes, easy replacement |
 | Critical storage | NVMe (ext4 → ZFS) | Host manages filesystem, LXC exports via NFS |
 | K8s storage | Longhorn (small) + NFS (bulk) | Ceph overkill for 1GbE |
-| Bitwarden | Official Helm + rawManifest | Full features, not Vaultwarden |
+| PostgreSQL | Shared instance, per-service DBs | Lower overhead, unified backup |
+| Redis | Separate instance per service | Prevent resource contention |
+| Vaultwarden | Isolated SQLite, no shared deps | Root of trust, no circular dependencies |
 
 ## Why LXC for Authentik & Netbird?
 

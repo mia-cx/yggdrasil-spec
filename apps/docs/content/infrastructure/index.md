@@ -10,10 +10,11 @@ This section covers the core infrastructure components that run outside of Kuber
 
 | Component | Location | Purpose |
 |-----------|----------|---------|
-| [[storage|Storage LXC]] | 10.0.1.2 | MergerFS pool + NFS exports |
-| [[authentik|Authentik LXC]] | 10.0.1.3 | Identity provider + SSO |
-| [[kubernetes|K3s (Hydra)]] | 10.0.1.4 | Container orchestration |
-| [[netbird|Netbird LXC]] | 10.0.1.5 | Overlay network management |
+| [Storage LXC](./storage.md) | 10.0.1.2 | MergerFS pool + NFS exports |
+| [Authentik LXC](./authentik.md) | 10.0.1.3 | Identity provider + SSO |
+| [K3s (Hydra)](./kubernetes.md) | 10.0.1.4 | Container orchestration |
+| [Netbird LXC](./netbird.md) | 10.0.1.5 | Overlay network management |
+| [Data Layer](./data-layer.md) | K3s | PostgreSQL, Redis, Vaultwarden |
 
 ## Dependency Order
 
