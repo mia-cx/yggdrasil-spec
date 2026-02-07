@@ -12,19 +12,18 @@ title: Architecture
 - **RAM:** 96GB DDR5-5200
 - **GPU:** RTX 3070 (passthrough to Workstation VM)
 - **NVMe:** Slot 1 boot, Slot 2 2TB data (`/mnt/nvme`), Slots 3-4 future expansion
-- **HDDs:** 4x8TB at `/mnt/disk1-4` (MergerFS pool, upgrading to 22TB over time)
+- **HDDs:** 4x8TB at `/mnt/sda1`-`/mnt/sdd1` (MergerFS pool, upgrading to 22TB over time)
 - **Network:** 2.5GbE + 10GbE NICs
 
 ### VMs and Containers
 
-| Name | Type | Resources | IP | VMID | Purpose |
-|------|------|-----------|-----|------|---------|
-| Storage LXC | LXC | 1GB RAM | 10.0.1.2 | 1002 | MergerFS + NFS exports |
-| Authentik LXC | LXC | 1-2GB RAM | 10.0.1.3 | 1003 | Identity provider (SSO) |
-| K3s VM | VM | 16GB RAM | 10.0.1.4 | 1004 | Kubernetes workloads |
-| Netbird LXC | LXC | 512MB-1GB | 10.0.1.5 | 1005 | Overlay network management |
-| Wings VM | VM | 4-8GB RAM | 10.0.1.6 | 1006 | Pelican/Pterodactyl game servers |
-| Workstation VM | VM | 48GB RAM | 10.0.3.1 | 3001 | Gaming/Blender + GPU |
+| Name           | Type | Resources | IP       | VMID | Purpose                          |
+| -------------- | ---- | --------- | -------- | ---- | -------------------------------- |
+| Storage LXC    | LXC  | 1GB RAM   | 10.0.1.2 | 1002 | MergerFS + NFS exports           |
+| K3s VM         | VM   | 16GB RAM  | 10.0.1.3 | 1003 | Kubernetes workloads             |
+| Netbird LXC    | LXC  | 512MB-1GB | 10.0.1.4 | 1004 | Overlay network management       |
+| Wings VM       | VM   | 4-8GB RAM | 10.0.1.6 | 1006 | Pelican/Pterodactyl game servers |
+| Workstation VM | VM   | 48GB RAM  | 10.0.3.1 | 3001 | Gaming/Blender + GPU             |
 
 ### Old Server
 
@@ -37,34 +36,33 @@ Download disks, will join Proxmox cluster after migration.
 ## Architecture Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Proxmox Host (10.0.1.1)                 │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │ Storage LXC  │  │ Authentik    │  │ Netbird LXC  │      │
-│  │ (10.0.1.2)   │  │ LXC          │  │ (10.0.1.5)   │      │
-│  │              │  │ (10.0.1.3)   │  │              │      │
-│  │ MergerFS     │  │              │  │ WireGuard    │      │
-│  │ NFS exports  │  │ OIDC/SSO     │  │ Management   │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-│                                                             │
-│  ┌────────────────────────────┐  ┌──────────────────────┐  │
-│  │ K3s VM (10.0.1.4)          │  │ Workstation VM       │  │
-│  │ VMID: 1004                 │  │ (10.0.3.1)           │  │
-│  │ Hydra cluster              │  │ VMID: 3001           │  │
-│  │ ├── Traefik                │  │ RTX 3070 passthrough │  │
-│  │ ├── Longhorn               │  │ Gaming / Blender     │  │
-│  │ ├── Jellyfin               │  │                      │  │
-│  │ └── ...services            │  │                      │  │
-│  └────────────────────────────┘  └──────────────────────┘  │
-│                                                             │
-│  Storage: /mnt/nvme (2TB) + /mnt/disk1-4 (4x8TB HDDs)      │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                     Proxmox Host (10.0.1.1)                  │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │ Storage LXC  │  │ Netbird LXC  │  │ Wings VM     │       │
+│  │ (10.0.1.2)   │  │ (10.0.1.4)   │  │ (10.0.1.6)   │       │
+│  │ MergerFS     │  │ WireGuard    │  │ Docker +     │       │
+│  │ NFS exports  │  │ Management   │  │ Game servers │       │
+│  └──────────────┘  └──────────────┘  └──────────────┘       │
+│                                                              │
+│  ┌─────────────────────────────┐  ┌──────────────────────┐  │
+│  │ K3s VM (10.0.1.3)           │  │ Workstation VM       │  │
+│  │ VMID: 1003                  │  │ (10.0.3.1)           │  │
+│  │ Hydra cluster               │  │ VMID: 3001           │  │
+│  │ ├── Traefik (ingress)       │  │ RTX 3070 passthrough │  │
+│  │ ├── Authentik (identity)    │  │ Gaming / Blender     │  │
+│  │ ├── Longhorn (storage)      │  │                      │  │
+│  │ └── Services (media, apps)  │  │                      │  │
+│  └─────────────────────────────┘  └──────────────────────┘  │
+│                                                              │
+│  Storage: /mnt/nvme (2TB) + /mnt/sda1-sdd1 (4x8TB HDDs)     │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ## Related
 
-- [Naming Scheme](./naming.md)
-- [Network Allocation](./network.md)
-- [Key Decisions](./decisions.md)
+- [Naming Scheme](./naming.md) -- mythology-based naming conventions
+- [Network Allocation](./network.md) -- IP ranges, VMID scheme, topology
+- [Key Decisions](./decisions.md) -- rationale for major technical choices

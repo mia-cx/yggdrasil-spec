@@ -1,23 +1,31 @@
 ---
-title: Pelican (Game Servers)
+title: Pelican
 ---
 
-# Pelican (Game Servers)
+# Pelican
 
-Pelican (Pterodactyl fork) for managing game servers.
+## Overview
+
+| Property  | Value                                              |
+| --------- | -------------------------------------------------- |
+| Image     | Pelican Panel (see chart)                          |
+| Port      | 80                                                 |
+| Namespace | `pelican`                                          |
+| URL       | `https://pelican.yggdrasil.mia.cx`                 |
+| Storage   | Longhorn (panel/db), local disk (Wings game files) |
+
+Game server management platform (Pterodactyl fork). Split architecture: the Panel runs in K3s, while Wings runs in a dedicated VM to isolate resource-hungry game containers.
 
 ## Architecture
 
-Pelican has two components:
-
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| **Panel** | K3s | Web UI, API, database |
-| **Wings** | Dedicated VM | Docker daemon for game server containers |
+| Component | Location                | Purpose                                  |
+| --------- | ----------------------- | ---------------------------------------- |
+| **Panel** | K3s                     | Web UI, API, database                    |
+| **Wings** | Dedicated VM (10.0.1.6) | Docker daemon for game server containers |
 
 ```
 ┌─────────────────────────────────────┐
-│ K3s (10.0.1.4)                      │
+│ K3s (10.0.1.3)                      │
 │  └── Pelican Panel                  │
 │       ├── Web UI                    │
 │       ├── API                       │
@@ -36,38 +44,39 @@ Pelican has two components:
 └─────────────────────────────────────┘
 ```
 
-## Why Separate VM for Wings?
+**Why a separate VM for Wings?**
 
 - Wings requires Docker socket access (`/var/run/docker.sock`)
 - Creates/manages its own containers (game servers)
-- LXC is unsupported and unreliable (nested container issues)
+- LXC is unsupported (nested container issues)
 - Game servers are resource-hungry and bursty
 - Isolation prevents game servers from affecting other services
 
-## Wings VM Setup
+## Manifests
 
-### VM Specs
+| File                               | Purpose              |
+| ---------------------------------- | -------------------- |
+| `argocd/pelican/ingressroute.yaml` | Traefik IngressRoute |
 
-| Property | Value |
-|----------|-------|
-| IP | 10.0.1.6 |
-| VMID | 1006 |
-| vCPUs | 4-8 (scale as needed) |
-| RAM | 4-8GB base (scale as needed) |
-| Disk | 50-100GB (game files) |
-| OS | Ubuntu 22.04 or Debian 12 |
+## Deployment
 
-### Install Docker
+### Wings VM
+
+| Property | Value                        |
+| -------- | ---------------------------- |
+| IP       | 10.0.1.6                     |
+| VMID     | 1006                         |
+| vCPUs    | 4-8 (scale as needed)        |
+| RAM      | 4-8GB base (scale as needed) |
+| Disk     | 50-100GB (game files)        |
+| OS       | Ubuntu 22.04 or Debian 12    |
 
 ```bash
+# Install Docker
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER
-```
 
-### Install Wings
-
-```bash
-# Create directory
+# Create Wings directory
 sudo mkdir -p /etc/pterodactyl
 cd /etc/pterodactyl
 
@@ -81,50 +90,30 @@ sudo wings --debug  # test
 sudo systemctl enable --now wings  # production
 ```
 
-## Panel in K3s
+### Panel (K3s)
 
-The Panel (web UI + database) runs in K3s like any other service.
+Deploy Panel with MariaDB/MySQL, Redis, and persistent storage for `/app/var/`:
 
-### Helm/Manifest
-
-Deploy Panel with:
-- MariaDB or MySQL for database
-- Redis for caching/queues
-- Persistent storage for `/app/var/`
-
-### IngressRoute
-
-```yaml
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: pelican
-  namespace: pelican
-spec:
-  entryPoints: [websecure]
-  routes:
-    - match: Host(`panel.yggdrasil.mia.cx`)
-      kind: Rule
-      services:
-        - name: pelican-panel
-          port: 80
-  tls:
-    secretName: wildcard-tls
+```bash
+kubectl apply -f argocd/pelican/ingressroute.yaml
 ```
 
-## Network Ports
+## Configuration
 
-Game servers need various ports exposed. Configure your router to forward game-specific ports to the Wings VM (10.0.1.4).
+### Network Ports
 
-Common ports:
-- Minecraft: 25565 (TCP/UDP)
-- Valheim: 2456-2458 (UDP)
-- ARK: 7777, 27015 (UDP)
+Game servers need various ports exposed. Configure your router to forward game-specific ports to the Wings VM (10.0.1.6).
+
+| Game      | Ports             |
+| --------- | ----------------- |
+| Minecraft | 25565 (TCP/UDP)   |
+| Valheim   | 2456-2458 (UDP)   |
+| ARK       | 7777, 27015 (UDP) |
 
 ## Storage
 
-Game server files can be stored on:
-- Local disk (fastest)
-- NFS mount from Storage LXC (shared, backed up)
-
-For large game files, local storage on the Wings VM is usually better for performance.
+| Component   | Storage              | Rationale                       |
+| ----------- | -------------------- | ------------------------------- |
+| Panel (K3s) | Longhorn             | Database and app config         |
+| Wings (VM)  | Local disk           | Best performance for game files |
+| Wings (VM)  | NFS mount (optional) | For shared/backed-up data       |

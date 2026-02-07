@@ -1,66 +1,126 @@
 ---
-title: Authentik LXC
+title: Authentik
 ---
 
-# Authentik LXC
-
-Identity provider for SSO across all services, deployed in a dedicated LXC independent of K3s.
+# Authentik
 
 ## Overview
 
-| Property | Value |
-|----------|-------|
-| IP | 10.0.1.3 |
-| VMID | 1003 |
-| Template | debian-12-standard |
-| vCPUs | 2 |
-| RAM | 1-2GB |
-| Disk | 10GB |
-| Domain | id.mia.cx |
+| Property  | Value                                        |
+| --------- | -------------------------------------------- |
+| Type      | K8s (Helm chart)                             |
+| Image     | `ghcr.io/goauthentik/server` (chart default) |
+| Port      | 9000                                         |
+| Namespace | `authentik`                                  |
+| Chart     | `authentik/authentik`                        |
+| URL       | `https://id.mia.cx`                          |
+| Storage   | Longhorn (PostgreSQL, Redis)                 |
 
-## Why LXC?
+Identity provider (IdP) for SSO across all services. Deploys via Helm into Kubernetes with bundled PostgreSQL and Redis.
 
-- **Resilience:** Stays up even if K3s is down
-- **Recovery:** Can authenticate to fix K3s issues
-- **Independence:** Backup/restore without K3s
+> **Legacy note:** Authentik was originally deployed in a standalone LXC (10.0.1.3, VMID 1003) using Docker Compose for resilience during K3s bootstrapping. The K8s deployment is now the primary target. The LXC approach is documented below for reference only.
 
-## Installation
+## Prerequisites
 
 ```bash
-apt update && apt install -y docker.io docker-compose
-mkdir -p /opt/authentik && cd /opt/authentik
-
-# Download docker-compose.yml from Authentik docs
-curl -sL https://goauthentik.io/docker-compose.yml > docker-compose.yml
-
-# Generate secrets
-echo "PG_PASS=$(openssl rand -base64 36)" >> .env
-echo "AUTHENTIK_SECRET_KEY=$(openssl rand -base64 60)" >> .env
-echo "AUTHENTIK_ERROR_REPORTING__ENABLED=false" >> .env
-
-docker-compose up -d
+kubectl create namespace authentik
 ```
 
-## Components
+Generate secrets:
 
-- PostgreSQL (included in compose)
-- Redis (included in compose)
-- Authentik server
-- Authentik worker
+```bash
+export AUTHENTIK_SECRET_KEY=$(openssl rand -base64 36)
+export PG_PASS=$(openssl rand -base64 24)
 
-## SSO Integration by Service
+kubectl create secret generic authentik-secrets -n authentik \
+  --from-literal=secret-key="$AUTHENTIK_SECRET_KEY" \
+  --from-literal=postgresql-password="$PG_PASS"
+```
 
-| Service | Method | Auto-create users? |
-|---------|--------|-------------------|
-| Netbird | OIDC | Yes |
-| Jellyfin | OIDC (plugin) | Yes, with group-based permissions |
-| Nextcloud | OIDC | Yes |
-| Forgejo | OIDC | Yes |
-| Grafana | OIDC | Yes |
-| Proxmox | OIDC (plugin) | Manual |
-| Sonarr/Radarr | Proxy auth | N/A (protected, not user-aware) |
+## Setup
 
-## Creating OIDC Applications
+### Helm Installation
+
+```bash
+helm repo add authentik https://charts.goauthentik.io
+helm repo update
+
+helm install authentik authentik/authentik \
+  -n authentik \
+  -f argocd/authentik/values.yaml
+```
+
+### Verify
+
+```bash
+kubectl get pods -n authentik -w
+```
+
+Wait for all pods to reach `Running`:
+
+- `authentik-server-*`
+- `authentik-worker-*`
+- `authentik-postgresql-*`
+- `authentik-redis-master-*`
+
+### IngressRoute
+
+```bash
+kubectl apply -f argocd/authentik/ingressroute.yaml
+```
+
+## Configuration
+
+### Initial Setup
+
+Retrieve the bootstrap password:
+
+```bash
+kubectl logs -n authentik \
+  -l app.kubernetes.io/name=authentik,app.kubernetes.io/component=server \
+  | grep -i "initial"
+```
+
+Or set one explicitly in `values.yaml` before install:
+
+```yaml
+authentik:
+  bootstrap:
+    password: "your-initial-password"
+    email: "admin@mia.cx"
+```
+
+Access the admin UI at `https://id.mia.cx/if/flow/initial-setup/`.
+
+### HTTPS Outpost (Forward Auth)
+
+Required for Traefik forward-auth:
+
+1. **Applications** → **Outposts** → edit "authentik Embedded Outpost"
+2. Ensure "Proxy" type is enabled
+
+### Forward-Auth Provider
+
+For services protected by Traefik forward-auth:
+
+1. **Applications** → **Providers** → **Create**
+2. Type: **Proxy Provider**
+3. Name: `traefik-forward-auth`
+4. Authorization flow: `default-provider-authorization-implicit-consent`
+5. Mode: **Forward auth (single application)**
+6. External host: `https://auth.mia.cx`
+
+### Groups
+
+| Group           | Purpose                     |
+| --------------- | --------------------------- |
+| `admins`        | Full access to all services |
+| `users`         | Standard user access        |
+| `media-users`   | Jellyfin / media access     |
+| `media-admin`   | Jellyfin admin              |
+| `netbird-users` | Netbird network access      |
+
+### Creating OIDC Applications
 
 For each service:
 
@@ -69,23 +129,106 @@ For each service:
 3. Set redirect URIs per service docs
 4. Copy Client ID + Secret
 
-## Groups
+### SSO Integration by Service
 
-Create groups for access control:
+| Service       | Method        | Auto-create users?                |
+| ------------- | ------------- | --------------------------------- |
+| Netbird       | OIDC          | Yes                               |
+| Jellyfin      | OIDC (plugin) | Yes, with group-based permissions |
+| Nextcloud     | OIDC          | Yes                               |
+| Forgejo       | OIDC          | Yes                               |
+| Grafana       | OIDC          | Yes                               |
+| Proxmox       | OIDC (plugin) | Manual                            |
+| Sonarr/Radarr | Proxy auth    | N/A (protected, not user-aware)   |
 
-| Group | Purpose |
-|-------|---------|
-| media-users | Jellyfin read access |
-| media-admin | Jellyfin admin access |
-| netbird-users | Netbird network access |
-| admin | Full admin access |
+### DNS Records
+
+| Record                | Type | Value                            |
+| --------------------- | ---- | -------------------------------- |
+| `id.mia.cx`           | A    | `<public-ip>` or CNAME to tunnel |
+| `id.yggdrasil.mia.cx` | A    | `10.0.128.1` (VIP)               |
+
+## Upgrade
+
+```bash
+helm repo update
+helm upgrade authentik authentik/authentik \
+  -n authentik \
+  -f argocd/authentik/values.yaml
+```
 
 ## Backup
 
 ```bash
-# Backup PostgreSQL
-docker exec authentik-postgresql pg_dump -U authentik authentik > backup.sql
+kubectl exec -n authentik authentik-postgresql-0 -- \
+  pg_dump -U authentik authentik > authentik-backup.sql
+```
 
-# Backup media/config
+## Verification
+
+```bash
+kubectl get pods -n authentik
+kubectl get ingressroute -n authentik
+```
+
+## Troubleshooting
+
+### Check Logs
+
+```bash
+kubectl logs -n authentik -l app.kubernetes.io/component=server -f
+kubectl logs -n authentik -l app.kubernetes.io/component=worker -f
+```
+
+### Reset Admin Password
+
+```bash
+kubectl exec -it -n authentik deployment/authentik-server -- \
+  ak create_recovery_key 10 akadmin
+```
+
+Outputs a recovery link valid for 10 minutes.
+
+### Database Connection Issues
+
+```bash
+kubectl exec -it -n authentik authentik-postgresql-0 -- \
+  psql -U authentik -d authentik -c "SELECT 1"
+```
+
+---
+
+## Legacy: LXC Deployment
+
+> This section documents the original Docker Compose deployment in a dedicated LXC. It remains useful during K3s bootstrapping or disaster recovery.
+
+| Property | Value              |
+| -------- | ------------------ |
+| IP       | 10.0.1.3           |
+| VMID     | 1003               |
+| Template | debian-12-standard |
+| vCPUs    | 2                  |
+| RAM      | 1-2GB              |
+| Disk     | 10GB               |
+
+**Why LXC?** Authentik stays available even if K3s is completely down, allowing you to authenticate and fix cluster issues.
+
+```bash
+apt update && apt install -y docker.io docker-compose
+mkdir -p /opt/authentik && cd /opt/authentik
+
+curl -sL https://goauthentik.io/docker-compose.yml > docker-compose.yml
+
+echo "PG_PASS=$(openssl rand -base64 36)" >> .env
+echo "AUTHENTIK_SECRET_KEY=$(openssl rand -base64 60)" >> .env
+echo "AUTHENTIK_ERROR_REPORTING__ENABLED=false" >> .env
+
+docker-compose up -d
+```
+
+Backup:
+
+```bash
+docker exec authentik-postgresql pg_dump -U authentik authentik > backup.sql
 tar -czf authentik-media.tar.gz /opt/authentik/media
 ```

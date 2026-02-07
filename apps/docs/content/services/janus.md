@@ -1,16 +1,18 @@
 ---
-title: Janus (Landing Pages)
+title: Janus
 ---
 
 # Janus
 
-Cloudflare Worker providing friendly landing pages for users not connected to the Yggdrasil network.
+## Overview
 
-## Naming
+| Property | Value                  |
+| -------- | ---------------------- |
+| Type     | Cloudflare Worker      |
+| Route    | `*.yggdrasil.mia.cx/*` |
+| Runtime  | Cloudflare edge        |
 
-Named after the Roman god of doorways, gates, and transitions. Janus has two faces - one looking at those inside the network, one looking at those outside.
-
-## Purpose
+Cloudflare Worker providing friendly landing pages for users not connected to the Yggdrasil overlay network. Named after the Roman god of doorways, gates, and transitions -- Janus has two faces, one looking at those inside the network, one looking at those outside.
 
 When a user tries to access `jellyfin.yggdrasil.mia.cx` without being connected to Netbird:
 
@@ -18,44 +20,62 @@ When a user tries to access `jellyfin.yggdrasil.mia.cx` without being connected 
 2. Janus Worker intercepts the request
 3. Returns a friendly page explaining how to connect
 
-## Worker Code
+## Deployment
+
+**Via Cloudflare Dashboard:**
+
+1. Create Worker in Cloudflare Dashboard
+2. Add route: `*.yggdrasil.mia.cx/*`
+3. Deploy code
+
+**Via Wrangler CLI:**
+
+```bash
+cd apps/janus
+npx wrangler deploy
+```
+
+## Configuration
+
+### Worker Code
 
 ```javascript
 const SERVICES = {
-  'jellyfin.yggdrasil.mia.cx': {
-    name: 'Jellyfin',
-    icon: '🎬',
-    description: 'Media streaming server'
+  "jellyfin.yggdrasil.mia.cx": {
+    name: "Jellyfin",
+    icon: "🎬",
+    description: "Media streaming server",
   },
-  'proxmox.yggdrasil.mia.cx': {
-    name: 'Proxmox',
-    icon: '🖥️',
-    description: 'Hypervisor management'
+  "proxmox.yggdrasil.mia.cx": {
+    name: "Proxmox",
+    icon: "🖥️",
+    description: "Hypervisor management",
   },
-  'nextcloud.yggdrasil.mia.cx': {
-    name: 'Nextcloud',
-    icon: '☁️',
-    description: 'File sync and collaboration'
+  "nextcloud.yggdrasil.mia.cx": {
+    name: "Nextcloud",
+    icon: "☁️",
+    description: "File sync and collaboration",
   },
-  'grafana.yggdrasil.mia.cx': {
-    name: 'Grafana',
-    icon: '📊',
-    description: 'Monitoring dashboards'
+  "grafana.yggdrasil.mia.cx": {
+    name: "Grafana",
+    icon: "📊",
+    description: "Monitoring dashboards",
   },
   // Add more as needed
-};
+}
 
 export default {
   async fetch(request) {
-    const url = new URL(request.url);
-    const host = url.hostname;
+    const url = new URL(request.url)
+    const host = url.hostname
     const service = SERVICES[host] || {
-      name: host.split('.')[0],
-      icon: '🔒',
-      description: 'Internal service'
-    };
+      name: host.split(".")[0],
+      icon: "🔒",
+      description: "Internal service",
+    }
 
-    return new Response(`
+    return new Response(
+      `
 <!DOCTYPE html>
 <html>
 <head>
@@ -95,27 +115,16 @@ export default {
   <a class="btn" href="https://netbird.io/download">Get Netbird</a>
 </body>
 </html>
-    `, {
-      headers: { 'Content-Type': 'text/html' }
-    });
-  }
-};
+    `,
+      {
+        headers: { "Content-Type": "text/html" },
+      },
+    )
+  },
+}
 ```
 
-## Deployment
-
-1. Create Worker in Cloudflare Dashboard
-2. Add route: `*.yggdrasil.mia.cx/*`
-3. Deploy code
-
-Or via Wrangler CLI:
-
-```bash
-cd apps/janus
-npx wrangler deploy
-```
-
-## Customization
+### Customization
 
 - Add services to the `SERVICES` object
 - Customize styling in the HTML template

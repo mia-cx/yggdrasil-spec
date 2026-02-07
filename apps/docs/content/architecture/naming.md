@@ -19,17 +19,17 @@ Yggdrasil (world tree - entire infrastructure)
 
 ## Current Names
 
-| Entity | Name | Mythology | Reason |
-|--------|------|-----------|--------|
-| Overall infrastructure | **Yggdrasil** | Norse | World tree connecting all realms |
-| Your home site | **Olympus** | Greek | Primary location, seat of power |
-| WiFi SSIDs | **Hera** | Greek | Marriage - "marries" devices |
-| Home LAN | **Hestia** | Greek | Hearth, home |
-| K3s cluster | **Hydra** | Greek | Multi-headed, regenerates |
-| Workstation | **Athena** | Greek | Wisdom, crafts |
-| Gateway worker | **Janus** | Roman | God of doorways, thresholds |
-| Storage LXC | TBD | Greek | Mnemosyne? (memory) |
-| Old server | TBD | Greek | Hephaestus? (forge) |
+| Entity                 | Name          | Mythology | Reason                           |
+| ---------------------- | ------------- | --------- | -------------------------------- |
+| Overall infrastructure | **Yggdrasil** | Norse     | World tree connecting all realms |
+| Your home site         | **Olympus**   | Greek     | Primary location, seat of power  |
+| WiFi SSIDs             | **Hera**      | Greek     | Marriage - "marries" devices     |
+| Home LAN               | **Hestia**    | Greek     | Hearth, home                     |
+| K3s cluster            | **Hydra**     | Greek     | Multi-headed, regenerates        |
+| Workstation            | **Athena**    | Greek     | Wisdom, crafts                   |
+| Gateway worker         | **Janus**     | Roman     | God of doorways, thresholds      |
+| Storage LXC            | TBD           | Greek     | Mnemosyne? (memory)              |
+| Old server             | TBD           | Greek     | Hephaestus? (forge)              |
 
 ## Domain
 
