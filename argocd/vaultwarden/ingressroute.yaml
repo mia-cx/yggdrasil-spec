@@ -1,0 +1,15 @@
+## No auth middleware — Vaultwarden handles its own auth via native SSO + master password
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: vaultwarden
+  namespace: vaultwarden
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`warden.mia.cx`) || Host(`vaultwarden.yggdrasil.mia.cx`)
+      kind: Rule
+      services:
+        - name: vaultwarden
+          port: 80
+  tls: {}

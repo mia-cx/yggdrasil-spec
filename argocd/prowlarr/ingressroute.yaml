@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prowlarr
+  namespace: media
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`prowlarr.yggdrasil.mia.cx`)
+      kind: Rule
+      middlewares:
+        - name: internal-only
+          namespace: kube-system
+      services:
+        - name: prowlarr
+          port: 9696
+  tls: {}

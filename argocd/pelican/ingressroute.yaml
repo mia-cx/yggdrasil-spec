@@ -1,0 +1,14 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: pelican
+  namespace: pelican
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`panel.yggdrasil.mia.cx`)
+      kind: Rule
+      services:
+        - name: pelican-panel
+          port: 80
+  tls: {}

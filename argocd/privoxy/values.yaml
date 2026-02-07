@@ -1,0 +1,41 @@
+## Helm values for Privoxy on K3s
+## Chart: bjw-s/app-template (v3)
+## Repo: https://bjw-s-labs.github.io/helm-charts
+##
+## HTTP proxy for download client anonymization.
+## Internal service only — no IngressRoute needed.
+## qBittorrent proxy setting: http://privoxy.media:8118
+
+controllers:
+  main:
+    containers:
+      main:
+        image:
+          repository: docker.io/vimagick/privoxy
+          tag: latest
+          pullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        port: 8118
+
+ingress:
+  main:
+    enabled: false
+
+persistence:
+  config:
+    enabled: true
+    type: emptyDir
+    globalMounts:
+      - path: /etc/privoxy

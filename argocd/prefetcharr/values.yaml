@@ -1,0 +1,40 @@
+## Helm values for Prefetcharr on K3s
+## Chart: bjw-s/app-template (v3)
+## Repo: https://bjw-s-labs.github.io/helm-charts
+##
+## Watches Jellyfin activity and tells Sonarr to fetch
+## the next season of shows you're watching.
+## No web UI — runs as a background daemon.
+
+controllers:
+  main:
+    containers:
+      main:
+        image:
+          repository: docker.io/phueber/prefetcharr
+          tag: latest
+          pullPolicy: IfNotPresent
+        env:
+          SONARR_URL: http://sonarr.media:8989
+          JELLYFIN_URL: http://jellyfin.media:8096
+          PREFETCH_COUNT: "1"
+          TZ: Europe/Amsterdam
+        envFrom:
+          - secretRef:
+              name: prefetcharr-secrets
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+
+service:
+  main:
+    controller: main
+    enabled: false
+
+ingress:
+  main:
+    enabled: false

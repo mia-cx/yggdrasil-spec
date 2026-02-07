@@ -1,0 +1,18 @@
+## Custom CoreDNS server block for internal DNS resolution
+## K3s auto-imports *.server files from the coredns-custom ConfigMap
+## Exit nodes resolve service domains to the site-local Traefik VIP
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  mia.server: |
+    mia.cx {
+      template IN A {
+        answer "{{ .Name }} 60 IN A 10.0.128.2"
+      }
+      template IN AAAA {
+        rcode NOERROR
+      }
+    }

@@ -1,0 +1,36 @@
+## Nextcloud — Helm chart + companion manifests (storage, IngressRoute)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nextcloud
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    # Helm chart
+    - repoURL: https://nextcloud.github.io/helm/
+      chart: nextcloud
+      targetRevision: 6.6.0  # Update to latest: helm search repo nextcloud/nextcloud
+      helm:
+        releaseName: nextcloud
+        valueFiles:
+          - $values/argocd/nextcloud/values.yaml
+    # Git repo — values reference
+    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+    # Companion manifests (storage, IngressRoute, headers middleware)
+    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      path: argocd/nextcloud
+      directory:
+        exclude: '{values.yaml}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nextcloud
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

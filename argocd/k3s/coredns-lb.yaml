@@ -1,0 +1,21 @@
+## LoadBalancer service for CoreDNS
+## Exposes CoreDNS on a LAN-routable IP so exit nodes (hostNetwork)
+## can query it without going through ClusterIP networking.
+## Used by the Netbird Nameserver Group for *.mia.cx resolution.
+apiVersion: v1
+kind: Service
+metadata:
+  name: coredns-lb
+  namespace: kube-system
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.128.3
+  selector:
+    k8s-app: kube-dns
+  ports:
+    - name: dns-udp
+      port: 53
+      protocol: UDP
+    - name: dns-tcp
+      port: 53
+      protocol: TCP

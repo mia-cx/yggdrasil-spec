@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: netbird-exit-node
+  namespace: netbird
+  labels:
+    app.kubernetes.io/name: netbird-exit-node
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: netbird-exit-node
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: netbird-exit-node
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: netbird
+          image: netbirdio/netbird:latest
+          env:
+            - name: NB_MANAGEMENT_URL
+              value: https://netbird.mia.cx
+            - name: NB_SETUP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: netbird-setup-key
+                  key: key
+            ## Netbird DNS must be enabled so the DNS proxy and
+            ## nftables routing/masquerade rules are set up correctly.
+            ## The Nameserver Group forwards *.mia.cx to K3s CoreDNS
+            ## via a LAN-routable LoadBalancer IP (not ClusterIP),
+            ## avoiding circular DNS dependencies on the exit node.
+          securityContext:
+            capabilities:
+              add: [NET_ADMIN, SYS_ADMIN]
+            privileged: true
+          volumeMounts:
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
+      volumes:
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+      tolerations:
+        - operator: Exists  # schedule on all nodes including control plane

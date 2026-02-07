@@ -1,0 +1,70 @@
+## Helm values for Jellyfin on K3s
+## Chart: bjw-s/app-template (v3)
+## Repo: https://bjw-s-labs.github.io/helm-charts
+
+controllers:
+  main:
+    containers:
+      main:
+        image:
+          repository: docker.io/jellyfin/jellyfin
+          tag: 10
+          pullPolicy: IfNotPresent
+        env:
+          JELLYFIN_PublishedServerUrl: https://jellyfin.mia.cx
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 4000m
+            memory: 4Gi
+        ## Hardware transcoding (add when Intel QuickSync nodes are available):
+        #   limits:
+        #     gpu.intel.com/i915: 1
+    # pod:
+    #   nodeSelector:
+    #     kubernetes.io/hostname: mpc-1
+
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        port: 8096
+
+ingress:
+  main:
+    enabled: false  # Using Traefik IngressRoute — see ingressroute.yaml
+
+persistence:
+  config:
+    enabled: true
+    type: persistentVolumeClaim
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    storageClass: longhorn
+    globalMounts:
+      - path: /config
+  cache:
+    enabled: true
+    type: persistentVolumeClaim
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    storageClass: longhorn
+    globalMounts:
+      - path: /cache
+  media:
+    enabled: true
+    type: persistentVolumeClaim
+    existingClaim: media-nfs-pvc
+    globalMounts:
+      - path: /media
+        readOnly: true
+  nvme:
+    enabled: true
+    type: persistentVolumeClaim
+    existingClaim: nvme-nfs-pvc
+    globalMounts:
+      - path: /nvme
+        readOnly: true

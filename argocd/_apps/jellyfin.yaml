@@ -1,0 +1,36 @@
+## Jellyfin — Helm chart (bjw-s/app-template) + companion manifests
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jellyfin
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    # Helm chart
+    - repoURL: https://bjw-s-labs.github.io/helm-charts
+      chart: app-template
+      targetRevision: 3.6.0  # Update to latest: helm search repo bjw-s/app-template
+      helm:
+        releaseName: jellyfin
+        valueFiles:
+          - $values/argocd/jellyfin/values.yaml
+    # Git repo — values reference
+    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+    # Companion manifests (storage, IngressRoute)
+    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      path: argocd/jellyfin
+      directory:
+        exclude: '{values.yaml}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: media
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,20 @@
+## App of Apps — syncs all Application manifests in this directory
+## Bootstrap: kubectl apply -f argocd/_apps/root.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+    targetRevision: main
+    path: argocd/_apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

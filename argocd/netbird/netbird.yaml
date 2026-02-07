@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: netbird
+---
+# Selector-less Service + Endpoints to route to the Netbird LXC (10.0.1.4)
+apiVersion: v1
+kind: Service
+metadata:
+  name: netbird
+  namespace: netbird
+spec:
+  ports:
+    - name: dashboard
+      port: 8080
+      targetPort: 8080
+    - name: management
+      port: 8081
+      targetPort: 8081
+    - name: signal
+      port: 8083
+      targetPort: 8083
+    - name: signal-grpc
+      port: 10000
+      targetPort: 10000
+    - name: relay
+      port: 8084
+      targetPort: 8084
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: netbird # must match Service name
+  namespace: netbird
+subsets:
+  - addresses:
+      - ip: 10.0.1.4
+    ports:
+      - name: dashboard
+        port: 8080
+      - name: management
+        port: 8081
+      - name: signal
+        port: 8083
+      - name: signal-grpc
+        port: 10000
+      - name: relay
+        port: 8084
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: netbird
+  namespace: netbird
+spec:
+  entryPoints: [websecure]
+  routes:
+    # Relay — HTTP + WebSocket
+    - match: (Host(`netbird.mia.cx`) || Host(`netbird.yggdrasil.mia.cx`)) && PathPrefix(`/relay`)
+      kind: Rule
+      services:
+        - name: netbird
+          port: 8084
+
+    # Signal — HTTP + WebSocket
+    - match: (Host(`netbird.mia.cx`) || Host(`netbird.yggdrasil.mia.cx`)) && PathPrefix(`/ws-proxy/signal`)
+      kind: Rule
+      services:
+        - name: netbird
+          port: 8083
+
+    # Signal — gRPC/h2c
+    - match: (Host(`netbird.mia.cx`) || Host(`netbird.yggdrasil.mia.cx`)) && PathPrefix(`/signalexchange.SignalExchange/`)
+      kind: Rule
+      services:
+        - name: netbird
+          port: 10000
+          scheme: h2c
+
+    # Management — gRPC/h2c
+    - match: (Host(`netbird.mia.cx`) || Host(`netbird.yggdrasil.mia.cx`)) && PathPrefix(`/management.ManagementService/`)
+      kind: Rule
+      services:
+        - name: netbird
+          port: 8081
+          scheme: h2c
+
+    # Management API + WebSocket + OAuth2 — plain HTTP
+    - match: (Host(`netbird.mia.cx`) || Host(`netbird.yggdrasil.mia.cx`)) && (PathPrefix(`/api`) || PathPrefix(`/ws-proxy/management`) || PathPrefix(`/oauth2`))
+      kind: Rule
+      services:
+        - name: netbird
+          port: 8081
+
+    # Dashboard — catch-all (lowest priority)
+    - match: Host(`netbird.mia.cx`) || Host(`netbird.yggdrasil.mia.cx`)
+      kind: Rule
+      services:
+        - name: netbird
+          port: 8080
+
+  tls: {}

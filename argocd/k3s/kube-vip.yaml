@@ -1,0 +1,64 @@
+## Static pod — copy to /var/lib/rancher/k3s/agent/pod-manifests/kube-vip.yaml
+## Must be placed BEFORE K3s installation
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-vip
+  namespace: kube-system
+spec:
+  hostAliases:
+  - hostnames:
+    - kubernetes
+    ip: 127.0.0.1
+  containers:
+  - name: kube-vip
+    image: ghcr.io/kube-vip/kube-vip:v0.8.7
+    args:
+    - manager
+    env:
+    - name: vip_arp
+      value: "true"
+    - name: port
+      value: "6443"
+    - name: vip_interface
+      value: ens18
+    - name: vip_cidr
+      value: "16"
+    - name: cp_enable
+      value: "true"
+    - name: cp_namespace
+      value: kube-system
+    - name: svc_enable
+      value: "true"
+    - name: vip_leaderelection
+      value: "true"
+    - name: vip_leasename
+      value: plndr-cp-lock
+    - name: vip_leaseduration
+      value: "5"
+    - name: vip_renewdeadline
+      value: "3"
+    - name: vip_retryperiod
+      value: "1"
+    - name: address
+      value: "10.0.128.1"
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN
+        - NET_RAW
+    resources:
+      requests:
+        cpu: 25m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
+    volumeMounts:
+    - mountPath: /etc/kubernetes/admin.conf
+      name: kubeconfig
+  hostNetwork: true
+  volumes:
+  - hostPath:
+      path: /etc/rancher/k3s/k3s.yaml
+    name: kubeconfig

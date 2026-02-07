@@ -1,0 +1,76 @@
+## Helm values for Tdarr on K3s
+## Chart: bjw-s/app-template (v3)
+## Repo: https://bjw-s-labs.github.io/helm-charts
+##
+## Tdarr server with built-in worker node.
+## Add separate tdarr_node deployments for additional workers.
+
+controllers:
+  main:
+    containers:
+      main:
+        image:
+          repository: docker.io/haveagitgat/tdarr
+          tag: latest
+          pullPolicy: IfNotPresent
+        env:
+          serverIP: 0.0.0.0
+          serverPort: "8266"
+          webUIPort: "8265"
+          internalNode: "true"
+          inContainer: "true"
+          nodeName: hydra-builtin
+          TZ: Europe/Amsterdam
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 4000m
+            memory: 4Gi
+        ## Hardware transcoding (uncomment when Intel QuickSync nodes are available):
+        #   limits:
+        #     gpu.intel.com/i915: 1
+
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        port: 8265
+      server:
+        port: 8266
+
+ingress:
+  main:
+    enabled: false
+
+persistence:
+  config:
+    enabled: true
+    type: persistentVolumeClaim
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    storageClass: longhorn
+    globalMounts:
+      - path: /app/server
+  data:
+    enabled: true
+    type: persistentVolumeClaim
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    storageClass: longhorn
+    globalMounts:
+      - path: /app/configs
+  transcode-cache:
+    enabled: true
+    type: emptyDir
+    sizeLimit: 50Gi
+    globalMounts:
+      - path: /temp
+  media:
+    enabled: true
+    type: persistentVolumeClaim
+    existingClaim: media-nfs-pvc
+    globalMounts:
+      - path: /media

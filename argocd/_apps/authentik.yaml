@@ -1,0 +1,36 @@
+## Authentik — Helm chart + companion manifests (IngressRoute)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    # Helm chart
+    - repoURL: https://charts.goauthentik.io
+      chart: authentik
+      targetRevision: 2025.2.1  # Update to latest: helm search repo authentik/authentik
+      helm:
+        releaseName: authentik
+        valueFiles:
+          - $values/argocd/authentik/values.yaml
+    # Git repo — values reference
+    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+    # Companion manifests (IngressRoute)
+    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      path: argocd/authentik
+      directory:
+        exclude: '{values.yaml}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: authentik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,94 @@
+## Multi-site DDNS — one pod per site, reads site label from node
+## Prerequisites:
+##   kubectl label node <node> topology.kubernetes.io/site=<sitename>
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cloudflare-ddns
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: cloudflare-ddns
+  template:
+    metadata:
+      labels:
+        app: cloudflare-ddns
+    spec:
+      serviceAccountName: cloudflare-ddns
+      initContainers:
+      - name: get-site
+        image: bitnami/kubectl:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          SITE=$(kubectl get node ${NODE_NAME} -o jsonpath='{.metadata.labels.topology\.kubernetes\.io/site}')
+          echo "DOMAINS=${SITE}.yggdrasil.mia.cx" > /config/env
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        volumeMounts:
+        - name: config
+          mountPath: /config
+      containers:
+      - name: cloudflare-ddns
+        image: favonia/cloudflare-ddns:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          source /config/env
+          export DOMAINS
+          exec /cloudflare-ddns
+        env:
+        - name: CF_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare-api-token
+              key: api-token
+        - name: PROXIED
+          value: "false"
+        - name: IP6_PROVIDER
+          value: "none"
+        volumeMounts:
+        - name: config
+          mountPath: /config
+      volumes:
+      - name: config
+        emptyDir: {}
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/site
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: cloudflare-ddns
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cloudflare-ddns
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cloudflare-ddns
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cloudflare-ddns
+subjects:
+- kind: ServiceAccount
+  name: cloudflare-ddns
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: cloudflare-ddns
+  apiGroup: rbac.authorization.k8s.io

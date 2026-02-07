@@ -1,0 +1,38 @@
+## Single-site DDNS — updates A records with the node's public IP
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflare-ddns
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflare-ddns
+  template:
+    metadata:
+      labels:
+        app: cloudflare-ddns
+    spec:
+      containers:
+      - name: cloudflare-ddns
+        image: favonia/cloudflare-ddns:latest
+        env:
+        - name: CF_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare-api-token
+              key: api-token
+        - name: DOMAINS
+          value: "olympus.yggdrasil.mia.cx,id.mia.cx"
+        - name: PROXIED
+          value: "false"
+        - name: IP6_PROVIDER
+          value: "none"
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            cpu: 50m
+            memory: 32Mi

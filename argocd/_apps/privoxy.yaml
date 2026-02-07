@@ -1,0 +1,28 @@
+## Privoxy — Helm chart (bjw-s/app-template)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: privoxy
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://bjw-s-labs.github.io/helm-charts
+      chart: app-template
+      targetRevision: 3.6.0
+      helm:
+        releaseName: privoxy
+        valueFiles:
+          - $values/argocd/privoxy/values.yaml
+    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: media
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

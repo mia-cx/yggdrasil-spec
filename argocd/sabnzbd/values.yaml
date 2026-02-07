@@ -1,0 +1,56 @@
+## Helm values for SABnzbd on K3s
+## Chart: bjw-s/app-template (v3)
+## Repo: https://bjw-s-labs.github.io/helm-charts
+
+controllers:
+  main:
+    containers:
+      main:
+        image:
+          repository: lscr.io/linuxserver/sabnzbd
+          tag: latest
+          pullPolicy: IfNotPresent
+        env:
+          PUID: "1000"
+          PGID: "1000"
+          TZ: Europe/Amsterdam
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        port: 8080
+
+ingress:
+  main:
+    enabled: false
+
+persistence:
+  config:
+    enabled: true
+    type: persistentVolumeClaim
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    storageClass: longhorn
+    globalMounts:
+      - path: /config
+  downloads:
+    enabled: true
+    type: persistentVolumeClaim
+    existingClaim: downloads-nfs-pvc
+    globalMounts:
+      - path: /downloads
+  media:
+    enabled: true
+    type: persistentVolumeClaim
+    existingClaim: media-nfs-pvc
+    globalMounts:
+      - path: /media

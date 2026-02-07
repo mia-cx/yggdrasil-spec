@@ -1,0 +1,9 @@
+## Default TLS Store — sets wildcard cert as default for all routes
+apiVersion: traefik.io/v1alpha1
+kind: TLSStore
+metadata:
+  name: default
+  namespace: kube-system
+spec:
+  defaultCertificate:
+    secretName: wildcard-tls

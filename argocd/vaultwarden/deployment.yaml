@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vaultwarden
+  namespace: vaultwarden
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vaultwarden
+  strategy:
+    type: Recreate  # Required for RWO volume
+  template:
+    metadata:
+      labels:
+        app: vaultwarden
+    spec:
+      containers:
+        - name: vaultwarden
+          image: vaultwarden/server:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: DOMAIN
+              value: "https://warden.mia.cx"
+            - name: SIGNUPS_ALLOWED
+              value: "false"
+            - name: INVITATIONS_ALLOWED
+              value: "true"
+            - name: ATTACHMENTS_FOLDER
+              value: "/attachments"
+            - name: ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vaultwarden-secrets
+                  key: ADMIN_TOKEN
+            - name: PUSH_ENABLED
+              value: "true"
+            - name: PUSH_INSTALLATION_ID
+              valueFrom:
+                secretKeyRef:
+                  name: vaultwarden-secrets
+                  key: PUSH_INSTALLATION_ID
+            - name: PUSH_INSTALLATION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vaultwarden-secrets
+                  key: PUSH_INSTALLATION_KEY
+            - name: SSO_ENABLED
+              value: "true"
+            - name: SSO_ONLY
+              value: "false"
+            - name: SSO_CLIENT_ID
+              value: "vaultwarden"
+            - name: SSO_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: vaultwarden-secrets
+                  key: SSO_CLIENT_SECRET
+            - name: SSO_AUTHORITY
+              value: "https://auth.mia.cx/application/o/vaultwarden/"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: attachments
+              mountPath: /attachments
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: vaultwarden-data-pvc
+        - name: attachments
+          persistentVolumeClaim:
+            claimName: vaultwarden-attachments-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vaultwarden
+  namespace: vaultwarden
+spec:
+  selector:
+    app: vaultwarden
+  ports:
+    - port: 80
+      targetPort: 80

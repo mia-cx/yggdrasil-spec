@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: media
+---
+## PVC binding to shared media-nfs PV (defined in argocd/k3s/nfs-pvs.yaml)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-nfs-pvc
+  namespace: media
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  resources:
+    requests:
+      storage: 29Ti
+  volumeName: media-nfs
+---
+## PVC binding to shared nvme-nfs PV (defined in argocd/k3s/nfs-pvs.yaml)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nvme-nfs-pvc
+  namespace: media
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  resources:
+    requests:
+      storage: 2Ti
+  volumeName: nvme-nfs
+---
+## PVC binding to shared downloads-nfs PV (defined in argocd/k3s/nfs-pvs.yaml)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: downloads-nfs-pvc
+  namespace: media
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  resources:
+    requests:
+      storage: 2Ti
+  volumeName: downloads-nfs

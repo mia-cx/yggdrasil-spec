@@ -1,0 +1,91 @@
+## Helm values for nextcloud/nextcloud chart
+## Repo: https://github.com/nextcloud/helm
+## Install: helm repo add nextcloud https://nextcloud.github.io/helm/
+
+image:
+  tag: 32-apache
+
+nextcloud:
+  host: cloud.mia.cx
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-secrets
+    usernameKey: nextcloud-username
+    passwordKey: nextcloud-password
+  extraEnv:
+    - name: OVERWRITEPROTOCOL
+      value: "https"
+  configs:
+    proxy.config.php: |-
+      <?php
+      $CONFIG = array(
+        'trusted_proxies' => ['10.42.0.0/16', '10.43.0.0/16'],
+        'forwarded_for_headers' => ['HTTP_X_FORWARDED_FOR'],
+        'overwriteprotocol' => 'https',
+      );
+
+internalDatabase:
+  enabled: false
+
+externalDatabase:
+  enabled: false
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-mariadb
+    usernameKey: db-username
+    passwordKey: db-password
+
+mariadb:
+  enabled: true
+  auth:
+    database: nextcloud
+    username: nextcloud
+    existingSecret: nextcloud-mariadb
+  primary:
+    persistence:
+      enabled: true
+      storageClass: longhorn-single
+      size: 10Gi
+
+redis:
+  enabled: true
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: false
+
+persistence:
+  enabled: true
+  existingClaim: nextcloud-pvc
+  nextcloudData:
+    enabled: true
+    existingClaim: nextcloud-data-pvc
+
+cronjob:
+  enabled: true
+
+startupProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 30
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+
+ingress:
+  enabled: false  # Using Traefik IngressRoute
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2Gi

@@ -1,0 +1,33 @@
+## Tdarr — Helm chart (bjw-s/app-template) + companion manifests
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tdarr
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://bjw-s-labs.github.io/helm-charts
+      chart: app-template
+      targetRevision: 3.6.0
+      helm:
+        releaseName: tdarr
+        valueFiles:
+          - $values/argocd/tdarr/values.yaml
+    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      path: argocd/tdarr
+      directory:
+        exclude: '{values.yaml}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: media
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: sabnzbd
+  namespace: media
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`sabnzbd.yggdrasil.mia.cx`)
+      kind: Rule
+      middlewares:
+        - name: internal-only
+          namespace: kube-system
+      services:
+        - name: sabnzbd
+          port: 8080
+  tls: {}

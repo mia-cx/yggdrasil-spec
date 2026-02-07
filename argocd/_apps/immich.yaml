@@ -1,0 +1,36 @@
+## Immich — Helm chart + companion manifests (NFS, PostgreSQL, IngressRoute)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: immich
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    # Helm chart
+    - repoURL: https://immich-app.github.io/immich-charts
+      chart: immich
+      targetRevision: 0.9.0  # Update to latest: helm search repo immich/immich
+      helm:
+        releaseName: immich
+        valueFiles:
+          - $values/argocd/immich/values.yaml
+    # Git repo — values reference
+    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+    # Companion manifests (NFS PVCs, CloudNativePG cluster, IngressRoute)
+    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      path: argocd/immich
+      directory:
+        exclude: '{values.yaml,default-values.yaml}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: immich
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

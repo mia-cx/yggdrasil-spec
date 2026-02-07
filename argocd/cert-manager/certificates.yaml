@@ -1,0 +1,26 @@
+## Wildcard Certificate — all domains in a single ACME order
+## Lives in kube-system so all IngressRoutes can reference wildcard-tls
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-certs
+  namespace: kube-system
+spec:
+  secretName: wildcard-tls
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer
+  dnsNames:
+    # mia.cx
+    - "mia.cx"
+    - "*.mia.cx"
+    - "*.yggdrasil.mia.cx"
+    # quilt.cx
+    - "quilt.cx"
+    - "*.quilt.cx"
+    # patch.cx
+    - "patch.cx"
+    - "*.patch.cx"
+    # vesta.cx
+    - "vesta.cx"
+    - "*.vesta.cx"

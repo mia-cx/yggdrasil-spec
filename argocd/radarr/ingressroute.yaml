@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: radarr
+  namespace: media
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`radarr.yggdrasil.mia.cx`)
+      kind: Rule
+      middlewares:
+        - name: internal-only
+          namespace: kube-system
+      services:
+        - name: radarr
+          port: 7878
+  tls: {}

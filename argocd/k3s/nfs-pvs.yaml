@@ -1,0 +1,45 @@
+## Shared NFS PersistentVolumes for K3s
+## Media (HDD, MergerFS via Storage LXC)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: media-nfs
+spec:
+  capacity:
+    storage: 29Ti
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  nfs:
+    server: 10.0.1.9
+    path: /mnt/media
+---
+## Critical data (NVMe via Storage LXC)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nvme-nfs
+spec:
+  capacity:
+    storage: 2Ti
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  nfs:
+    server: 10.0.1.2
+    path: /mnt/nvme
+---
+## Downloads (Old Server — staging area)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: downloads-nfs
+spec:
+  capacity:
+    storage: 3.6Ti
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  nfs:
+    server: 10.0.1.9
+    path: /mnt/downloads

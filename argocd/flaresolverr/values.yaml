@@ -1,0 +1,36 @@
+## Helm values for FlareSolverr on K3s
+## Chart: bjw-s/app-template (v3)
+## Repo: https://bjw-s-labs.github.io/helm-charts
+##
+## Internal service only — no IngressRoute needed.
+## Prowlarr connects to: http://flaresolverr.media:8191
+
+controllers:
+  main:
+    containers:
+      main:
+        image:
+          repository: ghcr.io/flaresolverr/flaresolverr
+          tag: latest
+          pullPolicy: IfNotPresent
+        env:
+          LOG_LEVEL: info
+          TZ: Europe/Amsterdam
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        port: 8191
+
+ingress:
+  main:
+    enabled: false
