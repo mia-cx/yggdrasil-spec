@@ -38,3 +38,19 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Secrets & credentials
+*.key
+credentials.json
+kubeconfig
+*.kubeconfig
+
+# Database dumps
+*.sql
+*.sql.gz
+*.dump
+
+# Terraform state (contains secrets)
+*.tfstate
+*.tfstate.backup
+.terraform/
