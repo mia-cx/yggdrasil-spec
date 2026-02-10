@@ -1,0 +1,16 @@
+## K3s Traefik customization — enables cross-namespace references (system-wide middleware)
+## Required for: middlewares in kube-system referenced by IngressRoutes in any namespace
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    # Management/architecture: no node affinity — scheduler decides (see workload-placement.md)
+    # System-wide middleware: allow IngressRoutes in any namespace to reference middlewares in kube-system
+    providers:
+      kubernetesCRD:
+        allowCrossNamespace: true
+    additionalArguments:
+      - "--providers.kubernetescrd.allowcrossnamespace=true"
