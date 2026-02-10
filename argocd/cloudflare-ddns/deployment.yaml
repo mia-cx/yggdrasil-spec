@@ -14,6 +14,13 @@ spec:
       labels:
         app: cloudflare-ddns
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/critical
+                    operator: Exists
       containers:
       - name: cloudflare-ddns
         image: favonia/cloudflare-ddns:latest

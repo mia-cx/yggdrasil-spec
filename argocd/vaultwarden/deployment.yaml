@@ -15,6 +15,13 @@ spec:
       labels:
         app: vaultwarden
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/critical
+                    operator: Exists
       containers:
         - name: vaultwarden
           image: vaultwarden/server:latest

@@ -34,11 +34,25 @@ global:
 
 server:
   replicas: 1
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: workloads/critical
+                operator: Exists
   ingress:
     enabled: false  # We'll use IngressRoute instead
 
 worker:
   replicas: 1
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: workloads/critical
+                operator: Exists
 
 postgresql:
   enabled: true
