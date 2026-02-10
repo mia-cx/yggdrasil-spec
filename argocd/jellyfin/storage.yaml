@@ -42,5 +42,5 @@ spec:
   storageClassName: ""
   resources:
     requests:
-      storage: 2Ti
+      storage: 3600Gi
   volumeName: downloads-nfs

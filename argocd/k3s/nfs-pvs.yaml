@@ -36,7 +36,7 @@ metadata:
   name: downloads-nfs
 spec:
   capacity:
-    storage: 3.6Ti
+    storage: 3600Gi
   accessModes: [ReadWriteMany]
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
