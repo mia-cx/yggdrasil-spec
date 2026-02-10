@@ -82,6 +82,15 @@ readinessProbe:
 ingress:
   enabled: false  # Using Traefik IngressRoute
 
+# Node affinity: schedule only on nodes with workloads/cloud-data (Immich, Nextcloud)
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: workloads/cloud-data
+              operator: Exists
+
 resources:
   requests:
     cpu: 200m

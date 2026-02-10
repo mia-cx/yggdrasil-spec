@@ -7,6 +7,14 @@
 
 controllers:
   main:
+    pod:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/media
+                    operator: Exists
     containers:
       main:
         image:

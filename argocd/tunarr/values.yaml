@@ -1,6 +1,10 @@
-## Helm values for Radarr on K3s
+## Helm values for Tunarr on K3s
 ## Chart: bjw-s/app-template (v3)
 ## Repo: https://bjw-s-labs.github.io/helm-charts
+##
+## Tunarr: IPTV / live TV channels from Plex/Jellyfin/Emby.
+## Tunarr persists db, settings, backups to /config/tunarr (see tunarr.com/getting-started/run).
+## Mount the PVC at that path to match official Docker/compose examples.
 
 controllers:
   main:
@@ -12,32 +16,32 @@ controllers:
               - matchExpressions:
                   - key: workloads/media
                     operator: Exists
-                  - key: workloads/downloading
-                    operator: Exists
     containers:
       main:
         image:
-          repository: lscr.io/linuxserver/radarr
+          repository: docker.io/chrisbenincasa/tunarr
           tag: latest
           pullPolicy: IfNotPresent
         env:
-          PUID: "1000"
-          PGID: "1000"
           TZ: Europe/Amsterdam
+          LOG_LEVEL: INFO
         resources:
           requests:
             cpu: 100m
             memory: 256Mi
           limits:
-            cpu: 1000m
-            memory: 1Gi
+            cpu: 2000m
+            memory: 2Gi
+        ## Hardware transcoding (uncomment when node has GPU):
+        #   limits:
+        #     gpu.intel.com/i915: 1
 
 service:
   main:
     controller: main
     ports:
       http:
-        port: 7878
+        port: 8000
 
 ingress:
   main:
@@ -51,16 +55,4 @@ persistence:
     size: 5Gi
     storageClass: longhorn
     globalMounts:
-      - path: /config
-  media:
-    enabled: true
-    type: persistentVolumeClaim
-    existingClaim: media-nfs-pvc
-    globalMounts:
-      - path: /media
-  downloads:
-    enabled: true
-    type: persistentVolumeClaim
-    existingClaim: downloads-nfs-pvc
-    globalMounts:
-      - path: /downloads
+      - path: /config/tunarr
