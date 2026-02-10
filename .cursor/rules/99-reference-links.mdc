@@ -1,0 +1,27 @@
+---
+alwaysApply: true
+description: Fetch these directly instead of searching the web.
+---
+
+# Reference Links
+
+Fetch these directly instead of searching the web.
+
+- **SvelteKit** — https://svelte.dev/docs/kit
+- **Svelte 5** — https://svelte.dev/docs/svelte
+- **TailwindCSS** — https://tailwindcss.com/docs
+- **shadcn-svelte** — https://shadcn-svelte.com/docs
+- **Bits-UI** — https://bits-ui.com/docs
+- **Drizzle ORM** — https://orm.drizzle.team/docs/overview
+- **nanostores** — https://github.com/nanostores/nanostores
+- **Turborepo** — https://turbo.build/repo/docs
+- **Cloudflare Workers** — https://developers.cloudflare.com/workers/
+- **Cloudflare Pages** — https://developers.cloudflare.com/pages/
+- **Wrangler CLI** — https://developers.cloudflare.com/workers/wrangler/
+- **Quartz** — https://quartz.jzhao.xyz/
+- **Vitest** — https://vitest.dev/guide/
+- **Playwright** — https://playwright.dev/docs/intro
+- **pnpm** — https://pnpm.io/
+- **Astro** — https://docs.astro.build/
+- **Next.js** — https://nextjs.org/docs
+- **GraphQL** — https://graphql.org/learn/

@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+description: When and how to use subagents and skills during task execution and plans.
+---
+
+# Subagents and Skills
+
+**Subagents** (`{{AGENTS_DIR}}`) — Specialized agents invoked for specific steps. When a plan or todo names a subagent (e.g. vitest-writer, quartz-docs-author, verifier), invoke that subagent when performing that step. The subagent’s `description` drives when the agent suggests it; use the named subagent rather than doing the step manually when the plan references it.
+
+**Skills** (`{{SKILLS_DIR}}`) — Repeatable workflows. When implementing a plan, use skills referenced in the plan (e.g. vitest-writer for tests, quartz-docs-author for docs). Create or update a skill when the work produces a new multi-step workflow worth reusing.
+
+Keep this rule short; see [Rules and Skills](06-rules-and-skills.mdc) for when to create rules vs skills and for global promotion.

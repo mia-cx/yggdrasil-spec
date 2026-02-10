@@ -1,0 +1,17 @@
+---
+alwaysApply: true
+description: >-
+  **For every non-trivial task, create a todo list before starting.** The list
+  MUST include task-specific items AND these
+---
+
+# Task Management
+
+**For every non-trivial task, create a todo list before starting.** The list MUST include task-specific items AND these four standing items. When working on a plan, include these in the plan's frontmatter. When working as an agent, use available todo tools. Each one MUST appear as an explicit todo — mark it complete with a note, or mark it N/A with a reason. Silently omitting any of them is a failure mode.
+
+1. **Tests** — Write or update tests for the work done. Mark complete only after tests pass.
+2. **Rules & skills** — Capture any new project knowledge as `{{RULES_DIR}}` or `{{SKILLS_DIR}}`. See [Rules and Skills](./06-rules-and-skills.mdc) for triggers.
+3. **Documentation** — Update relevant documentation if the change affects documented behavior, commands, or architecture.
+4. **Review & close** — Before marking the task complete, review your own work for: gaps in logic or edge cases, potential bugs, performance issues, adherence to conventions (see [Coding Conventions](./09-coding-conventions.mdc)), and opportunities to simplify. Then verify: tests pass, app builds, rules/skills captured, docs updated. Ask: "Did I capture new project knowledge as rules or skills?" If no and the task involved non-trivial decisions, go back and create them.
+
+These four items are non-negotiable. They appear in every todo list, every time, regardless of task type. For items that genuinely do not apply (e.g., "Tests: N/A — no logic changed, documentation-only edit"), mark them N/A with a one-line justification visible in the todo list itself. The justification must be specific to the task, not generic.

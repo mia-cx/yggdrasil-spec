@@ -1,0 +1,14 @@
+---
+alwaysApply: true
+description: >-
+  **Frontend:** SvelteKit (Svelte 5, Vite) by default. shadcn-svelte + Bits-UI
+  for components. TailwindCSS for styling. na
+---
+
+# Technology Preferences
+
+**Frontend:** SvelteKit (Svelte 5, Vite) by default. shadcn-svelte + Bits-UI for components. TailwindCSS for styling. nanostores for global state. Svelte 5 runes (`$state`, `$derived`, `$effect`) for local state — no Svelte 4 stores. Exploring: Astro, React, Next.js.
+
+**Backend & Data:** SQLite or Postgres. Drizzle ORM. REST by default, GraphQL when the data graph benefits. Cloudflare (Workers, Pages, R2, D1) for infrastructure, Wrangler for dev/deploy.
+
+**Tooling:** pnpm always. Turborepo for monorepo orchestration. tsup for building packages. TypeScript strict mode (`noUncheckedIndexedAccess: true`). Vitest for unit tests. Playwright for E2E (only after working user-facing flows exist).

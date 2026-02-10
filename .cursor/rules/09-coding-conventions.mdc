@@ -1,0 +1,17 @@
+---
+alwaysApply: true
+---
+
+# Coding Conventions
+
+- **Early returns** — Guard clauses first, reduce nesting.
+- **`const` arrow functions** — `const toggle = () => {}` over `function`. Define types.
+- **Tailwind only** — Utility classes for all styling. No `<style>` blocks or inline CSS.
+- **Svelte `class:` directive** — `class:active={isActive}` over ternary in class strings.
+- **Descriptive names** — Event handlers prefixed with `handle`: `handleClick`, `handleKeyDown`.
+- **Accessibility** — Interactive elements need `tabindex`, `aria-label`, keyboard handlers.
+- **DRY** — Same pattern twice? Abstract it.
+- **Imports** — Always include all required imports.
+- **File naming** — kebab-case for all files and directories.
+- **Colors** — OKLCH color space for design tokens (e.g., `oklch(0.141 0.005 285.823)`). Not hex, not HSL.
+- **Theming** — `data-theme` attribute (`[data-theme='dark']`, `[data-theme='light']`, `[data-theme='auto']`), not CSS classes. Auto mode uses `prefers-color-scheme`.

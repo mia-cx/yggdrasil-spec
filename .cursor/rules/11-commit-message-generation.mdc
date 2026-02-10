@@ -1,0 +1,17 @@
+---
+description: >-
+  How to write commit messages (conventional style, subject/body). Use
+  organize-commits skill for splitting changes into multiple commits.
+alwaysApply: true
+---
+
+# When generating commit messages
+
+Use **conventional commits**: `type(scope): subject`. Common types: `chore`, `feat`, `fix`, `docs`, `test`, `style`, `refactor`.
+
+- **Subject**: present tense, under ~72 characters, no period at the end (e.g. "add feature" not "added feature").
+- **Body**: (optional) add when the subject alone doesn’t explain why or what.
+
+When the user wants to **split uncommitted changes into multiple logical commits**, use the **organize-commits** skill: group by concern (config, formatting, feature, tests, docs), propose an ordered commit plan, then stage and commit per plan. That skill defines the concern → type mapping and full workflow.
+
+Cursor’s built-in **Generate commit message** (Git tab) respects project rules; consistent history improves its suggestions.

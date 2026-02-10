@@ -1,0 +1,50 @@
+---
+alwaysApply: true
+description: >-
+  The user works in **pnpm monorepos** orchestrated by **Turborepo**. Apps and
+  packages are **git submodules** — each live
+---
+
+## Workspace Conventions
+
+The user works in **pnpm monorepos** orchestrated by **Turborepo**. Apps and packages are **git submodules** — each lives in its own repository (namespaced under the same GitHub org) and is added to the monorepo via `git submodule add`. Only the default template scaffolding (config, docs, etc.) lives directly in the monorepo repo.
+
+## Standard Monorepo Shape
+
+```text
+apps/
+  docs/          ← Always present. Quartz instance (Preact, not Svelte). Obsidian vault as content source.
+  [app-name]/    ← SvelteKit apps by default.
+packages/
+  config/        ← Shared tsconfig, eslint, prettier, lint-staged configs.
+  ui/            ← Component library (shadcn-svelte, Bits-UI, TailwindCSS).
+  utils/         ← Shared utilities and helpers. Published under @mia-cx when reusable across projects.
+```
+
+**Notes:**
+
+- For Cloudflare SvelteKit apps, use the `PRIVATE_` prefix for server-only environment variables (`env.privatePrefix: 'PRIVATE_'` in svelte.config).
+
+## New Project Setup
+
+When the user is creating a new monorepo, walk them through these steps:
+
+1. **Scaffold with Turborepo.** Suggest the user runs `pnpm dlx create-turbo@latest --example with-svelte` or provides a custom template repo via `--example <repo-url>`.
+2. **Follow the Standard Monorepo Shape.** Ensure `apps/docs/`, `packages/config/`, `packages/ui/`, and `packages/utils/` exist. Inform the user if any are missing after scaffolding.
+3. **Set up the docs app.** Tell the user to run `npx quartz create` inside `apps/docs/`. Quartz requires manual initialization.
+4. **Set up shared configs** in `packages/config/`.
+
+## Adding an App
+
+When adding an app or package to an existing monorepo:
+
+1. **Create a separate repo** under the same GitHub org (e.g., `@mia-cx/new-app`).
+2. **Add it as a git submodule**: `git submodule add <repo-url> apps/<app-name>` (or `packages/<pkg-name>`).
+3. **Scaffold using the official CLI** rather than hand-writing configs. Guide on which CLI to use:
+   - SvelteKit: `pnpm create svelte@latest`
+   - Astro: `pnpm create astro@latest`
+   - Next.js: `pnpm create next-app@latest`
+   - Quartz: `pnpx quartz create`
+   - Cloudflare: `pnpm dlx wrangler init`
+4. For Cloudflare-targeted apps, suggest `wrangler` for initialization and deployment.
+5. Fetch the relevant docs first (see [Reference Links](./99-reference-links.mdc)).

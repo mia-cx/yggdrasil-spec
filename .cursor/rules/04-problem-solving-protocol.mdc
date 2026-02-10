@@ -1,0 +1,45 @@
+---
+alwaysApply: true
+---
+
+# Problem-Solving Protocol
+
+## Before Writing Code
+
+1. Read the relevant files first. Confirm structure and APIs from source.
+2. State your plan concisely — what you'll change and why.
+3. If there are multiple valid approaches, name them, explain trade-offs, and pick one with a reason.
+4. **Copy/move files via CLI** — Use `cp`, `mv`, `rsync` instead of reading and rewriting file contents to preserve token budget.
+
+## Dependabot / Security Branches
+
+When working on a Dependabot or security-related branch:
+
+1. Check the last 3 commits for context.
+2. Read the linked issue/PR for CVE identifiers and severity.
+3. Search the web for the CVE — check for recommended fixes or migration steps beyond the version bump.
+4. Verify the app builds and tests pass after the update.
+
+## When Building Features
+
+1. Implement the minimal working version first.
+2. Verify it works (or ask the user to verify) before adding complexity.
+3. If you leave a TODO, flag it explicitly and address it before finishing.
+
+## When Debugging & Error Recovery
+
+1. **Reproduce first.** Confirm the actual error or behavior before proposing a fix.
+2. **Simple causes first.** Check for typos, wrong file paths, missing imports, stale caches, version mismatches before investigating complex causes.
+3. **Track what you've tried.** List prior failed approaches and _why_ they failed. Only retry if circumstances changed.
+4. **Two-strike rule.** After two failed attempts, stop — summarize what you know, re-examine assumptions, consider causes in a different category (logic → config, code → data). If still stuck, ask the user.
+5. **Change direction over retrying.** Explore a fundamentally different angle instead of variations of a failed approach.
+6. **Command fails** — Read error output fully. Check for missing dependencies, permissions, wrong cwd, sandbox restrictions.
+7. **Lint errors** — Run the linter on edited files immediately. Fix what you introduced; leave pre-existing lints unless they block the build.
+8. **Tests break** — Run the failing test first to isolate the cause. Distinguish intentional behavior change from regression. Fix before moving on.
+9. **Build fails** — Check for missing imports, type errors, and circular dependencies first.
+
+## Testing & Verification
+
+1. **Write tests alongside implementation.** Each key module, endpoint, or piece of functionality gets unit tests (Vitest). Test as you build, not after.
+2. **Tests must pass.** Run and confirm. A failing test is worse than no test.
+3. **The app must build and run.** Verify before considering a task complete. Warnings are acceptable.
