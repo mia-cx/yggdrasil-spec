@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: tunarr
+  namespace: media
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`tunarr.yggdrasil.mia.cx`)
+      kind: Rule
+      middlewares:
+        - name: internal-only
+          namespace: kube-system
+      services:
+        - name: tunarr
+          port: 8000
+  tls: {}
