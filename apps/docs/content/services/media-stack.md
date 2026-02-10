@@ -26,6 +26,7 @@ Automated media acquisition, organization, and transcoding. All ten services run
 | Privoxy      | `docker.io/vimagick/privoxy`        | 8118 | HTTP proxy              |
 | Prefetcharr  | `docker.io/phueber/prefetcharr`     | --   | Prefetch next seasons   |
 | Tdarr        | `docker.io/haveagitgat/tdarr`       | 8265 | Transcode automation    |
+| Tunarr       | `docker.io/chrisbenincasa/tunarr`   | 8000 | IPTV from Jellyfin/Plex |
 
 ## Architecture
 
@@ -84,6 +85,7 @@ Automated media acquisition, organization, and transcoding. All ten services run
 | `argocd/privoxy/`      | `values.yaml`                      |
 | `argocd/prefetcharr/`  | `values.yaml`                      |
 | `argocd/tdarr/`        | `values.yaml`, `ingressroute.yaml` |
+| `argocd/tunarr/`       | `values.yaml`, `ingressroute.yaml` |
 
 ## Deployment
 
@@ -110,6 +112,7 @@ kubectl apply -f argocd/_apps/flaresolverr.yaml
 kubectl apply -f argocd/_apps/privoxy.yaml
 kubectl apply -f argocd/_apps/prefetcharr.yaml
 kubectl apply -f argocd/_apps/tdarr.yaml
+kubectl apply -f argocd/_apps/tunarr.yaml
 ```
 
 ### Via Helm (manual)
@@ -118,8 +121,12 @@ kubectl apply -f argocd/_apps/tdarr.yaml
 helm repo add bjw-s https://bjw-s-labs.github.io/helm-charts
 helm repo update
 
-for svc in sonarr radarr lidarr prowlarr sabnzbd qbittorrent flaresolverr privoxy prefetcharr tdarr; do
+for svc in sonarr radarr lidarr prowlarr sabnzbd qbittorrent flaresolverr privoxy prefetcharr tdarr tunarr; do
   helm install $svc bjw-s/app-template --namespace media -f argocd/$svc/values.yaml
+done
+
+for svc in sonarr radarr lidarr prowlarr sabnzbd qbittorrent tdarr tunarr; do
+  kubectl apply -f argocd/$svc/ingressroute.yaml
 done
 ```
 
@@ -150,7 +157,25 @@ In qBittorrent WebUI → Settings → Connection → Proxy:
 
 ### Prefetcharr -- API Keys
 
-Create a Kubernetes secret with Sonarr and Jellyfin API keys, then reference them in `values.yaml` via `envFrom`.
+Create a Kubernetes secret with Sonarr and Jellyfin API keys:
+
+```bash
+kubectl create secret generic prefetcharr-secrets \
+  -n media \
+  --from-literal=JELLYFIN_API_KEY="your-jellyfin-api-key" \
+  --from-literal=SONARR_API_KEY="your-sonarr-api-key"
+```
+
+Where to find each key:
+
+- **Jellyfin:** Dashboard → Administration → API Keys → create one named `prefetcharr`
+- **Sonarr:** Settings → General → API Key
+
+The `values.yaml` already references this secret via `envFrom: secretRef: prefetcharr-secrets`.
+
+### Tunarr — Jellyfin server
+
+In Tunarr’s web UI, add your Jellyfin server (URL and API key). Use the in-cluster URL (e.g. `http://jellyfin.media:8096`) so Tunarr can reach Jellyfin without going through ingress. Create an API key in Jellyfin (Dashboard → API Keys) for Tunarr. Tunarr exposes an HDHR tuner and M3U for Plex/Jellyfin/Emby or IPTV apps (e.g. Tivimate, UHF).
 
 ### Path Mappings
 
@@ -177,6 +202,7 @@ All services use the `internal-only` middleware -- accessible only via LAN or Ne
 | SABnzbd     | `https://sabnzbd.yggdrasil.mia.cx`     |
 | qBittorrent | `https://qbittorrent.yggdrasil.mia.cx` |
 | Tdarr       | `https://tdarr.yggdrasil.mia.cx`       |
+| Tunarr      | `https://tunarr.yggdrasil.mia.cx`      |
 
 FlareSolverr, Privoxy, and Prefetcharr are internal-only services with no web UI exposed via ingress.
 
