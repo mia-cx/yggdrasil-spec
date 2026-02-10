@@ -12,6 +12,7 @@ Core platform components that underpin all services.
 | ------------------------------------- | ----------- | ------------------------------ |
 | [Storage LXC](./storage.md)           | 10.0.1.2    | MergerFS pool + NFS exports    |
 | [Kubernetes (Hydra)](./kubernetes.md) | 10.0.1.3    | K3s container orchestration    |
+| [Workload placement](./workload-placement.md) | K3s nodes | Node affinity (critical vs media) |
 | [ArgoCD](./argocd.md)                 | K3s         | GitOps continuous delivery     |
 | [Authentik](./authentik.md)           | K3s         | Identity provider + SSO        |
 | [Netbird](./netbird.md)               | 10.0.1.4    | Overlay network management     |

@@ -210,6 +210,10 @@ kubectl drain <node> --ignore-daemonsets --delete-emptydir-data
 kubectl uncordon <node>
 ```
 
+### Workload placement (critical vs media)
+
+To restrict which nodes a workload can run on (e.g. critical services HA on antheia + athena, media only on athena), use node labels and node affinity. See [Workload Placement (Node Affinity)](./workload-placement.md).
+
 ## Verification
 
 ```bash
