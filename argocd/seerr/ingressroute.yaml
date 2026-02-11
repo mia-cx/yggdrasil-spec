@@ -1,0 +1,14 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: seerr
+  namespace: media
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`seerr.mia.cx`) || Host(`seerr.yggdrasil.mia.cx`)
+      kind: Rule
+      services:
+        - name: seerr
+          port: 5055
+  tls: {}

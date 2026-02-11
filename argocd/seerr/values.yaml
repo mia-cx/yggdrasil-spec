@@ -1,0 +1,57 @@
+## Helm values for Seerr on K3s
+## Chart: bjw-s/app-template (v3)
+## Repo: https://bjw-s-labs.github.io/helm-charts
+## Seerr: https://github.com/seerr-team/seerr — media request/discovery for Jellyfin, integrates with Sonarr/Radarr
+
+controllers:
+  main:
+    pod:
+      securityContext:
+        fsGroup: 1000
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/media
+                    operator: Exists
+                  - key: workloads/downloading
+                    operator: Exists
+    containers:
+      main:
+        image:
+          repository: ghcr.io/seerr-team/seerr
+          tag: develop
+          pullPolicy: IfNotPresent
+        env:
+          PUID: "1000"
+          PGID: "1000"
+          TZ: Europe/Amsterdam
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        port: 5055
+
+ingress:
+  main:
+    enabled: false
+
+persistence:
+  config:
+    enabled: true
+    type: persistentVolumeClaim
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    storageClass: longhorn
+    globalMounts:
+      - path: /app/config
