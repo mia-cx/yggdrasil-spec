@@ -19,7 +19,9 @@ nextcloud:
     proxy.config.php: |-
       <?php
       $CONFIG = array(
-        'trusted_proxies' => ['10.42.0.0/16', '10.43.0.0/16'],
+        # Trust any in-cluster proxy (Traefik pod); pod CIDR varies by CNI (10.42/10.43 common for K3s)
+        # so use 10.0.0.0/8 so Nextcloud uses X-Forwarded-For and shows real client IP (LAN or public)
+        'trusted_proxies' => ['10.0.0.0/8','100.64.0.0/10','10.42.0.0/16', '10.43.0.0/16'],
         'forwarded_for_headers' => ['HTTP_X_FORWARDED_FOR'],
         'overwriteprotocol' => 'https',
       );
