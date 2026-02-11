@@ -58,6 +58,25 @@ kubectl get secret wildcard-tls -n kube-system
 
 ## Configuration
 
+Traefik overrides live in **`argocd/traefik/values.yaml`**. To apply them, upgrade the chart:
+
+```bash
+helm repo add traefik https://helm.traefik.io/traefik
+helm repo update
+helm upgrade traefik traefik/traefik -f argocd/traefik/values.yaml -n kube-system
+```
+
+If K3s manages Traefik via its bundled HelmChart, use the same release name and namespace; K3s may reconcile the chart, so you can instead apply **`argocd/traefik/helm-chart-config.yaml`** (ensure its `valuesContent` matches `values.yaml`) and let K3s roll the deployment. In-cluster edits to the Traefik Deployment or ConfigMap are overwritten by the chart.
+
+### Origin IP (real client IP to backends)
+
+So backends (e.g. Nextcloud) and forward-auth (e.g. Authentik) see the real client IP, two things are configured:
+
+1. **Preserve client IP at the Service** — `service.spec.externalTrafficPolicy: Local` in `values.yaml`. Without this, the node that receives traffic SNATs it, so Traefik sees the node IP and forwards that in `X-Forwarded-For`. With `Local`, the source IP is preserved and Traefik sets `X-Forwarded-For` to the real client. _Caveat:_ `Local` forwards only to pods on the node that received the request, so the node holding the Traefik VIP (e.g. kube-vip) must run a Traefik pod.
+2. **Trust upstream proxies** — When a proxy in front of Traefik (e.g. router, another LB) sends `X-Forwarded-For`, Traefik must trust it. The chart does not expose entrypoint `forwardedHeaders` as values, so this is set via `additionalArguments` in `values.yaml`. CIDRs match LAN and Netbird overlay.
+
+Backends must also trust the proxy: e.g. Nextcloud `trusted_proxies` includes the Traefik pod CIDR (`10.0.0.0/8` in our values) and `forwarded_for_headers` → `HTTP_X_FORWARDED_FOR`. After changing values, run the `helm upgrade` above or apply the HelmChartConfig; K3s will roll the Traefik deployment with the new values.
+
 ### Middlewares
 
 Both middlewares live in `kube-system` so any namespace can reference them.
@@ -66,7 +85,9 @@ Both middlewares live in `kube-system` so any namespace can reference them.
 kubectl apply -f argocd/traefik/middlewares.yaml
 ```
 
-**internal-only** -- `ipAllowList` restricting access to LAN (`10.0.0.0/8`) and Netbird overlay (`100.64.0.0/10`). Rejects public internet requests.
+**internal-only** -- `ipAllowList` restricting access to LAN (`10.0.0.0/8`) and Netbird overlay (`100.64.0.0/10`). Rejects public internet requests. It uses the connection **remote address** (the source IP of the TCP connection to Traefik), not `X-Forwarded-For`.
+
+**If 5G traffic still gets through:** If your router preserves source IP (e.g. you see your public IP in Nextcloud) but internal-only still allows requests from 5G, the connection Traefik receives may be from an internal IP (e.g. another NAT hop, or traffic taking a different path). Verify what Traefik sees by enabling access logs (see [Verify client IP](#verify-client-ip-access-logs) below) and checking the logged client IP for a request from 5G. If the log shows 10.x or 100.64.x, something in front of Traefik is NATing or the path is not direct. If the log shows your public IP but you still get through, the middleware may not be applied (check the IngressRoute). If the router does SNAT (connection source = router LAN IP), configure the port forward to preserve client IP, or don't rely on internal-only for that path and use the **authentik** middleware instead.
 
 ```yaml
 middlewares:
@@ -123,6 +144,35 @@ spec:
           port: 8989
   tls: {}
 ```
+
+### Verify client IP (access logs)
+
+To see which client IP Traefik uses for each request (the same IP used by internal-only), enable access logs. Logs are configured in `values.yaml` (e.g. `logs.access.enabled: true`, optional `format: json` and `fields.headers` for X-Forwarded-_). Do not put `--logs._`in`additionalArguments`— the Traefik binary can reject them and crash with “field not found, node: logs”. If you disabled access logs, re-enable in`values.yaml` with:
+
+```yaml
+logs:
+  access:
+    enabled: true
+```
+
+Re-apply the HelmChartConfig and restart the Traefik pod (or wait for K3s to roll it). Then open a route (e.g. Radarr) from your phone on 5G and check the Traefik pod logs:
+
+```bash
+kubectl logs -n kube-system -l app.kubernetes.io/name=traefik -c traefik --tail=50
+```
+
+Look for the request; the logged client IP is what internal-only and the backend see. If it shows 10.x or 100.64.x when you're on 5G, the connection to Traefik is coming from an internal hop. If it shows your public IP, internal-only should be blocking; if you still get through, confirm the IngressRoute has the internal-only middleware applied. Turn access logs off again after debugging by removing the `logs.access` block.
+
+### Inspect requests to a host (e.g. cloud.mia.cx)
+
+With access logs enabled (default CLF format), recent requests show `ClientAddr` (the IP Traefik sees) and the request line. To see only lines for a given host:
+
+```bash
+kubectl logs -n kube-system -l app.kubernetes.io/name=traefik -c traefik --tail=200 2>/dev/null \
+  | grep cloud.mia.cx
+```
+
+`values.yaml` already sets `logs.access.format: json` and `logs.access.fields.headers.names` for X-Forwarded-For / X-Forwarded-Proto when access logs are enabled. If your K3s-bundled chart is older and does not support these keys, simplify to `logs.access.enabled: true` only and test; invalid values can put Traefik in CrashLoopBackOff.
 
 ### Extracting Certificates
 

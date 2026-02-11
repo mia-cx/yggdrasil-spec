@@ -38,4 +38,5 @@ All services live under `*.yggdrasil.mia.cx`:
 - [Infrastructure](./infrastructure/index.md) -- Storage LXC, K3s, Authentik, Netbird, Traefik, DNS
 - [Services](./services/index.md) -- Jellyfin, Nextcloud, Vaultwarden, media stack, Pelican
 - [Operations](./operations/index.md) -- migration plan, runbooks
+- [Roadmaps](./roadmaps/index.md) -- plans by category (infrastructure, services)
 - [Quick Reference](./reference.md) -- IPs, VMIDs, service URLs

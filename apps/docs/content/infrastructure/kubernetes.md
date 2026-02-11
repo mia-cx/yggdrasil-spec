@@ -121,7 +121,9 @@ sudo sysctl --system
 
 ### kube-vip
 
-Install kube-vip **before** K3s:
+kube-vip runs only on **control-plane (server) nodes** — it advertises the API VIP and participates in leader election. **Do not** install it on agent-only (worker) nodes.
+
+Install kube-vip **before** K3s on **each** node that will run `k3s server` (first node and any additional control-plane nodes):
 
 ```bash
 sudo mkdir -p /var/lib/rancher/k3s/server/manifests/
@@ -191,14 +193,22 @@ kubectl apply -f argocd/k3s/nfs-pvs.yaml
 
 ### Adding Nodes
 
-Join new nodes via VIP:
+- **Agent (worker) nodes:** No kube-vip. Just join; the cluster already has the VIP on a control-plane node.
 
-```bash
-curl -sfL https://get.k3s.io | sh -s - server \
-  --server https://10.0.128.1:6443 \
-  --token <token> \
-  --tls-san=10.0.128.1
-```
+  ```bash
+  curl -sfL https://get.k3s.io | sh -s - agent \
+    --server https://10.0.128.1:6443 \
+    --token <token>
+  ```
+
+- **Server (control-plane) nodes:** Install kube-vip on the new node **before** joining (same steps as [kube-vip](#kube-vip) above: RBAC + static pod in `agent/pod-manifests`). Then join as server so the new node can participate in VIP leader election:
+
+  ```bash
+  curl -sfL https://get.k3s.io | sh -s - server \
+    --server https://10.0.128.1:6443 \
+    --token <token> \
+    --tls-san=10.0.128.1
+  ```
 
 ### Node Management
 

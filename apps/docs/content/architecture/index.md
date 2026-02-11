@@ -63,6 +63,7 @@ Download disks, will join Proxmox cluster after migration.
 
 ## Related
 
-- [Naming Scheme](./naming.md) -- mythology-based naming conventions
-- [Network Allocation](./network.md) -- IP ranges, VMID scheme, topology
-- [Key Decisions](./decisions.md) -- rationale for major technical choices
+- [Naming Scheme](./naming.md) — mythology-based naming conventions
+- [Network Allocation](./network.md) — IP ranges, VMID scheme, topology
+- [Key Decisions](./decisions.md) — rationale for major technical choices
+- [Resilience nodes (roadmap)](../roadmaps/infrastructure/resilience-nodes.md) — hosted DR nodes (configs only, no Longhorn)

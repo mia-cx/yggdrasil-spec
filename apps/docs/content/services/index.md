@@ -26,6 +26,7 @@ Application services running in the K3s cluster. For platform-level components (
 | ------------- | -------------------------------------------- | ---- | ------------- | ------------------------- |
 | **Media**     |
 | Jellyfin      | `docker.io/jellyfin/jellyfin:10`             | 8096 | `media`       | Media streaming           |
+| Seerr         | `ghcr.io/seerr-team/seerr:develop`           | 5055 | `media`       | Request/discovery (Jellyfin) |
 | Sonarr        | `lscr.io/linuxserver/sonarr:latest`          | 8989 | `media`       | TV automation             |
 | Radarr        | `lscr.io/linuxserver/radarr:latest`          | 7878 | `media`       | Movie automation          |
 | Lidarr        | `lscr.io/linuxserver/lidarr:latest`          | 8686 | `media`       | Music automation          |

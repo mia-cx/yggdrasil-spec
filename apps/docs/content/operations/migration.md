@@ -358,6 +358,7 @@ Total 36 vCPUs on 32 threads = mild overcommit (acceptable).
 - Join as server (control plane) or agent (workloads only)
 - Dedicate one to Jellyfin with Intel QuickSync
 - Old server can stay as K3s server
+- **Target workflow:** Use [Node onboarding roadmap](../roadmaps/infrastructure/node-onboarding.md) (PXE + cloud-init + OpenTofu) so adding each mini-PC is a code change and a PXE boot.
 
 ### Checklist
 
@@ -366,7 +367,7 @@ Total 36 vCPUs on 32 threads = mild overcommit (acceptable).
 - [ ] Join K3s cluster
 - [ ] Configure Intel QuickSync for Jellyfin
 - [ ] Move Jellyfin to mini-PC node
-- [ ] Repeat for additional mini-PCs
+- [ ] (Optional) Implement PXE + cloud-init + OpenTofu per roadmap; repeat for additional mini-PCs via netboot
 
 ---
 

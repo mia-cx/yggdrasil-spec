@@ -84,6 +84,15 @@ kubectl exec -n nextcloud deploy/nextcloud -- su -s /bin/bash www-data -c "php o
 
 ## Configuration
 
+### Real client IP (LAN / public)
+
+Nextcloud should show your real IP (LAN when at home, public when remote), not the Traefik pod IP. That requires:
+
+1. **Traefik** — Preserves and sends the real client IP in `X-Forwarded-For` (see [Traefik](../infrastructure/traefik.md): `service.spec.externalTrafficPolicy: Local` so Traefik sees the real source; `forwardedHeaders.trustedIPs` when a proxy sits in front of Traefik).
+2. **Nextcloud** — `trusted_proxies` in `proxy.config.php` must include the IP of the connection Nextcloud receives (the Traefik pod). Values use `10.0.0.0/8` so any in-cluster proxy is trusted regardless of pod CIDR; then `forwarded_for_headers` → `HTTP_X_FORWARDED_FOR` is used as the client IP.
+
+After changing `proxy.config.php` (e.g. in Helm values), redeploy or restart the Nextcloud pod so the config is applied.
+
 ### Post-Install
 
 **Get admin password:**
@@ -157,7 +166,7 @@ kubectl exec -it -n nextcloud deploy/nextcloud -- su -s /bin/bash www-data -c "p
   --identifier='authentik' \
   --clientid='nextcloud' \
   --clientsecret='YOUR_CLIENT_SECRET' \
-  --discoveryuri='https://auth.mia.cx/application/o/nextcloud/.well-known/openid-configuration' \
+  --discoveryuri='https://id.mia.cx/application/o/nextcloud/.well-known/openid-configuration' \
   --unique-uid='0' \
   --check-bearer='0' \
   --send-id-token-hint='1' \
@@ -171,7 +180,7 @@ Or configure in Settings → Administration → SSO & SAML authentication:
 | Identifier         | `authentik`                                                                    |
 | Client ID          | `nextcloud`                                                                    |
 | Client Secret      | (from secret)                                                                  |
-| Discovery endpoint | `https://auth.mia.cx/application/o/nextcloud/.well-known/openid-configuration` |
+| Discovery endpoint | `https://id.mia.cx/application/o/nextcloud/.well-known/openid-configuration` |
 
 3. Optional -- disable password login for SSO-only:
 

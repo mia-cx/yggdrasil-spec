@@ -18,6 +18,13 @@ pct enter <id>
 # Execute command in LXC
 pct exec <id> -- <command>
 
+# LXCs do not share the Proxmox host password or SSH keys — each container has its own
+# /etc/passwd and root home. To enable SSH key login: from the host run
+#   pct enter <id>
+# then create /root/.ssh (mode 700), add your public key to /root/.ssh/authorized_keys (600),
+# and ensure sshd has PubkeyAuthentication yes. Or one-liner from host:
+#   pct exec <id> -- bash -c 'mkdir -p /root/.ssh && echo "YOUR_PUBKEY" >> /root/.ssh/authorized_keys && chmod 700 /root/.ssh && chmod 600 /root/.ssh/authorized_keys'
+
 # Start/stop LXC
 pct start <id>
 pct stop <id>
@@ -29,6 +36,52 @@ qm list
 qm start <id>
 qm stop <id>
 ```
+
+### Moving VM disks or CT volumes to different storage (e.g. local-lvm → local)
+
+Use this when you want to move disks off `local-lvm` (LVM-thin) to `local` (directory) or another storage—e.g. before disks grow too large to move comfortably, or to rebalance space.
+
+**Caveats:**
+
+- Target storage must have enough free space for a **full copy** of the disk/volume during the move. Moving from `local-lvm` to `local` frees space in the LVM pool but uses space on the same root disk; ensure `local` (e.g. `/var/lib/vz`) has room.
+- Move **one VM or CT at a time**; optionally delete the source after each move so space is freed before the next.
+- **Stop** the VM or CT before moving (recommended for a clean move). VM live-move to another storage type on the same node is not guaranteed.
+- If the VM has **snapshots**, consider consolidating or moving the base disk first; snapshot chains can complicate moves.
+
+**VM disk (UI):**
+
+1. Stop the VM.
+2. VM → **Hardware** → select the disk (e.g. scsi0) → **Move disk**.
+3. Choose **Target storage** (e.g. `local`). Optionally enable **Delete source** after success.
+4. Start the VM when the move finishes.
+
+**VM disk (CLI):**
+
+```bash
+# Move disk (VMID 1003, disk scsi0) to storage 'local'
+qm move-disk 1003 scsi0 local
+
+# Optional: remove source after move
+qm move-disk 1003 scsi0 local --delete 1
+```
+
+**CT volume (UI):**
+
+1. Stop the container.
+2. **Datacenter** → **Storage** → select source storage (e.g. local-lvm) → **Content**.
+3. Select the CT volume (e.g. `vm-101-disk-0`) → **Move** → choose target storage (e.g. `local`).
+
+**CT volume (CLI):**
+
+```bash
+# List volumes on source storage to get the volid
+pvesm list local-lvm
+
+# Move volume (example)
+pvesm move vm-101-disk-0 local
+```
+
+Then start the container.
 
 ## Storage LXC
 

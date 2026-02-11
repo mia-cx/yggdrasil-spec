@@ -12,25 +12,31 @@ title: Media Stack
 | Chart     | `bjw-s/app-template` (v3)                 |
 | Storage   | Longhorn (config), NFS (media, downloads) |
 
-Automated media acquisition, organization, and transcoding. All ten services run in the `media` namespace and share NFS volumes for media and downloads.
+Automated media acquisition, organization, and transcoding. All services run in the `media` namespace; most share NFS volumes for media and downloads. Seerr uses only Longhorn (config).
 
-| Service      | Image                               | Port | Purpose                 |
-| ------------ | ----------------------------------- | ---- | ----------------------- |
-| Sonarr       | `lscr.io/linuxserver/sonarr`        | 8989 | TV show automation      |
-| Radarr       | `lscr.io/linuxserver/radarr`        | 7878 | Movie automation        |
-| Lidarr       | `lscr.io/linuxserver/lidarr`        | 8686 | Music automation        |
-| Prowlarr     | `lscr.io/linuxserver/prowlarr`      | 9696 | Indexer management      |
-| SABnzbd      | `lscr.io/linuxserver/sabnzbd`       | 8080 | Usenet downloader       |
-| qBittorrent  | `lscr.io/linuxserver/qbittorrent`   | 8080 | Torrent client          |
-| FlareSolverr | `ghcr.io/flaresolverr/flaresolverr` | 8191 | Cloudflare bypass proxy |
-| Privoxy      | `docker.io/vimagick/privoxy`        | 8118 | HTTP proxy              |
-| Prefetcharr  | `docker.io/phueber/prefetcharr`     | --   | Prefetch next seasons   |
-| Tdarr        | `docker.io/haveagitgat/tdarr`       | 8265 | Transcode automation    |
-| Tunarr       | `docker.io/chrisbenincasa/tunarr`   | 8000 | IPTV from Jellyfin/Plex |
+| Service      | Image                               | Port | Purpose                        |
+| ------------ | ----------------------------------- | ---- | ------------------------------ |
+| Seerr        | `ghcr.io/seerr-team/seerr`          | 5055 | Request/discovery (Jellyfin)    |
+| Sonarr       | `lscr.io/linuxserver/sonarr`        | 8989 | TV show automation             |
+| Radarr       | `lscr.io/linuxserver/radarr`        | 7878 | Movie automation               |
+| Lidarr       | `lscr.io/linuxserver/lidarr`        | 8686 | Music automation               |
+| Prowlarr     | `lscr.io/linuxserver/prowlarr`      | 9696 | Indexer management             |
+| SABnzbd      | `lscr.io/linuxserver/sabnzbd`       | 8080 | Usenet downloader              |
+| qBittorrent  | `lscr.io/linuxserver/qbittorrent`   | 8080 | Torrent client                 |
+| FlareSolverr | `ghcr.io/flaresolverr/flaresolverr` | 8191 | Cloudflare bypass proxy        |
+| Privoxy      | `docker.io/vimagick/privoxy`        | 8118 | HTTP proxy                     |
+| Prefetcharr  | `docker.io/phueber/prefetcharr`     | --   | Prefetch next seasons          |
+| Jellyfin-Auto-Collections | `ghcr.io/ghomashudson/jellyfin-auto-collections` | -- | Sync collections (IMDb, Letterboxd, etc.) |
+| Tdarr        | `docker.io/haveagitgat/tdarr`       | 8265 | Transcode automation           |
+| Tunarr       | `docker.io/chrisbenincasa/tunarr`   | 8000 | IPTV from Jellyfin/Plex        |
 
 ## Architecture
 
 ```
+        ┌──────────────────┐
+        │  Seerr :5055     │ Request/discovery UI → Jellyfin + Sonarr/Radarr
+        └────────┬─────────┘
+                 │
                    ┌─────────────┐
                    │  Prowlarr   │ Indexer management
                    │  :9696      │
@@ -57,12 +63,12 @@ Automated media acquisition, organization, and transcoding. All ten services run
         │  /media (NFS)    │───▶│  Jellyfin    │
         │  MergerFS 29Ti   │    │  :8096       │
         └──────────────────┘    └──────┬───────┘
-                   │                   │ watching activity
+                   │                   │ watching activity / collections API
                    ▼                   ▼
-        ┌──────────────────┐    ┌──────────────┐
-        │  Tdarr           │    │  Prefetcharr │
-        │  :8265           │    │  (daemon)    │
-        │  Transcode       │    │  Prefetch    │
+        ┌──────────────────┐    ┌──────────────┐     ┌──────────────────────────────┐
+        │  Tdarr           │    │  Prefetcharr │     │  Jellyfin-Auto-Collections   │
+        │  :8265           │    │  (daemon)    │     │  (cron) IMDb/Letterboxd sync  │
+        │  Transcode       │    │  Prefetch    │     └──────────────────────────────┘
         └──────────────────┘    └──────────────┘
 
         ┌──────────────────┐
@@ -75,6 +81,7 @@ Automated media acquisition, organization, and transcoding. All ten services run
 
 | Directory              | Files                              |
 | ---------------------- | ---------------------------------- |
+| `argocd/seerr/`        | `values.yaml`, `ingressroute.yaml` |
 | `argocd/sonarr/`       | `values.yaml`, `ingressroute.yaml` |
 | `argocd/radarr/`       | `values.yaml`, `ingressroute.yaml` |
 | `argocd/lidarr/`       | `values.yaml`, `ingressroute.yaml` |
@@ -84,8 +91,9 @@ Automated media acquisition, organization, and transcoding. All ten services run
 | `argocd/flaresolverr/` | `values.yaml`                      |
 | `argocd/privoxy/`      | `values.yaml`                      |
 | `argocd/prefetcharr/`  | `values.yaml`                      |
+| `argocd/jellyfin-auto-collections/` | `cronjob.yaml`, `configmap.yaml`, `README.md` |
 | `argocd/tdarr/`        | `values.yaml`, `ingressroute.yaml` |
-| `argocd/tunarr/`       | `values.yaml`, `ingressroute.yaml` |
+| `argocd/tunarr/`       | `values.yaml`, `pvc.yaml`, `ingressroute.yaml` |
 
 ## Deployment
 
@@ -102,6 +110,7 @@ kubectl apply -f argocd/jellyfin/storage.yaml
 Push to `main` and ArgoCD syncs automatically. Or apply manually:
 
 ```bash
+kubectl apply -f argocd/_apps/seerr.yaml
 kubectl apply -f argocd/_apps/sonarr.yaml
 kubectl apply -f argocd/_apps/radarr.yaml
 kubectl apply -f argocd/_apps/lidarr.yaml
@@ -111,6 +120,7 @@ kubectl apply -f argocd/_apps/qbittorrent.yaml
 kubectl apply -f argocd/_apps/flaresolverr.yaml
 kubectl apply -f argocd/_apps/privoxy.yaml
 kubectl apply -f argocd/_apps/prefetcharr.yaml
+kubectl apply -f argocd/_apps/jellyfin-auto-collections.yaml
 kubectl apply -f argocd/_apps/tdarr.yaml
 kubectl apply -f argocd/_apps/tunarr.yaml
 ```
@@ -121,11 +131,11 @@ kubectl apply -f argocd/_apps/tunarr.yaml
 helm repo add bjw-s https://bjw-s-labs.github.io/helm-charts
 helm repo update
 
-for svc in sonarr radarr lidarr prowlarr sabnzbd qbittorrent flaresolverr privoxy prefetcharr tdarr tunarr; do
+for svc in seerr sonarr radarr lidarr prowlarr sabnzbd qbittorrent flaresolverr privoxy prefetcharr tdarr tunarr; do
   helm install $svc bjw-s/app-template --namespace media -f argocd/$svc/values.yaml
 done
 
-for svc in sonarr radarr lidarr prowlarr sabnzbd qbittorrent tdarr tunarr; do
+for svc in seerr sonarr radarr lidarr prowlarr sabnzbd qbittorrent tdarr tunarr; do
   kubectl apply -f argocd/$svc/ingressroute.yaml
 done
 ```
@@ -173,6 +183,32 @@ Where to find each key:
 
 The `values.yaml` already references this secret via `envFrom: secretRef: prefetcharr-secrets`.
 
+### Jellyfin-Auto-Collections — API key and user ID
+
+Create a secret with your Jellyfin API key and user ID (see `argocd/jellyfin-auto-collections/README.md`):
+
+```bash
+kubectl create secret generic jellyfin-auto-collections-secrets \
+  -n media \
+  --from-literal=JELLYFIN_API_KEY='your-api-key' \
+  --from-literal=JELLYFIN_USER_ID='your-jellyfin-user-uuid'
+```
+
+User ID is the UUID from the URL when viewing your user in Jellyfin Dashboard. The CronJob uses in-cluster URL `http://jellyfin.media:8096` by default; override with `JELLYFIN_SERVER_URL` in the secret if needed.
+
+### Tdarr — Node resources in UI
+
+The Tdarr web UI shows **host (node)** RAM and CPU for each node (e.g. "OS Mem: 7.7GB/31.3GB"), not the container limits. That is expected: the process reads from the OS and in Kubernetes the pod often sees the node’s totals. Actual enforcement is via the pod’s resource limits in `argocd/tdarr/values.yaml` (e.g. 8 Gi memory, 4 CPU per node). Ignore the "available" numbers in the UI for scheduling; the limits are what apply.
+
+### Seerr — Jellyfin and Sonarr/Radarr
+
+In Seerr’s initial setup (or Settings), add:
+
+- **Jellyfin:** URL `http://jellyfin.media:8096` and an API key (Dashboard → Administration → API Keys). Use the in-cluster hostname so Seerr reaches Jellyfin without ingress.
+- **Sonarr / Radarr:** Under Settings → Services, add each with URL `http://sonarr.media:8989` and `http://radarr.media:7878` and their API keys (Settings → General → API Key in each app).
+
+Seerr uses SQLite by default (stored in `/app/config`). For PostgreSQL, see [Seerr docs](https://docs.seerr.dev).
+
 ### Tunarr — Jellyfin server
 
 In Tunarr’s web UI, add your Jellyfin server (URL and API key). Use the in-cluster URL (e.g. `http://jellyfin.media:8096`) so Tunarr can reach Jellyfin without going through ingress. Create an API key in Jellyfin (Dashboard → API Keys) for Tunarr. Tunarr exposes an HDHR tuner and M3U for Plex/Jellyfin/Emby or IPTV apps (e.g. Tivimate, UHF).
@@ -195,6 +231,7 @@ All services use the `internal-only` middleware -- accessible only via LAN or Ne
 
 | Service     | URL                                    |
 | ----------- | -------------------------------------- |
+| Seerr       | `https://seerr.yggdrasil.mia.cx`       |
 | Sonarr      | `https://sonarr.yggdrasil.mia.cx`      |
 | Radarr      | `https://radarr.yggdrasil.mia.cx`      |
 | Lidarr      | `https://lidarr.yggdrasil.mia.cx`      |
@@ -206,9 +243,14 @@ All services use the `internal-only` middleware -- accessible only via LAN or Ne
 
 FlareSolverr, Privoxy, and Prefetcharr are internal-only services with no web UI exposed via ingress.
 
+### 403 Forbidden — Traefik vs app
+
+- **Traefik (internal-only):** Rejects when the client IP is not in 10.0.0.0/8 or 100.64.0.0/10 (e.g. you're resolving the hostname via public DNS so traffic goes out and back in; see [DNS — LAN](../infrastructure/dns.md#lan-same-network-no-netbird)).
+- **App (e.g. Radarr):** Can return 403 for auth or “external” connection rules. To see who returned 403, enable Traefik access logs (see [Traefik — Verify client IP](../infrastructure/traefik.md#verify-client-ip-access-logs)) and check the log line for that request: if the request reached the backend and the backend status is 403, the app returned it. In Radarr go to **Settings → General → Security**: if “Authentication” is “Required for external addresses”, the app treats the request as external when it doesn’t see a local client IP; ensure Traefik is sending `X-Forwarded-For` (Traefik does this by default; the Radarr IngressRoute uses the `forwarded-proto` middleware so the app gets `X-Forwarded-Proto: https` as well).
+
 ## Storage
 
-All services share NFS volumes via PVCs defined in `argocd/jellyfin/storage.yaml`:
+All services share NFS volumes via PVCs defined in `argocd/jellyfin/storage.yaml`. For Tdarr nodes on other sites (e.g. mini-PCs at Elysium/Arcadia), NFS can be made reachable over Netbird so they can transcode from the same library; see [Storage — NFS over Netbird](../infrastructure/storage.md#nfs-over-netbird-cross-site) for how and caveats (latency, fallbacks).
 
 | PVC                 | Mount        | Source                        |
 | ------------------- | ------------ | ----------------------------- |

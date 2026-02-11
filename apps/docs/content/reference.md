@@ -34,6 +34,7 @@ At-a-glance lookups. For detailed command recipes, see [Runbooks](./operations/r
 | Proxmox     | `https://10.0.1.1:8006`                |
 | Longhorn    | `https://longhorn.yggdrasil.mia.cx`    |
 | Grafana     | `https://grafana.yggdrasil.mia.cx`     |
+| Seerr       | `https://seerr.yggdrasil.mia.cx`       |
 | Sonarr      | `https://sonarr.yggdrasil.mia.cx`      |
 | Radarr      | `https://radarr.yggdrasil.mia.cx`      |
 | Prowlarr    | `https://prowlarr.yggdrasil.mia.cx`    |

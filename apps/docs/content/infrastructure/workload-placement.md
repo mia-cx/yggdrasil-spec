@@ -98,7 +98,7 @@ For **Netbird exit-nodes** “at least x per site”: use Option A (Deployment p
 
 ### Sites vs zones
 
-In this setup, **one site = one zone**. Use `topology.kubernetes.io/zone=<site-name>` (e.g. `athena`, `antheia`, `moms-home`) so Longhorn and the scheduler treat each location as a failure domain and spread replicas across sites when possible.
+In this setup, **one site = one zone**. Use `topology.kubernetes.io/zone=<site-name>` (e.g. `olympus`, `elysium`, `arcadia`) so Longhorn and the scheduler treat each location as a failure domain and spread replicas across sites when possible.
 
 **Multiple zones per site** is a datacenter-style pattern: e.g. one zone per rack or per “UPS group” (one or two redundant UPSes per rack) so a single rack or power boundary is one zone. We don’t expect multiple racks per site here, but it’s useful to know if you later have several failure domains in one building (different circuits, racks, or UPS groups).
 

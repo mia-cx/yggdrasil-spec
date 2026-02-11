@@ -7,6 +7,7 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 Infrastructure-as-code for a personal homelab. The `terraform/` folder uses OpenTofu (Terraform-compatible) to manage providers like Cloudflare and Proxmox; the `docker/` folder contains a minimal containerized toolchain for running OpenTofu reproducibly.
 
 Key entry points:
+
 - `terraform/main.tf` references two local modules (`./modules/cloudflare`, `./modules/proxmox`) and includes an example `cloudflare_record` resource. If `terraform/modules/*` are missing, they are expected to be added later.
 - `docker/Dockerfile` produces a lightweight Alpine image with the `tofu` binary and basic utilities; `docker/docker-compose.yaml` builds/tag this as `miacx/tofu:dev`.
 
@@ -39,6 +40,7 @@ You can work either with a locally installed OpenTofu or entirely via the provid
   - `tofu init -upgrade -chdir=terraform`
 
 Notes:
+
 - Provider credentials (e.g., Cloudflare) must be exported in the environment as required by the provider; when using the container, pass them through with `-e VAR=...` or via your shell environment.
 - If you prefer Compose, you can build the image with `docker compose -f docker/docker-compose.yaml build` and then run equivalent commands using `docker run` against the `miacx/tofu:dev` image.
 

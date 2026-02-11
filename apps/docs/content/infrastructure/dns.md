@@ -12,9 +12,23 @@ title: DNS
 | External | `*.yggdrasil.mia.cx` → Cloudflare Workers (Janus) |
 | Internal | `*.mia.cx` → 10.0.128.2 (Traefik VIP via CoreDNS) |
 
-Split-horizon DNS provides different resolution depending on whether the client is connected to the Netbird overlay network.
+Split-horizon DNS provides different resolution depending on whether the client is on Netbird or (for LAN) using a DNS server that returns the Traefik VIP.
 
-## How It Works
+## LAN (same network, no Netbird)
+
+When you’re on WiFi at home, your device usually uses the router or public DNS. Those resolve `*.yggdrasil.mia.cx` to the public IP, so traffic goes out and back in and Traefik sees the public IP → **internal-only** returns Forbidden.
+
+To have it work internally from the same network, LAN clients must resolve `*.yggdrasil.mia.cx` to the Traefik VIP **10.0.128.2** so traffic stays local and Traefik sees your LAN IP (e.g. 10.0.1.x).
+
+**Options:**
+
+1. **Router** — If it supports “Local DNS”, “DNS override”, or “Static host”, add `yggdrasil.mia.cx` (or each hostname) → `10.0.128.2`. Then devices that use the router as DNS will get internal resolution.
+2. **Pi-hole / AdGuard Home** — Add a DNS rewrite or local record: `*.yggdrasil.mia.cx` → `10.0.128.2`. Point the router’s DHCP DNS to this server so WiFi clients use it.
+3. **Netbird on the device** — Install and use Netbird when on WiFi; then DNS goes through the overlay and CoreDNS returns 10.0.128.2.
+
+After LAN DNS returns 10.0.128.2, open `https://radarr.yggdrasil.mia.cx` from the same network; it should hit Traefik with your LAN IP and pass internal-only.
+
+## How It Works (Netbird)
 
 1. **Not on Netbird:** DNS resolves via Cloudflare, which serves Janus landing pages ("Connect to Yggdrasil to access this service")
 2. **On Netbird:** Domain resources intercept `*.mia.cx` queries, route through exit nodes, which resolve via K3s CoreDNS to the Traefik VIP
