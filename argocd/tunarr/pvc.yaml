@@ -1,0 +1,15 @@
+## Explicit PVC for Tunarr config/db persistence.
+## Referenced by Helm values via existingClaim: tunarr-config.
+## Longhorn provides RWO storage; data survives pod/node restarts.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tunarr-config
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 15Gi

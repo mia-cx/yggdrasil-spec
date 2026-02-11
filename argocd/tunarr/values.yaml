@@ -8,6 +8,7 @@
 
 controllers:
   main:
+    strategy: Recreate  # Required for RWO volume — prevents rollout blocking
     pod:
       affinity:
         nodeAffinity:
@@ -50,9 +51,6 @@ ingress:
 persistence:
   config:
     enabled: true
-    type: persistentVolumeClaim
-    accessMode: ReadWriteOnce
-    size: 5Gi
-    storageClass: longhorn
+    existingClaim: tunarr-config  # Explicit PVC in pvc.yaml — survives restarts
     globalMounts:
       - path: /config/tunarr
