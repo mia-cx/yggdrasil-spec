@@ -12,6 +12,6 @@ spec:
         - name: internal-only
           namespace: kube-system
       services:
-        - name: qbittorrent
+        - name: qbittorrent-main
           port: 8080
   tls: {}
