@@ -1,0 +1,64 @@
+## Config for Jellyfin-Auto-Collections (plugins and list sources).
+## Jellyfin connection uses !ENV — set JELLYFIN_API_KEY, JELLYFIN_USER_ID via Secret/env.
+## See https://github.com/ghomasHudson/Jellyfin-Auto-Collections#configuration-options
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jellyfin-auto-collections-config
+  namespace: media
+data:
+  config.yaml: |
+    # Jellyfin connection — values from environment (Secret)
+    jellyfin:
+      server_url: http://jellyfin.media:8096
+      api_key: !ENV ${JELLYFIN_API_KEY}
+      user_id: !ENV ${JELLYFIN_USER_ID}
+    # No in-container cron; Kubernetes CronJob drives schedule
+    crontab: ""
+    timezone: !ENV ${TZ:Europe/Amsterdam}
+    plugins:
+      imdb_chart:
+        enabled: true
+        list_ids:
+          - top
+          - boxoffice
+        clear_collection: true
+      imdb_list:
+        enabled: false
+        list_ids: []
+      # Disabled: upstream Letterboxd scraper breaks when site HTML changes (e.g. missing h1.title-1)
+      letterboxd:
+        enabled: false
+        imdb_id_filter: true
+        list_ids:
+          - fcbarcelona/list/movies-everyone-should-watch-at-least-once
+      mdblist:
+        enabled: false
+        list_ids: []
+      tspdt:
+        enabled: true
+        list_ids:
+          - 1000-greatest-films
+      trakt:
+        enabled: false
+        list_ids: []
+      arr:
+        enabled: false
+        server_configs: []
+        list_ids: []
+      jellyfin_api:
+        enabled: false
+        list_ids: []
+      popular_movies:
+        enabled: false
+        list_ids: []
+      criterion_channel:
+        enabled: false
+        list_ids: []
+      listmania:
+        enabled: false
+        list_ids: []
+      bfi:
+        enabled: true
+        list_ids:
+          - 10-great-films-featuring-dual-performances
