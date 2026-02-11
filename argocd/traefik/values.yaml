@@ -1,0 +1,24 @@
+# Traefik Helm values.
+# Apply: helm upgrade traefik traefik/traefik -f argocd/traefik/values.yaml -n kube-system
+
+# Preserve client IP: Service forwards without SNAT so Traefik sees real source
+service:
+  spec:
+    externalTrafficPolicy: Local
+
+# Allow IngressRoutes in any namespace to reference middlewares in kube-system
+providers:
+  kubernetesCRD:
+    allowCrossNamespace: true
+
+# Access logs (chart values; do not use --logs.* in additionalArguments)
+logs:
+  access:
+    enabled: true
+    format: json
+    fields:
+      headers:
+        defaultmode: keep
+        names:
+          X-Forwarded-For: keep
+          X-Forwarded-Proto: keep

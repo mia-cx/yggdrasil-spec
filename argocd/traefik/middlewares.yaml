@@ -8,8 +8,8 @@ metadata:
 spec:
   ipAllowList:
     sourceRange:
-      - 10.0.0.0/8        # LAN
-      - 100.64.0.0/10      # Netbird overlay (default CGNAT range)
+      - 10.0.0.0/8          # LAN
+      - 100.64.0.0/10       # Netbird overlay (default CGNAT range)
       # adjust to your actual Netbird address space
 ---
 ## Authentik Forward Auth — protects routes requiring SSO
