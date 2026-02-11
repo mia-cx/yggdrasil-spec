@@ -3,7 +3,7 @@ kind: Namespace
 metadata:
   name: netbird
 ---
-# Selector-less Service + Endpoints to route to the Netbird LXC (10.0.1.4)
+# Selector-less Service + EndpointSlice to route to the Netbird LXC (10.0.1.4)
 apiVersion: v1
 kind: Service
 metadata:
@@ -27,25 +27,35 @@ spec:
       port: 8084
       targetPort: 8084
 ---
-apiVersion: v1
-kind: Endpoints
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
 metadata:
-  name: netbird # must match Service name
+  name: netbird-external
   namespace: netbird
-subsets:
+  labels:
+    kubernetes.io/service-name: netbird
+addressType: IPv4
+endpoints:
   - addresses:
-      - ip: 10.0.1.4
-    ports:
-      - name: dashboard
-        port: 8080
-      - name: management
-        port: 8081
-      - name: signal
-        port: 8083
-      - name: signal-grpc
-        port: 10000
-      - name: relay
-        port: 8084
+      - "10.0.1.4"
+    conditions:
+      ready: true
+ports:
+  - name: dashboard
+    port: 8080
+    protocol: TCP
+  - name: management
+    port: 8081
+    protocol: TCP
+  - name: signal
+    port: 8083
+    protocol: TCP
+  - name: signal-grpc
+    port: 10000
+    protocol: TCP
+  - name: relay
+    port: 8084
+    protocol: TCP
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
