@@ -2,11 +2,13 @@
 ## Chart: bjw-s/app-template (v3)
 ## Repo: https://bjw-s-labs.github.io/helm-charts
 ##
-## Tdarr server with built-in worker node.
-## Add separate tdarr_node deployments for additional workers.
+## Tdarr server (single replica, stateful — no scaling to avoid stale queue state)
+## + tdarr-node as DaemonSet on every node with workloads/tdarr.
 
 controllers:
   main:
+    type: deployment
+    replicas: 1
     pod:
       affinity:
         nodeAffinity:
@@ -25,9 +27,7 @@ controllers:
           serverIP: 0.0.0.0
           serverPort: "8266"
           webUIPort: "8265"
-          internalNode: "true"
-          inContainer: "true"
-          nodeName: hydra-builtin
+          internalNode: "false"
           TZ: Europe/Amsterdam
         resources:
           requests:
@@ -36,6 +36,41 @@ controllers:
           limits:
             cpu: 4000m
             memory: 4Gi
+
+  node:
+    type: daemonset
+    pod:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/tdarr
+                    operator: Exists
+    containers:
+      main:
+        image:
+          repository: docker.io/haveagitgat/tdarr_node
+          tag: latest
+          pullPolicy: IfNotPresent
+        env:
+          # Service name is release "tdarr" (chart creates svc tdarr, not tdarr-main)
+          serverURL: "http://tdarr:8266"
+          nodeName:
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          nodeType: "mapped"
+          TZ: Europe/Amsterdam
+        # Mini-PC profile: 4–6c (some HT), 8–16 Gi RAM. One transcode per node.
+        # Note: Tdarr UI shows host (node) RAM/CPU, not container limits. Enforcement is via these limits.
+        resources:
+          requests:
+            cpu: 2000m   # at least 2 cores so transcodes can multithread
+            memory: 2Gi
+          limits:
+            cpu: 4000m   # 4 cores max; fits 4c/6c mini-PCs
+            memory: 8Gi  # Fits 8 Gi nodes; 16 Gi nodes have headroom
         ## Hardware transcoding (uncomment when Intel QuickSync nodes are available):
         #   limits:
         #     gpu.intel.com/i915: 1
@@ -53,6 +88,7 @@ ingress:
   main:
     enabled: false
 
+# Server-only: config + data (RWO; one node). Node gets only media + transcode-cache.
 persistence:
   config:
     enabled: true
@@ -60,20 +96,25 @@ persistence:
     accessMode: ReadWriteOnce
     size: 5Gi
     storageClass: longhorn
-    globalMounts:
-      - path: /app/server
+    advancedMounts:
+      main:
+        main:
+          - path: /app/server
   data:
     enabled: true
     type: persistentVolumeClaim
     accessMode: ReadWriteOnce
     size: 10Gi
     storageClass: longhorn
-    globalMounts:
-      - path: /app/configs
+    advancedMounts:
+      main:
+        main:
+          - path: /app/configs
   transcode-cache:
     enabled: true
     type: emptyDir
-    sizeLimit: 50Gi
+    # Output-only; sized for re-encoded output (target 10–30 Gi 4K, up to ~50–75 Gi long films)
+    sizeLimit: 80Gi
     globalMounts:
       - path: /temp
   media:
