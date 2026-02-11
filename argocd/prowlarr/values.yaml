@@ -5,6 +5,8 @@
 controllers:
   main:
     pod:
+      securityContext:
+        fsGroup: 1000
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
