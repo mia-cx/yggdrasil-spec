@@ -17,7 +17,7 @@ Low-level cluster components run **unconstrained** so the scheduler can place th
 | Component   | Affinity | Notes |
 | ----------- | -------- | ----- |
 | Longhorn    | none     | Storage; place via topology or leave to scheduler |
-| Traefik     | none     | Ingress; K3s HelmChartConfig has no affinity |
+| Traefik     | none     | Ingress; ArgoCD Helm chart has no affinity    |
 | CoreDNS     | none     | Cluster DNS |
 | cert-manager controller | **critical** (when deployed) | Not in this repo; where you install it, add `workloads/critical` affinity so it doesn’t land on experimental nodes |
 | cloudflare-ddns | **critical** | Constrained so DNS updates don’t run on experimental hardware |

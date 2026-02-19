@@ -8,19 +8,20 @@ title: Traefik
 
 | Property  | Value                     |
 | --------- | ------------------------- |
-| Type      | K8s (bundled with K3s)    |
+| Type      | ArgoCD (traefik/traefik Helm chart) |
 | Namespace | `kube-system`             |
 | VIP       | 10.0.128.2 (via kube-vip) |
 | Ports     | 80, 443                   |
 | Storage   | local-path (ACME cache)   |
 
-Ingress controller and reverse proxy bundled with K3s. The router forwards ports 80/443 to the Traefik VIP, which terminates TLS and routes requests to backend services.
+Ingress controller and reverse proxy. Deployed via ArgoCD using the official [traefik/traefik](https://github.com/traefik/traefik-helm-chart) Helm chart (replaces K3s built-in Traefik). The router forwards ports 80/443 to the Traefik VIP, which terminates TLS and routes requests to backend services.
 
 ## Prerequisites
 
-- K3s installed (Traefik ships as a default component)
+- K3s installed with **built-in Traefik disabled** (`--disable=traefik` on all server nodes)
 - kube-vip configured with VIP `10.0.128.2`
 - Router port-forwarding 80/443 to the VIP
+- ArgoCD installed and root Application synced
 
 ## Setup
 
@@ -58,15 +59,19 @@ kubectl get secret wildcard-tls -n kube-system
 
 ## Configuration
 
-Traefik overrides live in **`argocd/traefik/values.yaml`**. To apply them, upgrade the chart:
+Traefik is managed by ArgoCD via **`argocd/_apps/traefik.yaml`**. Values live in **`argocd/traefik/values.yaml`**; companion manifests (middlewares, TLS store) are in the same directory. Push changes to the repo and ArgoCD auto-syncs.
+
+To disable K3s built-in Traefik before migrating:
 
 ```bash
-helm repo add traefik https://helm.traefik.io/traefik
-helm repo update
-helm upgrade traefik traefik/traefik -f argocd/traefik/values.yaml -n kube-system
+# Add to /etc/default/k3s (or equivalent):
+K3S_SERVER_ARGS="--disable=traefik"
+
+# Restart K3s on all server nodes
+sudo systemctl restart k3s
 ```
 
-If K3s manages Traefik via its bundled HelmChart, use the same release name and namespace; K3s may reconcile the chart, so you can instead apply **`argocd/traefik/helm-chart-config.yaml`** (ensure its `valuesContent` matches `values.yaml`) and let K3s roll the deployment. In-cluster edits to the Traefik Deployment or ConfigMap are overwritten by the chart.
+After the built-in Traefik is gone, the ArgoCD `traefik` Application deploys the Helm chart. There will be a brief period without ingress until the new Traefik is running.
 
 ### Origin IP (real client IP to backends)
 
@@ -75,11 +80,11 @@ So backends (e.g. Nextcloud) and forward-auth (e.g. Authentik) see the real clie
 1. **Preserve client IP at the Service** — `service.spec.externalTrafficPolicy: Local` in `values.yaml`. Without this, the node that receives traffic SNATs it, so Traefik sees the node IP and forwards that in `X-Forwarded-For`. With `Local`, the source IP is preserved and Traefik sets `X-Forwarded-For` to the real client. _Caveat:_ `Local` forwards only to pods on the node that received the request, so the node holding the Traefik VIP (e.g. kube-vip) must run a Traefik pod.
 2. **Trust upstream proxies** — When a proxy in front of Traefik (e.g. router, another LB) sends `X-Forwarded-For`, Traefik must trust it. The chart does not expose entrypoint `forwardedHeaders` as values, so this is set via `additionalArguments` in `values.yaml`. CIDRs match LAN and Netbird overlay.
 
-Backends must also trust the proxy: e.g. Nextcloud `trusted_proxies` includes the Traefik pod CIDR (`10.0.0.0/8` in our values) and `forwarded_for_headers` → `HTTP_X_FORWARDED_FOR`. After changing values, run the `helm upgrade` above or apply the HelmChartConfig; K3s will roll the Traefik deployment with the new values.
+Backends must also trust the proxy: e.g. Nextcloud `trusted_proxies` includes the Traefik pod CIDR (`10.0.0.0/8` in our values) and `forwarded_for_headers` → `HTTP_X_FORWARDED_FOR`. After changing values, push to the repo; ArgoCD will roll the Traefik deployment.
 
 ### Middlewares
 
-Both middlewares live in `kube-system` so any namespace can reference them.
+Both middlewares live in `kube-system` so any namespace can reference them. Deployed by ArgoCD with the `traefik` Application. To apply manually:
 
 ```bash
 kubectl apply -f argocd/traefik/middlewares.yaml
@@ -155,7 +160,7 @@ logs:
     enabled: true
 ```
 
-Re-apply the HelmChartConfig and restart the Traefik pod (or wait for K3s to roll it). Then open a route (e.g. Radarr) from your phone on 5G and check the Traefik pod logs:
+Push the values change; ArgoCD will roll the Traefik deployment. Then open a route (e.g. Radarr) from your phone on 5G and check the Traefik pod logs:
 
 ```bash
 kubectl logs -n kube-system -l app.kubernetes.io/name=traefik -c traefik --tail=50
@@ -172,7 +177,7 @@ kubectl logs -n kube-system -l app.kubernetes.io/name=traefik -c traefik --tail=
   | grep cloud.mia.cx
 ```
 
-`values.yaml` already sets `logs.access.format: json` and `logs.access.fields.headers.names` for X-Forwarded-For / X-Forwarded-Proto when access logs are enabled. If your K3s-bundled chart is older and does not support these keys, simplify to `logs.access.enabled: true` only and test; invalid values can put Traefik in CrashLoopBackOff.
+`values.yaml` already sets `logs.access.format: json` and `logs.access.fields.headers.names` for X-Forwarded-For / X-Forwarded-Proto when access logs are enabled. If the chart does not support these keys, simplify to `logs.access.enabled: true` only; invalid values can put Traefik in CrashLoopBackOff.
 
 ### Extracting Certificates
 

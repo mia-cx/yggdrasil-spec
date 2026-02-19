@@ -16,7 +16,7 @@ Core platform components that underpin all services.
 | [ArgoCD](./argocd.md)                 | K3s         | GitOps continuous delivery     |
 | [Authentik](./authentik.md)           | K3s         | Identity provider + SSO        |
 | [Netbird](./netbird.md)               | 10.0.1.4    | Overlay network management     |
-| [Traefik](./traefik.md)               | K3s         | Ingress controller + TLS       |
+| [Traefik](./traefik.md)               | ArgoCD      | Ingress controller + TLS       |
 | [DNS](./dns.md)                       | Multi-layer | Split-horizon DNS resolution   |
 | [Data Layer](./data-layer.md)         | K3s         | PostgreSQL, Redis, Vaultwarden |
 

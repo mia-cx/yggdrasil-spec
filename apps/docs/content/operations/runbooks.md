@@ -141,9 +141,9 @@ curl -sfL https://get.k3s.io | sh -s - server \
 
 ```bash
 # Extract certs from K8s secret
-kubectl get secret wildcard-tls -n traefik \
+kubectl get secret wildcard-tls -n kube-system \
   -o jsonpath='{.data.tls\.crt}' | base64 -d > fullchain.pem
-kubectl get secret wildcard-tls -n traefik \
+kubectl get secret wildcard-tls -n kube-system \
   -o jsonpath='{.data.tls\.key}' | base64 -d > privkey.pem
 
 # Check cert expiry

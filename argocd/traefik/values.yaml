@@ -1,5 +1,8 @@
-# Traefik Helm values.
-# Apply: helm upgrade traefik traefik/traefik -f argocd/traefik/values.yaml -n kube-system
+## Traefik Helm values — official traefik/traefik chart
+## Repo: https://traefik.github.io/charts
+##
+## Migrated from K3s built-in Traefik (HelmChartConfig). Deploy only after
+## disabling K3s Traefik: add --disable=traefik to K3s server args.
 
 # Preserve client IP: Service forwards without SNAT so Traefik sees real source
 service:
@@ -11,7 +14,7 @@ providers:
   kubernetesCRD:
     allowCrossNamespace: true
 
-# Access logs (chart values; do not use --logs.* in additionalArguments)
+# Access logs
 logs:
   access:
     enabled: true
@@ -22,3 +25,12 @@ logs:
         names:
           X-Forwarded-For: keep
           X-Forwarded-Proto: keep
+
+# Entrypoint forwardedHeaders not exposed as chart values — use CLI args
+# Trust X-Forwarded-* from LAN (10.0.0.0/8) and Netbird overlay (100.64.0.0/10)
+additionalArguments:
+  - "--providers.kubernetesCRD.allowCrossNamespace=true"
+  - "--entryPoints.web.forwardedHeaders.trustedIPs=10.0.0.0/8,100.64.0.0/10"
+  - "--entryPoints.web.forwardedHeaders.insecure=false"
+  - "--entryPoints.websecure.forwardedHeaders.trustedIPs=10.0.0.0/8,100.64.0.0/10"
+  - "--entryPoints.websecure.forwardedHeaders.insecure=false"

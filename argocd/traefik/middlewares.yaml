@@ -1,5 +1,5 @@
 ## Internal-Only — restricts to LAN + Netbird overlay clients (system-wide)
-## Requires Traefik HelmChartConfig: providers.kubernetesCRD.allowCrossNamespace: true
+## Requires Traefik: providers.kubernetesCRD.allowCrossNamespace: true (in values.yaml)
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:

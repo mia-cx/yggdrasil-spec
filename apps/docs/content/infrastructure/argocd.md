@@ -75,7 +75,8 @@ The root Application syncs `argocd/_apps/`, which contains Application manifests
 ```
 argocd/_apps/
   root.yaml             <- App of Apps (bootstrap this one)
-  infrastructure.yaml   <- cert-manager, traefik, k3s-base, databases, cloudflare-ddns
+  infrastructure.yaml   <- cert-manager, k3s-base, databases, cloudflare-ddns
+  traefik.yaml          <- Helm (traefik/traefik) + middlewares + TLS store
   authentik.yaml        <- Helm multi-source (chart + values + IngressRoute)
   nextcloud.yaml        <- Helm multi-source (chart + values + storage + IngressRoute)
   jellyfin.yaml         <- Helm multi-source (chart + values + storage + IngressRoute)

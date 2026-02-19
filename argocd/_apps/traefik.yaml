@@ -1,0 +1,32 @@
+## Traefik — official Helm chart (traefik/traefik) + middlewares, TLS store
+## Replaces K3s built-in Traefik. Disable with --disable=traefik before syncing.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://traefik.github.io/charts
+      chart: traefik
+      targetRevision: 38.0.2  # Update: helm search repo traefik/traefik
+      helm:
+        releaseName: traefik
+        valueFiles:
+          - $values/argocd/traefik/values.yaml
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      path: argocd/traefik
+      directory:
+        exclude: '{values.yaml}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
