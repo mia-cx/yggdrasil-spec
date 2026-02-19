@@ -64,6 +64,11 @@ worker:
 
 postgresql:
   enabled: true
+  image:
+    registry: docker.io
+    repository: bitnami/postgresql
+    tag: latest
+    pullPolicy: Always
   auth:
     existingSecret: authentik-secrets
     secretKeys:
