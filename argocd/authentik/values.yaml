@@ -64,19 +64,12 @@ worker:
 
 postgresql:
   enabled: true
-  image:
-    registry: docker.io
-    repository: bitnamilegacy/postgresql
-    tag: "17.6.0-debian-12-r4"  # Match PG 17 data; main bitnami only has PG 18 latest
-    pullPolicy: IfNotPresent
   auth:
     existingSecret: authentik-secrets
     secretKeys:
       adminPasswordKey: postgresql-password
       userPasswordKey: postgresql-password
   primary:
-    # Chart default args use /bitnami/ but image expects /opt/bitnami/; override to [] so Bitnami uses its defaults
-    args: []
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
