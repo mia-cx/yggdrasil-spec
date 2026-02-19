@@ -41,6 +41,14 @@ server:
           - matchExpressions:
               - key: workloads/critical
                 operator: Exists
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: authentik-prefer
+                operator: In
+                values:
+                  - high
   ingress:
     enabled: false  # We'll use IngressRoute instead
 
@@ -53,6 +61,14 @@ worker:
           - matchExpressions:
               - key: workloads/critical
                 operator: Exists
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: authentik-prefer
+                operator: In
+                values:
+                  - high
 
 postgresql:
   enabled: true
@@ -67,6 +83,21 @@ postgresql:
       adminPasswordKey: postgresql-password
       userPasswordKey: postgresql-password
   primary:
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: workloads/critical
+                  operator: Exists
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: authentik-prefer
+                  operator: In
+                  values:
+                    - high
     persistence:
       enabled: true
       size: 8Gi
@@ -83,6 +114,21 @@ redis:
   auth:
     enabled: false
   master:
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: workloads/critical
+                  operator: Exists
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: authentik-prefer
+                  operator: In
+                  values:
+                    - high
     persistence:
       enabled: true
       size: 1Gi
