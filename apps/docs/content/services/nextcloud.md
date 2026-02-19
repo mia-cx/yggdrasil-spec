@@ -121,6 +121,8 @@ kubectl exec -it -n nextcloud deploy/nextcloud -- su -s /bin/bash www-data -c "p
 
 Nextcloud supports OIDC via the `user_oidc` app.
 
+**Required:** When `id.mia.cx` resolves to the Traefik VIP (`10.0.128.2`) from within the cluster (CoreDNS custom zone), Nextcloud blocks outbound requests to private IPs by default. Values include `allow_local_remote_servers => true` in `local-server.config.php` so the OIDC discovery endpoint is reachable.
+
 **Authentik provider:**
 
 1. Applications → Providers → Create → OAuth2/OpenID Provider

@@ -16,6 +16,12 @@ nextcloud:
     - name: OVERWRITEPROTOCOL
       value: "https"
   configs:
+    # Allow outbound HTTP to private IPs (e.g. id.mia.cx → 10.0.128.2 for OIDC discovery)
+    local-server.config.php: |-
+      <?php
+      $CONFIG = array(
+        'allow_local_remote_servers' => true,
+      );
     proxy.config.php: |-
       <?php
       $CONFIG = array(
