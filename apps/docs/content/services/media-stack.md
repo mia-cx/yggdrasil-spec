@@ -90,7 +90,7 @@ Automated media acquisition, organization, and transcoding. All services run in 
 | `argocd/qbittorrent/`  | `values.yaml`, `ingressroute.yaml` |
 | `argocd/flaresolverr/` | `values.yaml`                      |
 | `argocd/privoxy/`      | `values.yaml`                      |
-| `argocd/prefetcharr/`  | `values.yaml`                      |
+| `argocd/prefetcharr/`  | `values.yaml`, `configmap.yaml`    |
 | `argocd/jellyfin-auto-collections/` | `cronjob.yaml`, `configmap.yaml`, `README.md` |
 | `argocd/tdarr/`        | `values.yaml`, `ingressroute.yaml` |
 | `argocd/tunarr/`       | `values.yaml`, `pvc.yaml`, `ingressroute.yaml` |
@@ -165,13 +165,14 @@ In qBittorrent WebUI → Settings → Connection → Proxy:
 - Host: `privoxy.media`
 - Port: `8118`
 
-### Prefetcharr -- API Keys
+### Prefetcharr — TOML config and API keys
 
-Create a Kubernetes secret with Sonarr and Jellyfin API keys:
+Prefetcharr uses a TOML config ([p-hueber/prefetcharr](https://github.com/p-hueber/prefetcharr)). The static part (interval, log_level, urls, etc.) lives in `argocd/prefetcharr/configmap.yaml`; API keys stay in a Secret.
+
+**1. Create the Secret** (Jellyfin and Sonarr API keys only):
 
 ```bash
-kubectl create secret generic prefetcharr-secrets \
-  -n media \
+kubectl create secret generic prefetcharr-secrets -n media \
   --from-literal=JELLYFIN_API_KEY="your-jellyfin-api-key" \
   --from-literal=SONARR_API_KEY="your-sonarr-api-key"
 ```
@@ -181,7 +182,7 @@ Where to find each key:
 - **Jellyfin:** Dashboard → Administration → API Keys → create one named `prefetcharr`
 - **Sonarr:** Settings → General → API Key
 
-The `values.yaml` already references this secret via `envFrom: secretRef: prefetcharr-secrets`.
+**2. Edit the config** (optional): Change interval, `prefetch_num`, `log_level`, or other options in `argocd/prefetcharr/configmap.yaml`. The init container merges that template with the Secret at startup via `envsubst`.
 
 ### Jellyfin-Auto-Collections — API key and user ID
 

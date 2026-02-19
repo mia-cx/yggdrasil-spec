@@ -5,6 +5,12 @@
 ## Watches Jellyfin activity and tells Sonarr to fetch
 ## the next season of shows you're watching.
 ## No web UI — runs as a background daemon.
+##
+## Config: TOML template in configmap.yaml; API keys from Secret prefetcharr-secrets.
+## Create Secret with keys JELLYFIN_API_KEY and SONARR_API_KEY:
+##   kubectl create secret generic prefetcharr-secrets -n media \
+##     --from-literal=JELLYFIN_API_KEY=... --from-literal=SONARR_API_KEY=...
+## Init container merges template + secrets via envsubst before main starts.
 
 controllers:
   main:
@@ -18,20 +24,31 @@ controllers:
                     operator: Exists
                   - key: workloads/downloading
                     operator: Exists
+    initContainers:
+      config-merger:
+        image:
+          repository: docker.io/library/alpine
+          tag: "3.19"
+          pullPolicy: IfNotPresent
+        command:
+          - /bin/sh
+          - -c
+          - apk add --no-cache gettext >/dev/null && envsubst < /config-template/config.toml.template > /config-out/config.toml
+        envFrom:
+          - secretRef:
+              name: prefetcharr-secrets
     containers:
       main:
         image:
           repository: docker.io/phueber/prefetcharr
           tag: latest
           pullPolicy: IfNotPresent
+        command:
+          - /prefetcharr
+          - --config
+          - /config-out/config.toml
         env:
-          SONARR_URL: http://sonarr.media:8989
-          JELLYFIN_URL: http://jellyfin.media:8096
-          PREFETCH_COUNT: "1"
           TZ: Europe/Amsterdam
-        envFrom:
-          - secretRef:
-              name: prefetcharr-secrets
         resources:
           requests:
             cpu: 50m
@@ -48,3 +65,22 @@ service:
 ingress:
   main:
     enabled: false
+
+persistence:
+  config-template:
+    enabled: true
+    type: configMap
+    name: prefetcharr-config
+    globalMounts:
+      - path: /config-template
+  config-out:
+    enabled: true
+    type: emptyDir
+    globalMounts:
+      - path: /config-out
+  log:
+    enabled: true
+    type: emptyDir
+    sizeLimit: 100Mi
+    globalMounts:
+      - path: /log

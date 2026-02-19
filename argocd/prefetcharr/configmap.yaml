@@ -1,0 +1,25 @@
+## TOML config template for Prefetcharr.
+## ${JELLYFIN_API_KEY} and ${SONARR_API_KEY} are substituted at startup via envsubst.
+## Secret prefetcharr-secrets must contain those keys.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prefetcharr-config
+  namespace: media
+data:
+  config.toml.template: |
+    interval = 900
+    log_dir = "/log"
+    log_level = "Info"
+    prefetch_num = 2
+    request_seasons = true
+    connection_retries = 6
+
+    [media_server]
+    type = "Jellyfin"
+    url = "http://jellyfin:8096"
+    api_key = "${JELLYFIN_API_KEY}"
+
+    [sonarr]
+    url = "http://sonarr:8989"
+    api_key = "${SONARR_API_KEY}"

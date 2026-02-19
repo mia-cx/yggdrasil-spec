@@ -1,4 +1,4 @@
-## Prefetcharr — Helm chart (bjw-s/app-template)
+## Prefetcharr — Helm chart (bjw-s/app-template) + ConfigMap
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -17,6 +17,11 @@ spec:
     - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
       targetRevision: main
       ref: values
+    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      path: argocd/prefetcharr
+      directory:
+        exclude: '{values.yaml}'
   destination:
     server: https://kubernetes.default.svc
     namespace: media
