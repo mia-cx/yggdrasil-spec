@@ -66,8 +66,8 @@ postgresql:
   enabled: true
   image:
     registry: docker.io
-    repository: bitnami/postgresql
-    tag: "latest"  # Versioned tags deprecated; use latest with args: []
+    repository: bitnamilegacy/postgresql
+    tag: "17.6.0-debian-12-r4"  # Match PG 17 data; main bitnami only has PG 18 latest
     pullPolicy: IfNotPresent
   auth:
     existingSecret: authentik-secrets
