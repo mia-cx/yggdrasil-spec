@@ -67,7 +67,7 @@ postgresql:
   image:
     registry: docker.io
     repository: bitnami/postgresql
-    tag: "15"
+    tag: "latest"  # Versioned tags deprecated; use latest with args: []
     pullPolicy: IfNotPresent
   auth:
     existingSecret: authentik-secrets
@@ -75,12 +75,8 @@ postgresql:
       adminPasswordKey: postgresql-password
       userPasswordKey: postgresql-password
   primary:
-    # Fix for goauthentik/helm#387: chart uses /bitnami/ path, Bitnami 15+ uses /opt/bitnami/
-    args:
-      - -c
-      - config_file=/opt/bitnami/postgresql/conf/postgresql.conf
-      - -c
-      - hba_file=/opt/bitnami/postgresql/conf/pg_hba.conf
+    # Chart default args use /bitnami/ but image expects /opt/bitnami/; override to [] so Bitnami uses its defaults
+    args: []
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
