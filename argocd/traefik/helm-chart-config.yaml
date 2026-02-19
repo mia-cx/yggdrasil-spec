@@ -27,7 +27,9 @@ spec:
               X-Forwarded-For: keep
               X-Forwarded-Proto: keep
     # Entrypoint forwardedHeaders not exposed as chart values; keep as CLI args only
+    # Explicit allowCrossNamespace flag — values merge can be unreliable with K3s HelmChartConfig
     additionalArguments:
+      - "--providers.kubernetesCRD.allowCrossNamespace=true"
       - "--entryPoints.web.forwardedHeaders.trustedIPs=10.0.0.0/8,100.64.0.0/10"
       - "--entryPoints.web.forwardedHeaders.insecure=false"
       - "--entryPoints.websecure.forwardedHeaders.trustedIPs=10.0.0.0/8,100.64.0.0/10"
