@@ -12,6 +12,14 @@ controllers:
               - matchExpressions:
                   - key: workloads/media
                     operator: Exists
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: jellyfin-prefer
+                    operator: In
+                    values:
+                      - high
     containers:
       main:
         image:
