@@ -81,7 +81,7 @@ argocd/_apps/
   jellyfin.yaml         <- Helm multi-source (chart + values + storage + IngressRoute)
   immich.yaml           <- Helm multi-source (chart + values + NFS + PostgreSQL + IngressRoute)
   vaultwarden.yaml      <- Raw manifests (storage + deployment + IngressRoute)
-  pelican.yaml          <- Raw manifests (IngressRoute)
+  pelican.yaml          <- Helm (custom chart) + IngressRoute
   netbird.yaml          <- Raw manifests
 ```
 

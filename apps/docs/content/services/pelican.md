@@ -8,10 +8,10 @@ title: Pelican
 
 | Property  | Value                                              |
 | --------- | -------------------------------------------------- |
-| Image     | Pelican Panel (see chart)                          |
+| Image     | ghcr.io/pelican-dev/panel                          |
 | Port      | 80                                                 |
 | Namespace | `pelican`                                          |
-| URL       | `https://pelican.yggdrasil.mia.cx`                 |
+| URL       | `https://panel.yggdrasil.mia.cx`                  |
 | Storage   | Longhorn (panel/db), local disk (Wings game files) |
 
 Game server management platform (Pterodactyl fork). Split architecture: the Panel runs in K3s, while Wings runs in a dedicated VM to isolate resource-hungry game containers.
@@ -54,11 +54,24 @@ Game server management platform (Pterodactyl fork). Split architecture: the Pane
 
 ## Manifests
 
-| File                               | Purpose              |
-| ---------------------------------- | -------------------- |
-| `argocd/pelican/ingressroute.yaml` | Traefik IngressRoute |
+| File                               | Purpose                                  |
+| ---------------------------------- | ---------------------------------------- |
+| `argocd/_apps/pelican.yaml`        | ArgoCD Application (bjw-s/app-template) |
+| `argocd/pelican/values.yaml`        | Helm values overrides                    |
+| `argocd/pelican/ingressroute.yaml`  | Traefik IngressRoute                     |
 
 ## Deployment
+
+### Panel (K3s)
+
+Deployed via ArgoCD; no manual `kubectl apply` needed. Uses bjw-s/app-template Helm chart (same as Jellyfin, Radarr, etc.). After first sync:
+
+1. Visit `https://panel.yggdrasil.mia.cx/installer` to run the installer.
+2. **Back up your APP_KEY** (generated on first start):
+   ```bash
+   kubectl logs -n pelican deployment/pelican-panel | grep 'Generated app key:'
+   ```
+3. Configure database (SQLite in `/pelican-data` by default), session, queue, and cache in the installer.
 
 ### Wings VM
 
@@ -90,13 +103,6 @@ sudo wings --debug  # test
 sudo systemctl enable --now wings  # production
 ```
 
-### Panel (K3s)
-
-Deploy Panel with MariaDB/MySQL, Redis, and persistent storage for `/app/var/`:
-
-```bash
-kubectl apply -f argocd/pelican/ingressroute.yaml
-```
 
 ## Configuration
 

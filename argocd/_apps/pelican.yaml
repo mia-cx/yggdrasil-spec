@@ -1,14 +1,28 @@
+## Pelican Panel — Helm chart (bjw-s/app-template) + IngressRoute
+## Game server management (Pterodactyl fork). Panel in K3s; Wings on dedicated VM.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: pelican-config
+  name: pelican
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://github.com/mia-cx/yggdrasil-spec.git
-    targetRevision: main
-    path: argocd/pelican
+  sources:
+    - repoURL: https://bjw-s-labs.github.io/helm-charts
+      chart: app-template
+      targetRevision: 3.6.0  # Update to latest: helm search repo bjw-s/app-template
+      helm:
+        releaseName: pelican
+        valueFiles:
+          - $values/argocd/pelican/values.yaml
+    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      path: argocd/pelican
+      directory:
+        exclude: '{values.yaml}'
   destination:
     server: https://kubernetes.default.svc
     namespace: pelican

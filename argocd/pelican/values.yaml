@@ -1,0 +1,54 @@
+## Helm values for Pelican Panel on K3s
+## Chart: bjw-s/app-template (v3)
+## Repo: https://bjw-s-labs.github.io/helm-charts
+##
+## Game server management (Pterodactyl fork). Panel in K3s; Wings on dedicated VM.
+
+controllers:
+  main:
+    containers:
+      main:
+        image:
+          repository: ghcr.io/pelican-dev/panel
+          tag: latest
+          pullPolicy: IfNotPresent
+        env:
+          XDG_DATA_HOME: /pelican-data
+          APP_URL: https://panel.yggdrasil.mia.cx
+          ADMIN_EMAIL: mia@mia.cx  # Used by installer; set to your email
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        port: 80
+
+ingress:
+  main:
+    enabled: false  # Using Traefik IngressRoute — see ingressroute.yaml
+
+persistence:
+  data:
+    enabled: true
+    type: persistentVolumeClaim
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    storageClass: longhorn
+    globalMounts:
+      - path: /pelican-data
+  logs:
+    enabled: true
+    type: persistentVolumeClaim
+    accessMode: ReadWriteOnce
+    size: 2Gi
+    storageClass: longhorn
+    globalMounts:
+      - path: /var/www/html/storage/logs

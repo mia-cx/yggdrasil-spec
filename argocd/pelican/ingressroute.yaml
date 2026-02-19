@@ -9,6 +9,6 @@ spec:
     - match: Host(`panel.yggdrasil.mia.cx`)
       kind: Rule
       services:
-        - name: pelican-panel
+        - name: pelican
           port: 80
   tls: {}
