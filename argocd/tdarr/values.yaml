@@ -53,6 +53,13 @@ controllers:
           repository: docker.io/haveagitgat/tdarr_node
           tag: latest
           pullPolicy: IfNotPresent
+        # Skip LinuxServer init chown of /media (18TB NFS) — only chown small dirs
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            rm -f /etc/cont-init.d/01-setup-perms
+            chown -R 1000:1000 /home/Tdarr /logs /temp 2>/dev/null || true
+            exec /init
         env:
           # Service name is release "tdarr" (chart creates svc tdarr, not tdarr-main)
           serverURL: "http://tdarr:8266"
