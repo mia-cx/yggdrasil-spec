@@ -4,10 +4,14 @@
 ## Migrated from K3s built-in Traefik (HelmChartConfig). Deploy only after
 ## disabling K3s Traefik: add --disable=traefik to K3s server args.
 
-# Preserve client IP: Service forwards without SNAT so Traefik sees real source
+# externalTrafficPolicy: Local preserves client IP for internal-only middleware but can break
+# connectivity when kube-vip + single-replica Traefik: traffic from some LAN sources (e.g. 10.0.15.x)
+# may timeout while traffic from K3s nodes works. Use Cluster if Local causes issues; trade-off
+# is SNAT (Traefik may see node IP instead of real client); internal-only still works if the
+# connection comes from a node in the same site.
 service:
   spec:
-    externalTrafficPolicy: Local
+    externalTrafficPolicy: Cluster  # was Local; revert if client IP preservation is required
 
 # Allow IngressRoutes in any namespace to reference middlewares in kube-system
 providers:
