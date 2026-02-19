@@ -5,7 +5,7 @@ metadata:
   name: cloudflare-ddns
   namespace: kube-system
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: cloudflare-ddns
@@ -21,6 +21,17 @@ spec:
               - matchExpressions:
                   - key: workloads/critical
                     operator: Exists
+                  - key: topology.kubernetes.io/site
+                    operator: In
+                    values:
+                      - olympus
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: cloudflare-ddns
       containers:
       - name: cloudflare-ddns
         image: favonia/cloudflare-ddns:latest
