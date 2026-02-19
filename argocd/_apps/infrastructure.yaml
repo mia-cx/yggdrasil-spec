@@ -7,7 +7,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
     targetRevision: main
     path: argocd/cert-manager
   destination:
@@ -27,7 +27,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
     targetRevision: main
     path: argocd/traefik
   destination:
@@ -48,7 +48,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
     targetRevision: main
     path: argocd/k3s
     directory:
@@ -70,7 +70,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
     targetRevision: main
     path: argocd/databases
   destination:
@@ -93,7 +93,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
     targetRevision: main
     path: argocd/cloudflare-ddns
     directory:

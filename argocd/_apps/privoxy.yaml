@@ -14,7 +14,7 @@ spec:
         releaseName: privoxy
         valueFiles:
           - $values/argocd/privoxy/values.yaml
-    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
       targetRevision: main
       ref: values
   destination:

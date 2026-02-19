@@ -14,10 +14,10 @@ spec:
         releaseName: sabnzbd
         valueFiles:
           - $values/argocd/sabnzbd/values.yaml
-    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/mia-cx/yggdrasil-spec.git
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
       targetRevision: main
       path: argocd/sabnzbd
       directory:
