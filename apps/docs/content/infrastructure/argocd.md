@@ -11,7 +11,7 @@ title: ArgoCD
 | Type      | K8s                                            |
 | Namespace | `argocd`                                       |
 | Pattern   | App of Apps                                    |
-| Repo      | `https://github.com/mia-cx/yggdrasil-spec.git` |
+| Repo      | `git@github.com:mia-cx/yggdrasil-spec.git` |
 | Sync      | Automated (prune + self-heal)                  |
 
 GitOps continuous delivery -- automatically syncs all manifests and Helm charts from this repo to the cluster. A root Application watches `argocd/_apps/` and creates all child Applications.
@@ -51,7 +51,7 @@ argocd repo add git@github.com:mia-cx/yggdrasil-spec.git \
   --ssh-private-key-path ~/.ssh/argocd_deploy_key
 
 # Option 2: HTTPS token (fine-grained PAT with Contents: Read)
-argocd repo add https://github.com/mia-cx/yggdrasil-spec.git \
+argocd repo add git@github.com:mia-cx/yggdrasil-spec.git \
   --username x-access-token \
   --password ghp_YOUR_TOKEN
 ```
