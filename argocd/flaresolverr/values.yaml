@@ -44,3 +44,5 @@ service:
 ingress:
   main:
     enabled: false
+    hosts:
+      - flaresolverr.yggdrasil.mia.cx

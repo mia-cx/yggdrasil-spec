@@ -44,6 +44,8 @@ service:
 ingress:
   main:
     enabled: false
+    hosts:
+      - radarr.yggdrasil.mia.cx
 
 persistence:
   config:

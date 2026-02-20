@@ -56,6 +56,8 @@ service:
 ingress:
   main:
     enabled: false
+    hosts:
+      - qbittorrent.yggdrasil.mia.cx
 
 persistence:
   config:

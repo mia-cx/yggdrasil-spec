@@ -42,5 +42,7 @@ service:
 ingress:
   main:
     enabled: false
+    hosts:
+      - privoxy.yggdrasil.mia.cx
 
 persistence: {}

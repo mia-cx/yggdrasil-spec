@@ -65,6 +65,8 @@ service:
 ingress:
   main:
     enabled: false
+    hosts:
+      - prefetcharr.yggdrasil.mia.cx
 
 persistence:
   config-template:

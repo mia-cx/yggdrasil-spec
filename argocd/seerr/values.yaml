@@ -45,6 +45,8 @@ service:
 ingress:
   main:
     enabled: false
+    hosts:
+      - seerr.yggdrasil.mia.cx
 
 persistence:
   config:

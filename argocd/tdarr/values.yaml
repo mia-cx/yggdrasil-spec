@@ -94,6 +94,8 @@ service:
 ingress:
   main:
     enabled: false
+    hosts:
+      - tdarr.yggdrasil.mia.cx
 
 # Server-only: config + data (RWO; one node). Node gets only media + transcode-cache.
 persistence:

@@ -44,6 +44,8 @@ service:
 ingress:
   main:
     enabled: false  # Using Traefik IngressRoute — see ingressroute.yaml
+    hosts:
+      - sonarr.yggdrasil.mia.cx
 
 persistence:
   config:

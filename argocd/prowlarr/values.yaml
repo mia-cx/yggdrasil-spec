@@ -44,6 +44,8 @@ service:
 ingress:
   main:
     enabled: false
+    hosts:
+      - prowlarr.yggdrasil.mia.cx
 
 persistence:
   config:

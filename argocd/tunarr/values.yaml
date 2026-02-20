@@ -47,6 +47,8 @@ service:
 ingress:
   main:
     enabled: false
+    hosts:
+      - tunarr.yggdrasil.mia.cx
 
 persistence:
   config:

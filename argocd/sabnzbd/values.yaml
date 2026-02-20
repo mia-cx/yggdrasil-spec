@@ -48,6 +48,8 @@ service:
 ingress:
   main:
     enabled: false
+    hosts:
+      - sabnzbd.yggdrasil.mia.cx
 
 persistence:
   config:
