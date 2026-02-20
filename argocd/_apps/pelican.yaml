@@ -28,6 +28,14 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: pelican
+  # CNPG operator adds default affinity (pod anti-affinity); ArgoCD sees drift and fails
+  ignoreDifferences:
+    - group: postgresql.cnpg.io
+      kind: Cluster
+      namespace: pelican
+      name: pelican-database
+      jqPathExpressions:
+        - .spec.affinity
   syncPolicy:
     automated:
       prune: true
