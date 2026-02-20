@@ -8,7 +8,7 @@
 controllers:
   main:
     type: deployment
-    replicas: 0  # Temporarily 0 for chown fix; set back to 1 when done
+    replicas: 1
     pod:
       affinity:
         nodeAffinity:
