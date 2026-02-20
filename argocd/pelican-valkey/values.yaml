@@ -4,8 +4,13 @@
 
 fullnameOverride: pelican-valkey
 
-nodeSelector:
-  workloads/games: ""
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: workloads/games
+              operator: Exists
 
 dataStorage:
   enabled: true

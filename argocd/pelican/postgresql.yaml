@@ -9,8 +9,12 @@ spec:
   instances: 2
 
   affinity:
-    nodeSelector:
-      workloads/games: ""
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: workloads/games
+                operator: Exists
 
   storage:
     size: 10Gi
