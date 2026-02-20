@@ -23,6 +23,8 @@ Game server management platform (Pterodactyl fork). Split architecture: the Pane
 | **Panel** | K3s                     | Web UI, API                              |
 | **PostgreSQL** | K3s (pelican ns)    | Database (CloudNativePG)               |
 | **Valkey** | K3s (pelican ns)        | Sessions, cache (Redis-compatible, official chart) |
+| **Scheduler** | K3s (CronJob)        | Laravel schedule:run (every minute)               |
+| **Queue worker** | K3s (Deployment)   | Background jobs (backups, power actions)        |
 | **Wings** | Dedicated VM (10.0.1.6) | Docker daemon for game server containers |
 
 ```
@@ -32,7 +34,9 @@ Game server management platform (Pterodactyl fork). Split architecture: the Pane
 │       ├── Web UI                    │
 │       ├── API                       │
 │       ├── PostgreSQL (pelican-database)   │
-│       └── Valkey (pelican-valkey)   │
+│       ├── Valkey (pelican-valkey)   │
+│       ├── Scheduler (CronJob)      │
+│       └── Queue worker (Deployment) │
 └─────────────────────────────────────┘
               │
               │ API calls
@@ -65,6 +69,7 @@ Game server management platform (Pterodactyl fork). Split architecture: the Pane
 | `argocd/pelican/values.yaml`        | Helm values overrides                    |
 | `argocd/pelican/ingressroute.yaml`  | Traefik IngressRoute                     |
 | `argocd/pelican/scheduler-cronjob.yaml` | Laravel scheduler (runs every minute)   |
+| `argocd/pelican/queue-worker-deployment.yaml` | Laravel queue worker (backups, power actions) |
 
 ## Deployment
 

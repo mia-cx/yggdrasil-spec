@@ -1,0 +1,91 @@
+## Pelican queue worker — runs php artisan queue:work continuously
+## Processes background jobs (backups, power actions, server installs, etc.)
+## p:environment:queue-service is for systemd; in K8s we use a Deployment
+##
+## Uses same APP_KEY secret as scheduler; if PVC names differ, update claimName below.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pelican-queue
+  namespace: pelican
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pelican-queue
+  template:
+    metadata:
+      labels:
+        app: pelican-queue
+    spec:
+      containers:
+        - name: queue
+          image: ghcr.io/pelican-dev/panel:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - php
+            - /var/www/html/artisan
+            - queue:work
+            - redis
+            - --sleep=3
+          env:
+            - name: XDG_DATA_HOME
+              value: /pelican-data
+            - name: APP_URL
+              value: https://panel.mia.cx
+            - name: BEHIND_PROXY
+              value: "true"
+            - name: DB_CONNECTION
+              value: pgsql
+            - name: DB_HOST
+              value: pelican-database-rw
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_DATABASE
+              value: panel
+            - name: REDIS_HOST
+              value: pelican-valkey
+            - name: REDIS_PORT
+              value: "6379"
+            - name: QUEUE_CONNECTION
+              value: redis
+            - name: SESSION_DRIVER
+              value: redis
+            - name: CACHE_STORE
+              value: redis
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: pelican-database-app
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pelican-database-app
+                  key: password
+            - name: APP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pelican-scheduler-secrets
+                  key: APP_KEY
+          volumeMounts:
+            - name: data
+              mountPath: /pelican-data
+            - name: logs
+              mountPath: /var/www/html/storage/logs
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: pelican-persistence-data
+        - name: logs
+          persistentVolumeClaim:
+            claimName: pelican-persistence-logs
