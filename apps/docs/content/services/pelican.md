@@ -64,6 +64,7 @@ Game server management platform (Pterodactyl fork). Split architecture: the Pane
 | `argocd/_apps/pelican-valkey.yaml`  | Valkey for sessions/cache (official)    |
 | `argocd/pelican/values.yaml`        | Helm values overrides                    |
 | `argocd/pelican/ingressroute.yaml`  | Traefik IngressRoute                     |
+| `argocd/pelican/scheduler-cronjob.yaml` | Laravel scheduler (runs every minute)   |
 
 ## Deployment
 
@@ -74,9 +75,14 @@ Deployed via ArgoCD; no manual `kubectl apply` needed. Uses bjw-s/app-template H
 1. Visit `https://panel.yggdrasil.mia.cx/installer` to run the installer.
 2. **Back up your APP_KEY** (generated on first start):
    ```bash
-   kubectl logs -n pelican deployment/pelican-panel | grep 'Generated app key:'
+   kubectl logs -n pelican deployment/pelican | grep 'Generated app key:'
    ```
 3. Database (PostgreSQL) and Valkey (Redis-compatible) are pre-configured; complete the installer (admin account, panel name).
+4. **Create scheduler secret** (required for CronJob; in-container crontab does not work):
+   ```bash
+   APP_KEY=$(kubectl exec -n pelican deployment/pelican -- cat /var/www/html/.env 2>/dev/null | grep '^APP_KEY=' | cut -d= -f2-)
+   kubectl create secret generic pelican-scheduler-secrets -n pelican --from-literal=APP_KEY="$APP_KEY" --dry-run=client -o yaml | kubectl apply -f -
+   ```
 
 ### Wings VM
 
