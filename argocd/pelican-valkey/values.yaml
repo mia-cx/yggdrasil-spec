@@ -4,6 +4,9 @@
 
 fullnameOverride: pelican-valkey
 
+nodeSelector:
+  workloads/games: ""
+
 dataStorage:
   enabled: true
   requestedSize: 1Gi

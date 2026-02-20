@@ -20,6 +20,13 @@ spec:
       labels:
         app: pelican-queue
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/games
+                    operator: Exists
       containers:
         - name: queue
           image: ghcr.io/pelican-dev/panel:latest

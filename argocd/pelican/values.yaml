@@ -9,6 +9,13 @@ controllers:
     pod:
       securityContext:
         fsGroup: 82  # www-data GID (Alpine); makes PVCs writable
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/games
+                    operator: Exists
     containers:
       main:
         image:
