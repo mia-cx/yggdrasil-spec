@@ -21,7 +21,7 @@ Game server management platform (Pterodactyl fork). Split architecture: the Pane
 | Component | Location                | Purpose                                  |
 | --------- | ----------------------- | ---------------------------------------- |
 | **Panel** | K3s                     | Web UI, API                              |
-| **PostgreSQL** | K3s (pelican ns)    | Database (Bitnami chart)                |
+| **PostgreSQL** | K3s (pelican ns)    | Database (CloudNativePG)               |
 | **Redis** | K3s (pelican ns)        | Sessions, cache (Bitnami chart)          |
 | **Wings** | Dedicated VM (10.0.1.6) | Docker daemon for game server containers |
 
@@ -60,7 +60,7 @@ Game server management platform (Pterodactyl fork). Split architecture: the Pane
 | File                               | Purpose                                  |
 | ---------------------------------- | ---------------------------------------- |
 | `argocd/_apps/pelican.yaml`         | ArgoCD Application (bjw-s/app-template) |
-| `argocd/_apps/pelican-postgresql.yaml` | PostgreSQL for Panel (Bitnami)        |
+| `argocd/pelican/postgresql.yaml`       | CloudNativePG Cluster for Panel       |
 | `argocd/_apps/pelican-redis.yaml`   | Redis for sessions/cache (Bitnami)      |
 | `argocd/pelican/values.yaml`        | Helm values overrides                    |
 | `argocd/pelican/ingressroute.yaml`  | Traefik IngressRoute                     |

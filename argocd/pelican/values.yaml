@@ -21,18 +21,22 @@ controllers:
           ADMIN_EMAIL: mia@mia.cx  # Used by installer; set to your email
           BEHIND_PROXY: "true"  # Skip LE_EMAIL check; Traefik handles TLS
           DB_CONNECTION: pgsql
-          DB_HOST: pelican-postgresql
+          DB_HOST: pelican-database-rw
           DB_PORT: "5432"
           DB_DATABASE: panel
-          DB_USERNAME: pelican
           REDIS_HOST: pelican-redis-master
           REDIS_PORT: "6379"
           SESSION_DRIVER: redis
           CACHE_STORE: redis
+          DB_USERNAME:
+            valueFrom:
+              secretKeyRef:
+                name: pelican-database-app
+                key: username
           DB_PASSWORD:
             valueFrom:
               secretKeyRef:
-                name: pelican-postgresql
+                name: pelican-database-app
                 key: password
         resources:
           requests:
