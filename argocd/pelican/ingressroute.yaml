@@ -6,7 +6,7 @@ metadata:
 spec:
   entryPoints: [websecure]
   routes:
-    - match: Host(`panel.yggdrasil.mia.cx`) || Host(`panel.mia.cx`)
+    - match: Host(`pelican.yggdrasil.mia.cx`) || Host(`panel.mia.cx`)
       kind: Rule
       services:
         - name: pelican
