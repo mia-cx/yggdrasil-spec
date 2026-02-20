@@ -20,7 +20,9 @@ Game server management platform (Pterodactyl fork). Split architecture: the Pane
 
 | Component | Location                | Purpose                                  |
 | --------- | ----------------------- | ---------------------------------------- |
-| **Panel** | K3s                     | Web UI, API, database                    |
+| **Panel** | K3s                     | Web UI, API                              |
+| **PostgreSQL** | K3s (pelican ns)    | Database (Bitnami chart)                |
+| **Redis** | K3s (pelican ns)        | Sessions, cache (Bitnami chart)          |
 | **Wings** | Dedicated VM (10.0.1.6) | Docker daemon for game server containers |
 
 ```
@@ -29,7 +31,8 @@ Game server management platform (Pterodactyl fork). Split architecture: the Pane
 │  └── Pelican Panel                  │
 │       ├── Web UI                    │
 │       ├── API                       │
-│       └── MySQL/MariaDB             │
+│       ├── PostgreSQL (pelican-postgresql) │
+│       └── Redis (pelican-redis)     │
 └─────────────────────────────────────┘
               │
               │ API calls
@@ -56,7 +59,9 @@ Game server management platform (Pterodactyl fork). Split architecture: the Pane
 
 | File                               | Purpose                                  |
 | ---------------------------------- | ---------------------------------------- |
-| `argocd/_apps/pelican.yaml`        | ArgoCD Application (bjw-s/app-template) |
+| `argocd/_apps/pelican.yaml`         | ArgoCD Application (bjw-s/app-template) |
+| `argocd/_apps/pelican-postgresql.yaml` | PostgreSQL for Panel (Bitnami)        |
+| `argocd/_apps/pelican-redis.yaml`   | Redis for sessions/cache (Bitnami)      |
 | `argocd/pelican/values.yaml`        | Helm values overrides                    |
 | `argocd/pelican/ingressroute.yaml`  | Traefik IngressRoute                     |
 
@@ -71,7 +76,7 @@ Deployed via ArgoCD; no manual `kubectl apply` needed. Uses bjw-s/app-template H
    ```bash
    kubectl logs -n pelican deployment/pelican-panel | grep 'Generated app key:'
    ```
-3. Configure database (SQLite in `/pelican-data` by default), session, queue, and cache in the installer.
+3. Database (PostgreSQL) and Redis are pre-configured; complete the installer (admin account, panel name).
 
 ### Wings VM
 
@@ -118,8 +123,10 @@ Game servers need various ports exposed. Configure your router to forward game-s
 
 ## Storage
 
-| Component   | Storage              | Rationale                       |
-| ----------- | -------------------- | ------------------------------- |
-| Panel (K3s) | Longhorn             | Database and app config         |
-| Wings (VM)  | Local disk           | Best performance for game files |
-| Wings (VM)  | NFS mount (optional) | For shared/backed-up data       |
+| Component       | Storage              | Rationale                       |
+| --------------- | -------------------- | ------------------------------- |
+| Panel (K3s)     | Longhorn             | App config, logs               |
+| PostgreSQL (K3s) | Longhorn           | Database                        |
+| Redis (K3s)     | Longhorn             | Persistence (optional)          |
+| Wings (VM)      | Local disk           | Best performance for game files |
+| Wings (VM)      | NFS mount (optional) | For shared/backed-up data       |
