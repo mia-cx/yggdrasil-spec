@@ -1,0 +1,91 @@
+## Pelican scheduler — runs Laravel schedule:run every minute
+## Replaces in-container crontab (containers lack suid cron)
+##
+## 1. After first install, create the APP_KEY secret:
+##   APP_KEY=$(kubectl exec -n pelican deployment/pelican -- cat /var/www/html/.env 2>/dev/null | grep '^APP_KEY=' | cut -d= -f2)
+##   kubectl create secret generic pelican-scheduler-secrets -n pelican --from-literal=APP_KEY="$APP_KEY" --dry-run=client -o yaml | kubectl apply -f -
+##
+## 2. If PVC names differ, run `kubectl get pvc -n pelican` and update claimName below.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pelican-scheduler
+  namespace: pelican
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"  # Same wave as pelican
+spec:
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: scheduler
+              image: ghcr.io/pelican-dev/panel:latest
+              imagePullPolicy: IfNotPresent
+              command:
+                - php
+                - /var/www/html/artisan
+                - schedule:run
+              env:
+                - name: XDG_DATA_HOME
+                  value: /pelican-data
+                - name: APP_URL
+                  value: https://panel.mia.cx
+                - name: BEHIND_PROXY
+                  value: "true"
+                - name: DB_CONNECTION
+                  value: pgsql
+                - name: DB_HOST
+                  value: pelican-database-rw
+                - name: DB_PORT
+                  value: "5432"
+                - name: DB_DATABASE
+                  value: panel
+                - name: REDIS_HOST
+                  value: pelican-valkey
+                - name: REDIS_PORT
+                  value: "6379"
+                - name: SESSION_DRIVER
+                  value: redis
+                - name: CACHE_STORE
+                  value: redis
+                - name: DB_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: pelican-database-app
+                      key: username
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: pelican-database-app
+                      key: password
+                - name: APP_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: pelican-scheduler-secrets
+                      key: APP_KEY
+              volumeMounts:
+                - name: data
+                  mountPath: /pelican-data
+                - name: logs
+                  mountPath: /var/www/html/storage/logs
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 200m
+                  memory: 256Mi
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: pelican-persistence-data
+            - name: logs
+              persistentVolumeClaim:
+                claimName: pelican-persistence-logs
