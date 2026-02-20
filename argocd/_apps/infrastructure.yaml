@@ -36,6 +36,13 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system
+  ignoreDifferences:
+    - group: ""
+      kind: PersistentVolume
+      name: downloads-nfs
+      jqPathExpressions:
+        - .metadata.deletionTimestamp
+        - .metadata.finalizers
   syncPolicy:
     automated:
       prune: true
