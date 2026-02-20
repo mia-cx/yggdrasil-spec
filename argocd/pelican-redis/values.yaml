@@ -1,0 +1,14 @@
+## Redis for Pelican Panel (sessions, cache)
+## Chart: bitnami/redis
+## Repo: https://charts.bitnami.com/bitnami
+
+architecture: standalone
+
+auth:
+  enabled: false
+
+master:
+  persistence:
+    enabled: true
+    storageClass: longhorn
+    size: 1Gi

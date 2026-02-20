@@ -1,0 +1,31 @@
+## Pelican Redis — cache/sessions for Pelican Panel
+## Syncs before pelican (wave 0)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pelican-redis
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: redis
+      targetRevision: "21"
+      helm:
+        releaseName: pelican-redis
+        valueFiles:
+          - $values/argocd/pelican-redis/values.yaml
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pelican
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,16 @@
+## PostgreSQL for Pelican Panel
+## Chart: bitnami/postgresql
+## Repo: https://charts.bitnami.com/bitnami
+
+fullnameOverride: pelican-postgresql
+
+auth:
+  database: panel
+  username: pelican
+  password: ""  # Auto-generated; stored in secret pelican-postgresql
+
+primary:
+  persistence:
+    enabled: true
+    storageClass: longhorn
+    size: 10Gi

@@ -1,0 +1,31 @@
+## Pelican PostgreSQL — database for Pelican Panel
+## Syncs before pelican (wave 0)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pelican-postgresql
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: postgresql
+      targetRevision: "16"
+      helm:
+        releaseName: pelican-postgresql
+        valueFiles:
+          - $values/argocd/pelican-postgresql/values.yaml
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pelican
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
