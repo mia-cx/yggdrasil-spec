@@ -51,8 +51,6 @@ persistence:
   config:
     enabled: true
     type: persistentVolumeClaim
-    accessMode: ReadWriteOnce
-    size: 2Gi
-    storageClass: longhorn
+    existingClaim: prowlarr
     globalMounts:
       - path: /config

@@ -63,9 +63,7 @@ persistence:
   config:
     enabled: true
     type: persistentVolumeClaim
-    accessMode: ReadWriteOnce
-    size: 5Gi
-    storageClass: longhorn
+    existingClaim: qbittorrent
     globalMounts:
       - path: /config
   downloads:
