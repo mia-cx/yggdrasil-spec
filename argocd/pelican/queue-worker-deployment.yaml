@@ -2,7 +2,7 @@
 ## Processes background jobs (backups, power actions, server installs, etc.)
 ## p:environment:queue-service is for systemd; in K8s we use a Deployment
 ##
-## Uses same APP_KEY secret as scheduler; if PVC names differ, update claimName below.
+## Uses same APP_KEY secret and PVCs (pelican-data, pelican-logs) as scheduler.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -92,7 +92,7 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: pelican-persistence-data
+            claimName: pelican-data
         - name: logs
           persistentVolumeClaim:
-            claimName: pelican-persistence-logs
+            claimName: pelican-logs

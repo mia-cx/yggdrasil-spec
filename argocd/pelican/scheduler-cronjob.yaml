@@ -5,7 +5,7 @@
 ##   APP_KEY=$(kubectl exec -n pelican deployment/pelican -- cat /var/www/html/.env 2>/dev/null | grep '^APP_KEY=' | cut -d= -f2)
 ##   kubectl create secret generic pelican-scheduler-secrets -n pelican --from-literal=APP_KEY="$APP_KEY" --dry-run=client -o yaml | kubectl apply -f -
 ##
-## 2. If PVC names differ, run `kubectl get pvc -n pelican` and update claimName below.
+## 2. PVCs: pelican-data, pelican-logs (from bjw-s app-template)
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -92,7 +92,7 @@ spec:
           volumes:
             - name: data
               persistentVolumeClaim:
-                claimName: pelican-persistence-data
+                claimName: pelican-data
             - name: logs
               persistentVolumeClaim:
-                claimName: pelican-persistence-logs
+                claimName: pelican-logs
