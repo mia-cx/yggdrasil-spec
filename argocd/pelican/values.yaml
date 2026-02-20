@@ -6,6 +6,9 @@
 
 controllers:
   main:
+    pod:
+      securityContext:
+        fsGroup: 82  # www-data GID (Alpine); makes PVCs writable
     containers:
       main:
         image:
@@ -14,8 +17,9 @@ controllers:
           pullPolicy: IfNotPresent
         env:
           XDG_DATA_HOME: /pelican-data
-          APP_URL: https://panel.yggdrasil.mia.cx
+          APP_URL: https://panel.mia.cx
           ADMIN_EMAIL: mia@mia.cx  # Used by installer; set to your email
+          BEHIND_PROXY: "true"  # Skip LE_EMAIL check; Traefik handles TLS
         resources:
           requests:
             cpu: 100m
