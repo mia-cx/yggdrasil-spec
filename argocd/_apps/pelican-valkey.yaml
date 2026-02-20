@@ -1,22 +1,23 @@
-## Pelican Redis — cache/sessions for Pelican Panel
+## Pelican Valkey — Redis-compatible cache/sessions for Pelican Panel
+## Official Valkey chart (BSD); Bitnami Redis has licensing changes
 ## Syncs before pelican (wave 0)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: pelican-redis
+  name: pelican-valkey
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
   sources:
-    - repoURL: https://charts.bitnami.com/bitnami
-      chart: redis
-      targetRevision: "21"
+    - repoURL: https://valkey.io/valkey-helm/
+      chart: valkey
+      targetRevision: "0.9.3"
       helm:
-        releaseName: pelican-redis
+        releaseName: pelican-valkey
         valueFiles:
-          - $values/argocd/pelican-redis/values.yaml
+          - $values/argocd/pelican-valkey/values.yaml
     - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
       targetRevision: main
       ref: values

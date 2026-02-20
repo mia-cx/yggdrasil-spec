@@ -22,7 +22,7 @@ Game server management platform (Pterodactyl fork). Split architecture: the Pane
 | --------- | ----------------------- | ---------------------------------------- |
 | **Panel** | K3s                     | Web UI, API                              |
 | **PostgreSQL** | K3s (pelican ns)    | Database (CloudNativePG)               |
-| **Redis** | K3s (pelican ns)        | Sessions, cache (Bitnami chart)          |
+| **Valkey** | K3s (pelican ns)        | Sessions, cache (Redis-compatible, official chart) |
 | **Wings** | Dedicated VM (10.0.1.6) | Docker daemon for game server containers |
 
 ```
@@ -31,8 +31,8 @@ Game server management platform (Pterodactyl fork). Split architecture: the Pane
 │  └── Pelican Panel                  │
 │       ├── Web UI                    │
 │       ├── API                       │
-│       ├── PostgreSQL (pelican-postgresql) │
-│       └── Redis (pelican-redis)     │
+│       ├── PostgreSQL (pelican-database)   │
+│       └── Valkey (pelican-valkey)   │
 └─────────────────────────────────────┘
               │
               │ API calls
@@ -61,7 +61,7 @@ Game server management platform (Pterodactyl fork). Split architecture: the Pane
 | ---------------------------------- | ---------------------------------------- |
 | `argocd/_apps/pelican.yaml`         | ArgoCD Application (bjw-s/app-template) |
 | `argocd/pelican/postgresql.yaml`       | CloudNativePG Cluster for Panel       |
-| `argocd/_apps/pelican-redis.yaml`   | Redis for sessions/cache (Bitnami)      |
+| `argocd/_apps/pelican-valkey.yaml`  | Valkey for sessions/cache (official)    |
 | `argocd/pelican/values.yaml`        | Helm values overrides                    |
 | `argocd/pelican/ingressroute.yaml`  | Traefik IngressRoute                     |
 
@@ -76,7 +76,7 @@ Deployed via ArgoCD; no manual `kubectl apply` needed. Uses bjw-s/app-template H
    ```bash
    kubectl logs -n pelican deployment/pelican-panel | grep 'Generated app key:'
    ```
-3. Database (PostgreSQL) and Redis are pre-configured; complete the installer (admin account, panel name).
+3. Database (PostgreSQL) and Valkey (Redis-compatible) are pre-configured; complete the installer (admin account, panel name).
 
 ### Wings VM
 
@@ -127,6 +127,6 @@ Game servers need various ports exposed. Configure your router to forward game-s
 | --------------- | -------------------- | ------------------------------- |
 | Panel (K3s)     | Longhorn             | App config, logs               |
 | PostgreSQL (K3s) | Longhorn           | Database                        |
-| Redis (K3s)     | Longhorn             | Persistence (optional)          |
+| Valkey (K3s)    | Longhorn             | Sessions, cache                 |
 | Wings (VM)      | Local disk           | Best performance for game files |
 | Wings (VM)      | NFS mount (optional) | For shared/backed-up data       |

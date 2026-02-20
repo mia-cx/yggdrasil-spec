@@ -24,7 +24,7 @@ controllers:
           DB_HOST: pelican-database-rw
           DB_PORT: "5432"
           DB_DATABASE: panel
-          REDIS_HOST: pelican-redis-master
+          REDIS_HOST: pelican-valkey
           REDIS_PORT: "6379"
           SESSION_DRIVER: redis
           CACHE_STORE: redis

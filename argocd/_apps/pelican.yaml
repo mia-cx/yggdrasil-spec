@@ -6,7 +6,7 @@ metadata:
   name: pelican
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "1"  # After pelican-redis (wave 0)
+    argocd.argoproj.io/sync-wave: "1"  # After pelican-valkey (wave 0)
 spec:
   project: default
   sources:
