@@ -197,6 +197,15 @@ kubectl create secret generic jellyfin-auto-collections-secrets \
 
 User ID is the UUID from the URL when viewing your user in Jellyfin Dashboard. The CronJob uses in-cluster URL `http://jellyfin.media:8096` by default; override with `JELLYFIN_SERVER_URL` in the secret if needed.
 
+### Jellyfin — Streams or offline downloads dropping after a few minutes
+
+If playback or offline sync stops and requires a restart:
+
+1. **Traefik timeouts** — `argocd/traefik/values.yaml` sets `readTimeout=0` and `writeTimeout=0` for the websecure entrypoint so long-lived streams are not cut.
+2. **NFS resilience** — `argocd/k3s/nfs-pvs.yaml` adds `timeo=600`, `retrans=3`, and larger `rsize`/`wsize` for media/nvme PVs. If the PVs already exist, you must recreate them (or migrate) for mountOptions to apply.
+3. **Direct access test** — Connect to Jellyfin via `http://jellyfin.media:8096` (in-cluster) or port-forward, bypassing Traefik. If that works, the proxy was the cause.
+4. **Jellyfin Dashboard** — Transcoding → Temporary transcoding path: ensure it uses `/cache` (emptyDir, fast local I/O), not NFS.
+
 ### Tdarr — Node resources in UI
 
 The Tdarr web UI shows **host (node)** RAM and CPU for each node (e.g. "OS Mem: 7.7GB/31.3GB"), not the container limits. That is expected: the process reads from the OS and in Kubernetes the pod often sees the node’s totals. Actual enforcement is via the pod’s resource limits in `argocd/tdarr/values.yaml` (e.g. 8 Gi memory, 4 CPU per node). Ignore the "available" numbers in the UI for scheduling; the limits are what apply.
