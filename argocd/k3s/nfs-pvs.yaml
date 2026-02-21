@@ -1,4 +1,5 @@
 ## Shared NFS PersistentVolumes for K3s
+## If PVs already exist, mountOptions are immutable — remove them or recreate PVs during maintenance.
 ## Media (HDD, MergerFS via Storage LXC)
 apiVersion: v1
 kind: PersistentVolume
@@ -13,6 +14,12 @@ spec:
   nfs:
     server: 10.0.1.9
     path: /mnt/media
+  # Resilient NFS: 60s timeout, 3 retries — reduces stream drops from brief stalls
+  mountOptions:
+    - timeo=600
+    - retrans=3
+    - rsize=1048576
+    - wsize=1048576
 ---
 ## Critical data (NVMe via Storage LXC)
 apiVersion: v1
@@ -28,6 +35,11 @@ spec:
   nfs:
     server: 10.0.1.2
     path: /mnt/nvme
+  mountOptions:
+    - timeo=600
+    - retrans=3
+    - rsize=1048576
+    - wsize=1048576
 ---
 ## Downloads (Old Server — staging area)
 apiVersion: v1
