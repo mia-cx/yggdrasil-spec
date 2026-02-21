@@ -32,9 +32,12 @@ logs:
 
 # Entrypoint forwardedHeaders not exposed as chart values — use CLI args
 # Trust X-Forwarded-* from LAN (10.0.0.0/8) and Netbird overlay (100.64.0.0/10)
+# readTimeout=0 disables timeout so Jellyfin streams and offline downloads don't drop after ~5 min
 additionalArguments:
   - "--providers.kubernetesCRD.allowCrossNamespace=true"
   - "--entryPoints.web.forwardedHeaders.trustedIPs=10.0.0.0/8,100.64.0.0/10"
   - "--entryPoints.web.forwardedHeaders.insecure=false"
   - "--entryPoints.websecure.forwardedHeaders.trustedIPs=10.0.0.0/8,100.64.0.0/10"
   - "--entryPoints.websecure.forwardedHeaders.insecure=false"
+  - "--entryPoints.websecure.transport.respondingTimeouts.readTimeout=0"
+  - "--entryPoints.websecure.transport.respondingTimeouts.writeTimeout=0"
