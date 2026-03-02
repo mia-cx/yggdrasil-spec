@@ -2,6 +2,7 @@
 ## Chart: bjw-s/app-template (v3)
 ## Repo: https://bjw-s-labs.github.io/helm-charts
 ## Readarr: ebook/audiobook automation (LinuxServer image; port 8787)
+## Image has no latest tag; use develop.
 
 controllers:
   main:
@@ -21,7 +22,7 @@ controllers:
       main:
         image:
           repository: lscr.io/linuxserver/readarr
-          tag: latest
+          tag: develop
           pullPolicy: IfNotPresent
         env:
           PUID: "1000"

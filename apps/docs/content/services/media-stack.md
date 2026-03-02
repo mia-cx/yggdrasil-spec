@@ -20,7 +20,7 @@ Automated media acquisition, organization, and transcoding. All services run in 
 | Sonarr       | `lscr.io/linuxserver/sonarr`        | 8989 | TV show automation             |
 | Radarr       | `lscr.io/linuxserver/radarr`        | 7878 | Movie automation               |
 | Lidarr       | `lscr.io/linuxserver/lidarr`        | 8686 | Music automation               |
-| Readarr      | `lscr.io/linuxserver/readarr`       | 8787 | Ebook/audiobook automation    |
+| Readarr      | `lscr.io/linuxserver/readarr:develop`    | 8787 | Ebook/audiobook automation    |
 | Prowlarr     | `lscr.io/linuxserver/prowlarr`      | 9696 | Indexer management             |
 | SABnzbd      | `lscr.io/linuxserver/sabnzbd`       | 8080 | Usenet downloader              |
 | qBittorrent  | `lscr.io/linuxserver/qbittorrent`   | 8080 | Torrent client                 |
