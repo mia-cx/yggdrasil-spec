@@ -1,0 +1,12 @@
+---
+description: Readarr image tag pinning gotcha
+globs:
+  - argocd/readarr/*.yaml
+alwaysApply: false
+---
+
+# Readarr image tag gotcha
+
+- `linuxserver/readarr` is deprecated and floating tags (for example `develop`) may exist as names but resolve to zero images.
+- For Kubernetes deploys, pin to a concrete tag with a valid manifest list (for example `develop-0.4.18.2805-ls157`) so pulls are deterministic.
+- If `ImagePullBackOff` says `no match for platform in manifest`, verify the tag's images list on Docker Hub before changing node settings.

@@ -2,7 +2,8 @@
 ## Chart: bjw-s/app-template (v3)
 ## Repo: https://bjw-s-labs.github.io/helm-charts
 ## Readarr: ebook/audiobook automation (LinuxServer image; port 8787)
-## lscr.io image has no manifest for this platform; use Docker Hub develop tag.
+## Floating tags like "develop" currently resolve to zero images on Docker Hub.
+## Pin to a concrete tag with a valid manifest list for amd64/arm64.
 
 controllers:
   main:
@@ -22,7 +23,7 @@ controllers:
       main:
         image:
           repository: docker.io/linuxserver/readarr
-          tag: develop
+          tag: develop-0.4.18.2805-ls157
           pullPolicy: IfNotPresent
         env:
           PUID: "1000"
