@@ -1,0 +1,14 @@
+## Config PVC for Readarr (ebook/audiobook automation).
+## Referenced by Helm values via existingClaim: readarr.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: readarr
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 5Gi

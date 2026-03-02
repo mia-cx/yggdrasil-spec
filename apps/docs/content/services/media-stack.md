@@ -20,6 +20,7 @@ Automated media acquisition, organization, and transcoding. All services run in 
 | Sonarr       | `lscr.io/linuxserver/sonarr`        | 8989 | TV show automation             |
 | Radarr       | `lscr.io/linuxserver/radarr`        | 7878 | Movie automation               |
 | Lidarr       | `lscr.io/linuxserver/lidarr`        | 8686 | Music automation               |
+| Readarr      | `lscr.io/linuxserver/readarr`       | 8787 | Ebook/audiobook automation    |
 | Prowlarr     | `lscr.io/linuxserver/prowlarr`      | 9696 | Indexer management             |
 | SABnzbd      | `lscr.io/linuxserver/sabnzbd`       | 8080 | Usenet downloader              |
 | qBittorrent  | `lscr.io/linuxserver/qbittorrent`   | 8080 | Torrent client                 |
@@ -85,6 +86,7 @@ Automated media acquisition, organization, and transcoding. All services run in 
 | `argocd/sonarr/`       | `values.yaml`, `ingressroute.yaml` |
 | `argocd/radarr/`       | `values.yaml`, `ingressroute.yaml` |
 | `argocd/lidarr/`       | `values.yaml`, `ingressroute.yaml` |
+| `argocd/readarr/`      | `values.yaml`, `pvc.yaml`, `ingressroute.yaml` |
 | `argocd/prowlarr/`     | `values.yaml`, `ingressroute.yaml` |
 | `argocd/sabnzbd/`      | `values.yaml`, `ingressroute.yaml` |
 | `argocd/qbittorrent/`  | `values.yaml`, `ingressroute.yaml` |
@@ -114,6 +116,7 @@ kubectl apply -f argocd/_apps/seerr.yaml
 kubectl apply -f argocd/_apps/sonarr.yaml
 kubectl apply -f argocd/_apps/radarr.yaml
 kubectl apply -f argocd/_apps/lidarr.yaml
+kubectl apply -f argocd/_apps/readarr.yaml
 kubectl apply -f argocd/_apps/prowlarr.yaml
 kubectl apply -f argocd/_apps/sabnzbd.yaml
 kubectl apply -f argocd/_apps/qbittorrent.yaml
@@ -131,11 +134,11 @@ kubectl apply -f argocd/_apps/tunarr.yaml
 helm repo add bjw-s https://bjw-s-labs.github.io/helm-charts
 helm repo update
 
-for svc in seerr sonarr radarr lidarr prowlarr sabnzbd qbittorrent flaresolverr privoxy prefetcharr tdarr tunarr; do
+for svc in seerr sonarr radarr lidarr readarr prowlarr sabnzbd qbittorrent flaresolverr privoxy prefetcharr tdarr tunarr; do
   helm install $svc bjw-s/app-template --namespace media -f argocd/$svc/values.yaml
 done
 
-for svc in seerr sonarr radarr lidarr prowlarr sabnzbd qbittorrent tdarr tunarr; do
+for svc in seerr sonarr radarr lidarr readarr prowlarr sabnzbd qbittorrent tdarr tunarr; do
   kubectl apply -f argocd/$svc/ingressroute.yaml
 done
 ```
@@ -145,10 +148,10 @@ done
 ### Prowlarr -- Indexers
 
 1. Open Prowlarr, add your indexers
-2. Under Settings → Apps, add Sonarr, Radarr, and Lidarr
+2. Under Settings → Apps, add Sonarr, Radarr, Lidarr, and Readarr
 3. Set FlareSolverr proxy: `http://flaresolverr.media:8191`
 
-### Sonarr / Radarr / Lidarr -- Download Clients
+### Sonarr / Radarr / Lidarr / Readarr -- Download Clients
 
 In each \*arr app, add download clients under Settings → Download Clients:
 
@@ -215,7 +218,7 @@ The Tdarr web UI shows **host (node)** RAM and CPU for each node (e.g. "OS Mem: 
 In Seerr’s initial setup (or Settings), add:
 
 - **Jellyfin:** URL `http://jellyfin.media:8096` and an API key (Dashboard → Administration → API Keys). Use the in-cluster hostname so Seerr reaches Jellyfin without ingress.
-- **Sonarr / Radarr:** Under Settings → Services, add each with URL `http://sonarr.media:8989` and `http://radarr.media:7878` and their API keys (Settings → General → API Key in each app).
+- **Sonarr / Radarr / Lidarr / Readarr:** Under Settings → Services, add each with URL `http://sonarr.media:8989`, `http://radarr.media:7878`, `http://lidarr.media:8686`, `http://readarr.media:8787` and their API keys (Settings → General → API Key in each app).
 
 Seerr uses SQLite by default (stored in `/app/config`). For PostgreSQL, see [Seerr docs](https://docs.seerr.dev).
 
@@ -227,11 +230,12 @@ In Tunarr’s web UI, add your Jellyfin server (URL and API key). Use the in-clu
 
 Configure root folders in each \*arr app:
 
-| App    | Root Folder     |
-| ------ | --------------- |
-| Sonarr | `/media/tv`     |
-| Radarr | `/media/movies` |
-| Lidarr | `/media/music`  |
+| App     | Root Folder      |
+| ------- | ---------------- |
+| Sonarr  | `/media/tv`      |
+| Radarr  | `/media/movies`  |
+| Lidarr  | `/media/music`   |
+| Readarr | `/media/books`   |
 
 Download path: `/downloads` (shared across all apps and download clients).
 
@@ -245,6 +249,7 @@ All services use the `internal-only` middleware -- accessible only via LAN or Ne
 | Sonarr      | `https://sonarr.yggdrasil.mia.cx`      |
 | Radarr      | `https://radarr.yggdrasil.mia.cx`      |
 | Lidarr      | `https://lidarr.yggdrasil.mia.cx`      |
+| Readarr     | `https://readarr.yggdrasil.mia.cx`     |
 | Prowlarr    | `https://prowlarr.yggdrasil.mia.cx`    |
 | SABnzbd     | `https://sabnzbd.yggdrasil.mia.cx`     |
 | qBittorrent | `https://qbittorrent.yggdrasil.mia.cx` |

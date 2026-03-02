@@ -37,6 +37,7 @@ At-a-glance lookups. For detailed command recipes, see [Runbooks](./operations/r
 | Seerr       | `https://seerr.yggdrasil.mia.cx`       |
 | Sonarr      | `https://sonarr.yggdrasil.mia.cx`      |
 | Radarr      | `https://radarr.yggdrasil.mia.cx`      |
+| Readarr     | `https://readarr.yggdrasil.mia.cx`     |
 | Prowlarr    | `https://prowlarr.yggdrasil.mia.cx`    |
 | SABnzbd     | `https://sabnzbd.yggdrasil.mia.cx`     |
 | qBittorrent | `https://qbittorrent.yggdrasil.mia.cx` |
@@ -58,7 +59,7 @@ At-a-glance lookups. For detailed command recipes, see [Runbooks](./operations/r
 | `argocd`          | ArgoCD server + repo server                                                                                 |
 | `longhorn-system` | Longhorn storage                                                                                            |
 | `authentik`       | Authentik server + worker + PostgreSQL + Redis                                                              |
-| `media`           | Jellyfin, Sonarr, Radarr, Lidarr, Prowlarr, SABnzbd, qBittorrent, FlareSolverr, Privoxy, Prefetcharr, Tdarr |
+| `media`           | Jellyfin, Sonarr, Radarr, Lidarr, Readarr, Prowlarr, SABnzbd, qBittorrent, FlareSolverr, Privoxy, Prefetcharr, Tdarr |
 | `nextcloud`       | Nextcloud + MariaDB + Redis                                                                                 |
 | `immich`          | Immich server + ML + PostgreSQL + Valkey                                                                    |
 | `vaultwarden`     | Vaultwarden                                                                                                 |

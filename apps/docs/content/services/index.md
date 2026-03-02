@@ -30,6 +30,7 @@ Application services running in the K3s cluster. For platform-level components (
 | Sonarr        | `lscr.io/linuxserver/sonarr:latest`          | 8989 | `media`       | TV automation             |
 | Radarr        | `lscr.io/linuxserver/radarr:latest`          | 7878 | `media`       | Movie automation          |
 | Lidarr        | `lscr.io/linuxserver/lidarr:latest`          | 8686 | `media`       | Music automation          |
+| Readarr       | `lscr.io/linuxserver/readarr:latest`         | 8787 | `media`       | Ebook/audiobook automation |
 | Prowlarr      | `lscr.io/linuxserver/prowlarr:latest`        | 9696 | `media`       | Indexer management        |
 | SABnzbd       | `lscr.io/linuxserver/sabnzbd:latest`         | 8080 | `media`       | Usenet downloader         |
 | qBittorrent   | `lscr.io/linuxserver/qbittorrent:latest`     | 8080 | `media`       | Torrent client            |
