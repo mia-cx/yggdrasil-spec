@@ -11,7 +11,7 @@
 # connection comes from a node in the same site.
 service:
   spec:
-    externalTrafficPolicy: Cluster  # was Local; revert if client IP preservation is required
+    externalTrafficPolicy: Local  # was Local; revert if client IP preservation is required
 
 # Allow IngressRoutes in any namespace to reference middlewares in kube-system
 providers:
