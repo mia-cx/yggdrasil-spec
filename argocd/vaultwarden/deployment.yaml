@@ -24,7 +24,7 @@ spec:
                     operator: Exists
       containers:
         - name: vaultwarden
-          image: vaultwarden/server:latest
+          image: vaultwarden/server:1.35.4
           ports:
             - containerPort: 80
           env:

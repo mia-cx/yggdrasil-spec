@@ -8,7 +8,7 @@ title: Vaultwarden
 
 | Property  | Value                                 |
 | --------- | ------------------------------------- |
-| Image     | `vaultwarden/server:latest`           |
+| Image     | `vaultwarden/server:1.35.4`           |
 | Port      | 80                                    |
 | Namespace | `vaultwarden`                         |
 | URL       | `https://warden.mia.cx`               |
