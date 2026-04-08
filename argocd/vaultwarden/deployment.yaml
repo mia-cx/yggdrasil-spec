@@ -42,7 +42,7 @@ spec:
                   name: vaultwarden-secrets
                   key: ADMIN_TOKEN
             - name: PUSH_ENABLED
-              value: "true"
+              value: "false"
             - name: PUSH_INSTALLATION_ID
               valueFrom:
                 secretKeyRef:
