@@ -28,6 +28,10 @@ spec:
           ports:
             - containerPort: 80
           env:
+            - name: PUSH_RELAY_URI
+              value: "https://api.bitwarden.eu"
+            - name: PUSH_IDENTITY_URI
+              value: "https://identity.bitwarden.eu"
             - name: DOMAIN
               value: "https://warden.mia.cx"
             - name: SIGNUPS_ALLOWED
