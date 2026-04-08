@@ -165,6 +165,65 @@ exportfs -ra
 systemctl enable --now nfs-server
 ```
 
+### Samba (record to network drive)
+
+Use **SMB** in the **same** Storage LXC that exports `/mnt/media` over NFS so DVRs, set-top boxes, or Windows clients can record to the MergerFS pool without a second copy of the data.
+
+**Layout**
+
+- Create a dedicated directory, e.g. `/mnt/media/recordings` (or `tv-recordings`), owned by a Linux user that Samba will map to.
+- Expose that path as one SMB share (or separate shares per device class).
+- Keep NFS unchanged; Jellyfin / Transcodes / *arr can read the same tree if you point them at that path.
+
+**Install (inside the LXC)**
+
+```bash
+apt update && apt install -y samba
+mkdir -p /mnt/media/recordings
+chown root:root /mnt/media/recordings   # or a dedicated user, see below
+chmod 2775 /mnt/media/recordings        # optional setgid so new files inherit group
+```
+
+**Dedicated Samba user (recommended)**
+
+```bash
+useradd -M -s /usr/sbin/nologin recordings
+smbpasswd -a recordings   # SMB password (separate from UNIX password)
+chown recordings:recordings /mnt/media/recordings
+```
+
+**Minimal `smb.conf` fragment** (`/etc/samba/smb.conf` — merge into `[global]` or append)
+
+```ini
+[recordings]
+   path = /mnt/media/recordings
+   browseable = yes
+   read only = no
+   guest ok = no
+   valid users = recordings
+   create mask = 0664
+   directory mask = 0775
+```
+
+Lock SMB to the LAN (and Netbird if needed). Example: only bind to the storage interface, or use host firewall / Proxmox firewall on the CT to allow **445/tcp** (and **139/tcp** if legacy clients need it) from `10.0.0.0/16` and `100.64.0.0/10` only.
+
+```bash
+testparm
+systemctl enable --now smbd nmbd
+```
+
+**Clients**
+
+- Windows: `\\10.0.1.2\recordings` (replace IP with the Storage LXC that hosts `/mnt/media`; cluster PVs use the NFS server IP from `argocd/k3s/nfs-pvs.yaml` if that differs).
+- macOS: `smb://10.0.1.2/recordings`
+- Recorder: set share name, user `recordings`, and the SMB password you chose with `smbpasswd`.
+
+**Notes**
+
+- **Second storage CT:** If MergerFS / `/mnt/media` lives on a different IP than this doc’s `10.0.1.2` (e.g. another LXC), install Samba there on the box that actually holds the paths you want to record into.
+- **Do not** put Samba only in Kubernetes unless you have a clear volume backend; for large sequential writes, SMB on the storage CT is simpler and matches NFS locality.
+- **Performance:** SMB adds CPU; for 4K recording, ensure the CT has enough CPU and avoid antivirus scanning the share path from Windows if unnecessary.
+
 ## Architecture
 
 ```

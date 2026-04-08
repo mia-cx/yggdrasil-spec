@@ -21,6 +21,7 @@ Automated media acquisition, organization, and transcoding. All services run in 
 | Radarr       | `lscr.io/linuxserver/radarr`        | 7878 | Movie automation               |
 | Lidarr       | `lscr.io/linuxserver/lidarr`        | 8686 | Music automation               |
 | Readarr      | `docker.io/linuxserver/readarr:develop-0.4.18.2805-ls157` | 8787 | Ebook/audiobook automation    |
+| rreading-glasses | `docker.io/blampe/rreading-glasses:latest` | 8788 | Readarr metadata API (Goodreads) |
 | Prowlarr     | `lscr.io/linuxserver/prowlarr`      | 9696 | Indexer management             |
 | SABnzbd      | `lscr.io/linuxserver/sabnzbd`       | 8080 | Usenet downloader              |
 | qBittorrent  | `lscr.io/linuxserver/qbittorrent`   | 8080 | Torrent client                 |
@@ -87,6 +88,7 @@ Automated media acquisition, organization, and transcoding. All services run in 
 | `argocd/radarr/`       | `values.yaml`, `ingressroute.yaml` |
 | `argocd/lidarr/`       | `values.yaml`, `ingressroute.yaml` |
 | `argocd/readarr/`      | `values.yaml`, `pvc.yaml`, `ingressroute.yaml` |
+| `argocd/rreading-glasses/` | `postgresql.yaml` (CNPG), `deployment.yaml` |
 | `argocd/prowlarr/`     | `values.yaml`, `ingressroute.yaml` |
 | `argocd/sabnzbd/`      | `values.yaml`, `ingressroute.yaml` |
 | `argocd/qbittorrent/`  | `values.yaml`, `ingressroute.yaml` |
@@ -117,6 +119,7 @@ kubectl apply -f argocd/_apps/sonarr.yaml
 kubectl apply -f argocd/_apps/radarr.yaml
 kubectl apply -f argocd/_apps/lidarr.yaml
 kubectl apply -f argocd/_apps/readarr.yaml
+kubectl apply -f argocd/_apps/rreading-glasses.yaml
 kubectl apply -f argocd/_apps/prowlarr.yaml
 kubectl apply -f argocd/_apps/sabnzbd.yaml
 kubectl apply -f argocd/_apps/qbittorrent.yaml
@@ -159,6 +162,16 @@ In each \*arr app, add download clients under Settings → Download Clients:
 | ----------- | ------------------- | ---- |
 | SABnzbd     | `sabnzbd.media`     | 8080 |
 | qBittorrent | `qbittorrent.media` | 8080 |
+
+### Readarr — rreading-glasses metadata (self-hosted)
+
+[rreading-glasses](https://github.com/blampe/rreading-glasses) is a drop-in replacement for Readarr’s retired metadata service (Goodreads). After deploying, point Readarr at it:
+
+1. In Readarr, open **Settings → Development** (this page is hidden; go to `http(s)://readarr.yggdrasil.mia.cx/settings/development`).
+2. Set **Metadata Provider Source** to `http://rreading-glasses.media:8788`.
+3. Click **Save**.
+
+You can switch back to the public instance (`https://api.bookinfo.pro`) or disable by clearing the field. Requires CloudNative-PG operator (same as Immich/Pelican).
 
 ### qBittorrent -- Privoxy
 
