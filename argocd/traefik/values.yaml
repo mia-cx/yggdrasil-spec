@@ -7,14 +7,41 @@
 image:
   tag: "3.6.10"
 
-# externalTrafficPolicy: Local preserves client IP for internal-only middleware but can break
-# connectivity when kube-vip + single-replica Traefik: traffic from some LAN sources (e.g. 10.0.15.x)
-# may timeout while traffic from K3s nodes works. Use Cluster if Local causes issues; trade-off
-# is SNAT (Traefik may see node IP instead of real client); internal-only still works if the
-# connection comes from a node in the same site.
+# Keep externalTrafficPolicy: Local so Traefik preserves the real client IP.
+# kube-vip service election makes the VIP follow nodes that have a local Traefik pod,
+# and Traefik is replicated across hosts so a single node loss does not blackhole ingress.
 service:
   spec:
-    externalTrafficPolicy: Local  # was Local; revert if client IP preservation is required
+    externalTrafficPolicy: Local
+
+deployment:
+  replicas: 2
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: workloads/critical
+              operator: Exists
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: traefik
+        topologyKey: kubernetes.io/hostname
+
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: traefik
 
 # Allow IngressRoutes in any namespace to reference middlewares in kube-system
 providers:
