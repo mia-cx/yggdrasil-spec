@@ -9,7 +9,7 @@ spec:
     - match: Host(`prowlarr.yggdrasil.mia.cx`)
       kind: Rule
       middlewares:
-        - name: internal-only
+        - name: authentik
           namespace: kube-system
       services:
         - name: prowlarr

@@ -1,18 +1,5 @@
-## Internal-Only — restricts to LAN + Netbird overlay clients (system-wide)
-## Requires Traefik: providers.kubernetesCRD.allowCrossNamespace: true (in values.yaml)
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: internal-only
-  namespace: kube-system
-spec:
-  ipAllowList:
-    sourceRange:
-      - 10.0.0.0/8          # LAN
-      - 100.64.0.0/10       # Netbird overlay (default CGNAT range)
-      # adjust to your actual Netbird address space
----
 ## Authentik Forward Auth — protects routes requiring SSO
+## Requires Traefik: providers.kubernetesCRD.allowCrossNamespace: true (in values.yaml)
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -20,7 +7,7 @@ metadata:
   namespace: kube-system
 spec:
   forwardAuth:
-    address: http://authentik-server.authentik/outpost.goauthentik.io/auth/traefik
+    address: http://ak-outpost-authentik-embedded-outpost.authentik:9000/outpost.goauthentik.io/auth/traefik
     trustForwardHeader: true
     authResponseHeaders:
       - X-authentik-username
