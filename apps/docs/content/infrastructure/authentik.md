@@ -92,23 +92,28 @@ authentik:
 
 Access the admin UI at `https://id.mia.cx/if/flow/initial-setup/`.
 
-### HTTPS Outpost (Forward Auth)
+### Embedded Outpost (Forward Auth)
 
 Required for Traefik forward-auth:
 
-1. **Applications** → **Outposts** → edit "authentik Embedded Outpost"
-2. Ensure "Proxy" type is enabled
+1. **Applications** → **Outposts** → edit `authentik Embedded Outpost`
+2. Ensure the outpost has the **Proxy** integration enabled
+3. Confirm the embedded outpost is available at `ak-outpost-authentik-embedded-outpost.authentik:9000` inside the cluster
 
 ### Forward-Auth Provider
 
-For services protected by Traefik forward-auth:
+For the shared Traefik middleware used by internal services:
 
 1. **Applications** → **Providers** → **Create**
 2. Type: **Proxy Provider**
 3. Name: `traefik-forward-auth`
 4. Authorization flow: `default-provider-authorization-implicit-consent`
-5. Mode: **Forward auth (single application)**
-6. External host: `https://auth.mia.cx`
+5. Mode: **Forward auth (domain level)**
+6. External host: `https://id.mia.cx`
+7. Internal host: leave empty unless you have a specific backend override need
+8. Assign the provider to the embedded outpost
+
+This repo is using the domain-level model so one Authentik forward-auth provider can protect multiple Traefik routes.
 
 ### Groups
 

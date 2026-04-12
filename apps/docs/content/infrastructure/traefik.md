@@ -85,29 +85,21 @@ Backends must also trust the proxy: e.g. Nextcloud `trusted_proxies` includes th
 
 ### Middlewares
 
-Both middlewares live in `kube-system` so any namespace can reference them. Deployed by ArgoCD with the `traefik` Application. To apply manually:
+The shared Authentik forward-auth middleware lives in `kube-system` so any namespace can reference it. It is deployed by ArgoCD with the `traefik` Application. To apply manually:
 
 ```bash
 kubectl apply -f argocd/traefik/middlewares.yaml
 ```
 
-**internal-only** -- `ipAllowList` restricting access to LAN (`10.0.0.0/8`) and Netbird overlay (`100.64.0.0/10`). Rejects public internet requests. It uses the connection **remote address** (the source IP of the TCP connection to Traefik), not `X-Forwarded-For`.
-
-**If 5G traffic still gets through:** If your router preserves source IP (e.g. you see your public IP in Nextcloud) but internal-only still allows requests from 5G, the connection Traefik receives may be from an internal IP (e.g. another NAT hop, or traffic taking a different path). Verify what Traefik sees by enabling access logs (see [Verify client IP](#verify-client-ip-access-logs) below) and checking the logged client IP for a request from 5G. If the log shows 10.x or 100.64.x, something in front of Traefik is NATing or the path is not direct. If the log shows your public IP but you still get through, the middleware may not be applied (check the IngressRoute). If the router does SNAT (connection source = router LAN IP), configure the port forward to preserve client IP, or don't rely on internal-only for that path and use the **authentik** middleware instead.
-
-```yaml
-middlewares:
-  - name: internal-only
-    namespace: kube-system
-```
-
-**authentik** -- Forward-auth to the Authentik outpost for SSO-protected routes.
+**authentik** -- Forward-auth to the Authentik embedded outpost for SSO-protected routes.
 
 ```yaml
 middlewares:
   - name: authentik
     namespace: kube-system
 ```
+
+The current repo shape uses Authentik **domain-level forward auth**. That means protected apps point at the `authentik` middleware directly, and Authentik itself stays exposed at `https://id.mia.cx`.
 
 ### IngressRoute Examples
 
@@ -130,7 +122,7 @@ spec:
     secretName: wildcard-tls
 ```
 
-**Protected service (internal + auth):**
+**Protected service (Authentik forward-auth):**
 
 ```yaml
 apiVersion: traefik.io/v1alpha1
@@ -143,7 +135,7 @@ spec:
     - match: Host(`sonarr.yggdrasil.mia.cx`)
       kind: Rule
       middlewares:
-        - name: internal-only
+        - name: authentik
           namespace: kube-system
       services:
         - name: sonarr
@@ -151,9 +143,11 @@ spec:
   tls: {}
 ```
 
-### Verify client IP (access logs)
+### Verify forward-auth (access logs)
 
-To see which client IP Traefik uses for each request (the same IP used by internal-only), enable access logs. Logs are configured in `values.yaml` (e.g. `logs.access.enabled: true`, optional `format: json` and `fields.headers` for X-Forwarded-_). Do not put `--logs._`in`additionalArguments`— the Traefik binary can reject them and crash with “field not found, node: logs”. If you disabled access logs, re-enable in`values.yaml` with:
+Access logs are useful when debugging redirect loops, missing headers, or unexpected 401/403 responses from forward-auth. Logs are configured in `values.yaml`. Do not put `--logs._` in `additionalArguments` — the Traefik binary can reject them and crash with `field not found, node: logs`.
+
+If access logs are disabled, re-enable them with:
 
 ```yaml
 logs:
@@ -161,13 +155,13 @@ logs:
     enabled: true
 ```
 
-Push the values change; ArgoCD will roll the Traefik deployment. Then open a route (e.g. Radarr) from your phone on 5G and check the Traefik pod logs:
+Push the values change; ArgoCD will roll the Traefik deployment. Then open a protected route and inspect recent Traefik logs:
 
 ```bash
 kubectl logs -n kube-system -l app.kubernetes.io/name=traefik -c traefik --tail=50
 ```
 
-Look for the request; the logged client IP is what internal-only and the backend see. If it shows 10.x or 100.64.x when you're on 5G, the connection to Traefik is coming from an internal hop. If it shows your public IP, internal-only should be blocking; if you still get through, confirm the IngressRoute has the internal-only middleware applied. Turn access logs off again after debugging by removing the `logs.access` block.
+For forward-auth issues, check whether requests are being redirected to Authentik, whether the callback returns successfully, and whether the backend receives the expected `X-authentik-*` headers.
 
 ### Inspect requests to a host (e.g. cloud.mia.cx)
 
