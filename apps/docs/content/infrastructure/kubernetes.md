@@ -121,7 +121,7 @@ sudo sysctl --system
 
 ### kube-vip
 
-kube-vip runs only on **control-plane (server) nodes** — it advertises the API VIP and participates in leader election. **Do not** install it on agent-only (worker) nodes.
+kube-vip runs only on **control-plane (server) nodes** — it advertises the API VIP and watches `LoadBalancer` Services. **Do not** install it on agent-only (worker) nodes.
 
 Install kube-vip **before** K3s on **each** node that will run `k3s server` (first node and any additional control-plane nodes):
 
@@ -129,13 +129,15 @@ Install kube-vip **before** K3s on **each** node that will run `k3s server` (fir
 sudo mkdir -p /var/lib/rancher/k3s/server/manifests/
 sudo mkdir -p /var/lib/rancher/k3s/agent/pod-manifests/
 
-# Download RBAC (for multi-node leader election)
+# Download RBAC (required for multi-node API VIP leadership and Service VIP watching)
 curl -sL https://kube-vip.io/manifests/rbac.yaml \
   | sudo tee /var/lib/rancher/k3s/server/manifests/kube-vip-rbac.yaml
 
 # Copy static pod manifest
 sudo cp argocd/k3s/kube-vip.yaml /var/lib/rancher/k3s/agent/pod-manifests/kube-vip.yaml
 ```
+
+The static pod in `argocd/k3s/kube-vip.yaml` enables both `svc_enable=true` and `svc_election=true`. That second flag is important for `externalTrafficPolicy: Local`: kube-vip will only elect a leader for a `LoadBalancer` Service from nodes that have a local backing pod, so the Traefik VIP can fail over without landing on a node that would drop ingress traffic.
 
 ### K3s Installation
 
@@ -153,6 +155,8 @@ curl -sfL https://get.k3s.io | sh -s - server \
 sudo kubectl create configmap -n kube-system kubevip \
   --from-literal range-global=10.0.128.2-10.0.128.60
 ```
+
+Service VIPs such as Traefik (`10.0.128.2`) are still advertised by a real node on the LAN. kube-vip elects which node owns each Service VIP; with `svc_election=true` and a Service using `externalTrafficPolicy: Local`, only nodes with a local endpoint are eligible for that VIP.
 
 ### Local kubectl Access
 

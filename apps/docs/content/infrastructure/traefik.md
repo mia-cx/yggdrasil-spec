@@ -12,6 +12,7 @@ title: Traefik
 | Namespace | `kube-system`             |
 | VIP       | 10.0.128.2 (via kube-vip) |
 | Ports     | 80, 443                   |
+| Replicas  | 2 (spread across nodes)   |
 | Storage   | local-path (ACME cache)   |
 
 Ingress controller and reverse proxy. Deployed via ArgoCD using the official [traefik/traefik](https://github.com/traefik/traefik-helm-chart) Helm chart (replaces K3s built-in Traefik). The router forwards ports 80/443 to the Traefik VIP, which terminates TLS and routes requests to backend services.
@@ -77,7 +78,7 @@ After the built-in Traefik is gone, the ArgoCD `traefik` Application deploys the
 
 So backends (e.g. Nextcloud) and forward-auth (e.g. Authentik) see the real client IP, two things are configured:
 
-1. **Preserve client IP at the Service** — `service.spec.externalTrafficPolicy: Local` in `values.yaml`. Without this, the node that receives traffic SNATs it, so Traefik sees the node IP and forwards that in `X-Forwarded-For`. With `Local`, the source IP is preserved and Traefik sets `X-Forwarded-For` to the real client. _Caveat:_ `Local` forwards only to pods on the node that received the request, so the node holding the Traefik VIP (e.g. kube-vip) must run a Traefik pod.
+1. **Preserve client IP at the Service** — `service.spec.externalTrafficPolicy: Local` in `values.yaml`. Without this, the node that receives traffic SNATs it, so Traefik sees the node IP and forwards that in `X-Forwarded-For`. With `Local`, the source IP is preserved and Traefik sets `X-Forwarded-For` to the real client. _Caveat:_ `Local` forwards only to pods on the node that received the request, so kube-vip must advertise the VIP from a node with a local Traefik pod. That is why kube-vip runs with `svc_election=true` and Traefik runs as a 2-replica Deployment spread across hostnames.
 2. **Trust upstream proxies** — When a proxy in front of Traefik (e.g. router, another LB) sends `X-Forwarded-For`, Traefik must trust it. The chart does not expose entrypoint `forwardedHeaders` as values, so this is set via `additionalArguments` in `values.yaml`. CIDRs match LAN and Netbird overlay.
 
 Backends must also trust the proxy: e.g. Nextcloud `trusted_proxies` includes the Traefik pod CIDR (`10.0.0.0/8` in our values) and `forwarded_for_headers` → `HTTP_X_FORWARDED_FOR`. After changing values, push to the repo; ArgoCD will roll the Traefik deployment.
