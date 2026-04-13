@@ -10,7 +10,7 @@ spec:
     # Helm chart
     - repoURL: https://nextcloud.github.io/helm/
       chart: nextcloud
-      targetRevision: 6.6.0  # Update to latest: helm search repo nextcloud/nextcloud
+      targetRevision: 8.9.1  # Safe patch bump from live 8.9.0; restores Argo rendering
       helm:
         releaseName: nextcloud
         valueFiles:

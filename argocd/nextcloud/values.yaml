@@ -3,7 +3,7 @@
 ## Install: helm repo add nextcloud https://nextcloud.github.io/helm/
 
 image:
-  tag: 32-apache
+  tag: 32.0.8-apache
 
 nextcloud:
   host: cloud.mia.cx
