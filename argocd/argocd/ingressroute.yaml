@@ -1,0 +1,18 @@
+## ArgoCD dashboard — internal only, protected by Authentik forward-auth
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`argocd.yggdrasil.mia.cx`)
+      kind: Rule
+      middlewares:
+        - name: authentik
+          namespace: kube-system
+      services:
+        - name: argocd-server
+          port: 80
+  tls: {}

@@ -1,0 +1,16 @@
+## argocd-cmd-params-cm — ArgoCD server runtime parameters
+## SOURCE OF TRUTH ONLY — not synced by ArgoCD (excluded from argocd-config app).
+## Apply manually: kubectl apply -f argocd/argocd/params-cm.yaml
+##
+## server.insecure: Traefik terminates TLS; ArgoCD serves plain HTTP on :80.
+## Required for the IngressRoute forward-auth middleware to function correctly.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cmd-params-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cmd-params-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  server.insecure: "true"
