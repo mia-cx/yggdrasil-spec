@@ -15,12 +15,23 @@ nextcloud:
   extraEnv:
     - name: OVERWRITEPROTOCOL
       value: "https"
+    - name: POD_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
   configs:
     # Allow outbound HTTP to private IPs (e.g. id.mia.cx → 10.0.128.2 for OIDC discovery)
     local-server.config.php: |-
       <?php
       $CONFIG = array(
         'allow_local_remote_servers' => true,
+      );
+    server-id.config.php: |-
+      <?php
+      $CONFIG = array(
+        # Each pod identifies itself by name — safe for single replica today,
+        # correct automatically when scaled for HA.
+        'server_identifier' => getenv('POD_NAME') ?: 'nextcloud',
       );
     proxy.config.php: |-
       <?php
