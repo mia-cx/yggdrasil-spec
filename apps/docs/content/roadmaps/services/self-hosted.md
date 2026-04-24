@@ -24,6 +24,24 @@ Criteria here: prefer FOSS, container-friendly (Docker/K8s), and manageable ongo
 
 **External contributors:** They use **git** to push and pull the notes repo on [Forgejo](https://forgejo.org/) ([docs](https://forgejo.org/docs/)); no LiveSync. So: internal = LiveSync + MinIO, external = git + Forgejo.
 
+### Future MinIO use: bulky corpus and generated artifacts
+
+A good future use for MinIO is keeping **large corpora, generated datasets, archives, and benchmark artifacts out of GitHub**.
+
+Current preference: keep committing directly to GitHub until the dataset size actually becomes painful. When that happens, prefer:
+
+- **GitHub** for code, schemas, manifests, and a small committed fixture
+- **MinIO/object storage** for bulky corpus blobs and generated assets
+- **manifest/index files in git** that point to content-addressed objects or versioned tarballs
+
+Avoid reaching for Git LFS first unless the assets truly need Git-style history and clone semantics. For large QR corpus data, plain object storage is the simpler fit.
+
+Possible later follow-up:
+
+- deploy MinIO in-cluster behind Traefik
+- create a dedicated corpus bucket/prefix
+- add push/fetch tooling in the consuming repo instead of storing assets in Git
+
 ---
 
 ## Music and media
