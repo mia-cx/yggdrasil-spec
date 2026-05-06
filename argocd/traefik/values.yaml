@@ -17,6 +17,15 @@ service:
 deployment:
   replicas: 2
 
+# With 2 replicas on 2 nodes plus required pod anti-affinity, the chart default
+# maxSurge=1 creates an unschedulable extra pod during restarts. Roll by taking
+# one old pod down first, then scheduling its replacement.
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 0
+    maxUnavailable: 1
+
 podDisruptionBudget:
   enabled: true
   minAvailable: 1
