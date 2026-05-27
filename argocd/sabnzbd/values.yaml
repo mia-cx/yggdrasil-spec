@@ -24,7 +24,7 @@ controllers:
       main:
         image:
           repository: lscr.io/linuxserver/sabnzbd
-          tag: latest
+          tag: 5.0.1-ls251
           pullPolicy: IfNotPresent
         env:
           PUID: "1000"

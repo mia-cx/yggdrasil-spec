@@ -21,7 +21,7 @@ controllers:
       main:
         image:
           repository: docker.io/haveagitgat/tdarr
-          tag: latest
+          tag: 2.71.01
           pullPolicy: IfNotPresent
         env:
           serverIP: 0.0.0.0
@@ -51,7 +51,7 @@ controllers:
       main:
         image:
           repository: docker.io/haveagitgat/tdarr_node
-          tag: latest
+          tag: 2.71.01
           pullPolicy: IfNotPresent
         # Skip LinuxServer init chown of /media (18TB NFS) — only chown small dirs
         command: ["/bin/sh", "-c"]

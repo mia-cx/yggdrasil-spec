@@ -41,7 +41,7 @@ controllers:
       main:
         image:
           repository: docker.io/phueber/prefetcharr
-          tag: latest
+          tag: 1.6.1
           pullPolicy: IfNotPresent
         command:
           - /prefetcharr
