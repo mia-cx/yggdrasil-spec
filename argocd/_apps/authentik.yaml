@@ -10,7 +10,7 @@ spec:
     # Helm chart
     - repoURL: https://charts.goauthentik.io
       chart: authentik
-      targetRevision: 2025.2.1  # Update to latest: helm search repo authentik/authentik
+      targetRevision: 2025.2.4  # Patch lane; check release notes before 2026.x
       helm:
         releaseName: authentik
         valueFiles:
