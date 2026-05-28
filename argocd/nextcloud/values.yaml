@@ -15,6 +15,10 @@ nextcloud:
   extraEnv:
     - name: OVERWRITEPROTOCOL
       value: "https"
+    - name: OVERWRITEHOST
+      value: "cloud.mia.cx"
+    - name: OVERWRITECLIURL
+      value: "https://cloud.mia.cx"
     - name: POD_NAME
       valueFrom:
         fieldRef:
@@ -41,6 +45,8 @@ nextcloud:
         'trusted_proxies' => ['10.0.0.0/8','100.64.0.0/10','10.42.0.0/16', '10.43.0.0/16'],
         'forwarded_for_headers' => ['HTTP_X_FORWARDED_FOR'],
         'overwriteprotocol' => 'https',
+        'overwritehost' => 'cloud.mia.cx',
+        'overwrite.cli.url' => 'https://cloud.mia.cx',
       );
 
 internalDatabase:

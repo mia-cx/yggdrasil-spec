@@ -9,12 +9,38 @@ spec:
     - match: Host(`cloud.mia.cx`) || Host(`nextcloud.yggdrasil.mia.cx`)
       kind: Rule
       middlewares:
+        - name: nextcloud-dav-redirect
+          namespace: nextcloud
+        - name: nextcloud-ios-dav-legacy-redirect
+          namespace: nextcloud
         - name: nextcloud-headers
           namespace: nextcloud
       services:
         - name: nextcloud
           port: 8080
   tls: {}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: nextcloud-dav-redirect
+  namespace: nextcloud
+spec:
+  redirectRegex:
+    regex: '^https://([^/]+)/(\.well-known/)?(card|cal)dav/?$'
+    replacement: 'https://${1}/remote.php/dav/'
+    permanent: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: nextcloud-ios-dav-legacy-redirect
+  namespace: nextcloud
+spec:
+  redirectRegex:
+    regex: '^https://([^/]+)/(principals|calendar/dav/[^/]+/user)/?$'
+    replacement: 'https://${1}/remote.php/dav/'
+    permanent: true
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
