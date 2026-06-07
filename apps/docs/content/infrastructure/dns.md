@@ -79,7 +79,7 @@ Each site sets its own VIP in the ConfigMap -- multi-site scales automatically. 
 
 ### Cloudflare DDNS
 
-Dynamic DNS keeps site-specific and public ingress records updated with the correct public IP. Current single-site records include `olympus.yggdrasil.mia.cx`, `id.mia.cx`, and `speedtest.mia.cx`.
+Dynamic DNS keeps site-specific ingress records updated with the correct public IP. Current single-site records include `olympus.yggdrasil.mia.cx` and `id.mia.cx`; public aliases such as `speedtest.mia.cx` can CNAME through those records.
 
 **Single site:**
 

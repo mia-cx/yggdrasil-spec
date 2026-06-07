@@ -30,4 +30,4 @@ Browser-based bandwidth test for checking public ingress and home uplink/downlin
 - Public route: `speedtest.mia.cx`
 - No Authentik middleware; the service is intentionally public.
 - TLS is served by Traefik's default wildcard certificate.
-- Cloudflare DDNS updates `speedtest.mia.cx` alongside other public records.
+- Public DNS uses the existing Cloudflare CNAME chain to the site DDNS record.
