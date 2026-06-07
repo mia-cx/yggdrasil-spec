@@ -1,0 +1,15 @@
+## Public service — no Authentik middleware.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: openspeedtest
+  namespace: speedtest
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`speedtest.mia.cx`)
+      kind: Rule
+      services:
+        - name: openspeedtest
+          port: 3000
+  tls: {}

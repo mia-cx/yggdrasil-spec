@@ -1,0 +1,45 @@
+## Helm values for OpenSpeedTest on K3s
+## Chart: bjw-s/app-template (v3)
+## Repo: https://bjw-s-labs.github.io/helm-charts
+##
+## Public bandwidth test at https://speedtest.mia.cx.
+## Traefik terminates TLS and forwards cleartext HTTP to container port 3000.
+
+controllers:
+  main:
+    pod:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/critical
+                    operator: Exists
+    containers:
+      main:
+        image:
+          repository: docker.io/openspeedtest/latest
+          tag: latest
+          pullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 2000m
+            memory: 512Mi
+
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        port: 3000
+
+ingress:
+  main:
+    enabled: false
+    hosts:
+      - speedtest.mia.cx
+
+persistence: {}

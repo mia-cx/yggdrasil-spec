@@ -1,0 +1,33 @@
+## OpenSpeedTest — Helm chart (bjw-s/app-template) + IngressRoute
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openspeedtest
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://bjw-s-labs.github.io/helm-charts
+      chart: app-template
+      targetRevision: 3.6.0
+      helm:
+        releaseName: openspeedtest
+        valueFiles:
+          - $values/argocd/openspeedtest/values.yaml
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      path: argocd/openspeedtest
+      directory:
+        exclude: '{values.yaml}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: speedtest
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

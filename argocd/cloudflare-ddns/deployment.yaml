@@ -42,7 +42,7 @@ spec:
               name: cloudflare-api-token
               key: api-token
         - name: DOMAINS
-          value: "olympus.yggdrasil.mia.cx,id.mia.cx"
+          value: "olympus.yggdrasil.mia.cx,id.mia.cx,speedtest.mia.cx"
         - name: PROXIED
           value: "false"
         - name: IP6_PROVIDER
