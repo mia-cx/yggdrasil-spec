@@ -25,23 +25,24 @@ At-a-glance lookups. For detailed command recipes, see [Runbooks](./operations/r
 
 ## Service URLs
 
-| Service     | URL                                    |
-| ----------- | -------------------------------------- |
-| Authentik   | `https://id.mia.cx`                    |
-| Jellyfin    | `https://jellyfin.yggdrasil.mia.cx`    |
-| Nextcloud   | `https://cloud.yggdrasil.mia.cx`       |
-| Vaultwarden | `https://warden.mia.cx`                |
-| Proxmox     | `https://10.0.1.1:8006`                |
-| Longhorn    | `https://longhorn.yggdrasil.mia.cx`    |
-| Grafana     | `https://grafana.yggdrasil.mia.cx`     |
-| Seerr       | `https://seerr.yggdrasil.mia.cx`       |
-| Sonarr      | `https://sonarr.yggdrasil.mia.cx`      |
-| Radarr      | `https://radarr.yggdrasil.mia.cx`      |
-| Readarr     | `https://readarr.yggdrasil.mia.cx`     |
-| Prowlarr    | `https://prowlarr.yggdrasil.mia.cx`    |
-| SABnzbd     | `https://sabnzbd.yggdrasil.mia.cx`     |
-| qBittorrent | `https://qbittorrent.yggdrasil.mia.cx` |
-| Tdarr       | `https://tdarr.yggdrasil.mia.cx`       |
+| Service       | URL                                    |
+| ------------- | -------------------------------------- |
+| Authentik     | `https://id.mia.cx`                    |
+| Jellyfin      | `https://jellyfin.yggdrasil.mia.cx`    |
+| Nextcloud     | `https://cloud.yggdrasil.mia.cx`       |
+| Vaultwarden   | `https://warden.mia.cx`                |
+| Proxmox       | `https://10.0.1.1:8006`                |
+| Longhorn      | `https://longhorn.yggdrasil.mia.cx`    |
+| Grafana       | `https://grafana.yggdrasil.mia.cx`     |
+| Seerr         | `https://seerr.yggdrasil.mia.cx`       |
+| Sonarr        | `https://sonarr.yggdrasil.mia.cx`      |
+| Radarr        | `https://radarr.yggdrasil.mia.cx`      |
+| Readarr       | `https://readarr.yggdrasil.mia.cx`     |
+| Prowlarr      | `https://prowlarr.yggdrasil.mia.cx`    |
+| SABnzbd       | `https://sabnzbd.yggdrasil.mia.cx`     |
+| qBittorrent   | `https://qbittorrent.yggdrasil.mia.cx` |
+| Tdarr         | `https://tdarr.yggdrasil.mia.cx`       |
+| OpenSpeedTest | `https://speedtest.mia.cx`             |
 
 ## NFS Exports
 
@@ -53,15 +54,16 @@ At-a-glance lookups. For detailed command recipes, see [Runbooks](./operations/r
 
 ## Namespaces
 
-| Namespace         | Services                                                                                                    |
-| ----------------- | ----------------------------------------------------------------------------------------------------------- |
-| `kube-system`     | Traefik, kube-vip, CoreDNS, cert-manager                                                                    |
-| `argocd`          | ArgoCD server + repo server                                                                                 |
-| `longhorn-system` | Longhorn storage                                                                                            |
-| `authentik`       | Authentik server + worker + PostgreSQL + Redis                                                              |
+| Namespace         | Services                                                                                                             |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `kube-system`     | Traefik, kube-vip, CoreDNS, cert-manager                                                                             |
+| `argocd`          | ArgoCD server + repo server                                                                                          |
+| `longhorn-system` | Longhorn storage                                                                                                     |
+| `authentik`       | Authentik server + worker + PostgreSQL + Redis                                                                       |
 | `media`           | Jellyfin, Sonarr, Radarr, Lidarr, Readarr, Prowlarr, SABnzbd, qBittorrent, FlareSolverr, Privoxy, Prefetcharr, Tdarr |
-| `nextcloud`       | Nextcloud + MariaDB + Redis                                                                                 |
-| `immich`          | Immich server + ML + PostgreSQL + Valkey                                                                    |
-| `vaultwarden`     | Vaultwarden                                                                                                 |
-| `netbird`         | Exit node DaemonSet                                                                                         |
-| `pelican`         | Pelican Panel                                                                                               |
+| `nextcloud`       | Nextcloud + MariaDB + Redis                                                                                          |
+| `immich`          | Immich server + ML + PostgreSQL + Valkey                                                                             |
+| `vaultwarden`     | Vaultwarden                                                                                                          |
+| `netbird`         | Exit node DaemonSet                                                                                                  |
+| `pelican`         | Pelican Panel                                                                                                        |
+| `speedtest`       | OpenSpeedTest                                                                                                        |
