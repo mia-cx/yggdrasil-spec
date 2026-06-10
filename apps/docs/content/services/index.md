@@ -41,7 +41,7 @@ Application services running in the K3s cluster. For platform-level components (
 | Tdarr         | `docker.io/haveagitgat/tdarr:latest`                      | 8265 | `media`       | Transcode automation         |
 | **Apps**      |
 | Nextcloud     | `nextcloud/nextcloud:32-apache`                           | 80   | `nextcloud`   | File sync + collaboration    |
-| Immich Server | `ghcr.io/immich-app/immich-server:v2.5.5`                 | 2283 | `immich`      | Photo management             |
+| Immich Server | `ghcr.io/immich-app/immich-server:v2.6.3`                 | 2283 | `immich`      | Photo management             |
 | Immich ML     | `ghcr.io/immich-app/immich-machine-learning`              | 3003 | `immich`      | Photo ML inference           |
 | Vaultwarden   | `vaultwarden/server:1.36.0`                               | 80   | `vaultwarden` | Password management          |
 | Pelican Panel | --                                                        | 80   | `pelican`     | Game server management       |
