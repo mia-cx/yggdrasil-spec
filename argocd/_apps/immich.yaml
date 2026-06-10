@@ -10,7 +10,7 @@ spec:
     # Helm chart
     - repoURL: https://immich-app.github.io/immich-charts
       chart: immich
-      targetRevision: 0.9.0  # Update to latest: helm search repo immich/immich
+      targetRevision: 0.12.0  # Update to latest: helm search repo immich/immich
       helm:
         releaseName: immich
         valueFiles:
