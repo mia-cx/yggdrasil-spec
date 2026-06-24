@@ -38,7 +38,7 @@ metadata:
 spec:
   entryPoints: [websecure]
   routes:
-    - match: Host(`hermes.yggdrasil.mia.cx`)
+    - match: Host(`hermes.yggdrasil.mia.cx`) || Host(`hermes.mia.cx`)
       kind: Rule
       services:
         - name: hermes-dashboard
