@@ -1,0 +1,46 @@
+## Hermes Dashboard — selector-less Service + EndpointSlice to route Traefik to hephaestus
+## The dashboard process runs on athena-hephaestus as a systemd user service.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hermes-dashboard
+  namespace: hermes
+spec:
+  ports:
+    - name: http
+      port: 9119
+      targetPort: 9119
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: hermes-dashboard-external
+  namespace: hermes
+  labels:
+    kubernetes.io/service-name: hermes-dashboard
+addressType: IPv4
+endpoints:
+  - addresses:
+      - "10.0.3.2"  # athena-hephaestus
+    conditions:
+      ready: true
+ports:
+  - name: http
+    port: 9119
+    protocol: TCP
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: hermes-dashboard
+  namespace: hermes
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`hermes.yggdrasil.mia.cx`)
+      kind: Rule
+      services:
+        - name: hermes-dashboard
+          port: 9119
+  tls: {}

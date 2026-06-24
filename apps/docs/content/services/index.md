@@ -8,18 +8,19 @@ Application services running in the K3s cluster. For platform-level components (
 
 ## Application Services
 
-| Service                             | Purpose                                 | SSO Method    |
-| ----------------------------------- | --------------------------------------- | ------------- |
-| [Jellyfin](./jellyfin.md)           | Media streaming                         | OIDC (plugin) |
-| [Media Stack](./media-stack.md)     | Media automation (Sonarr, Radarr, etc.) | Internal-only |
-| [Nextcloud](./nextcloud.md)         | File sync + collaboration               | OIDC          |
-| [Vaultwarden](./vaultwarden.md)     | Password management                     | Native OIDC   |
-| [Pelican](./pelican.md)             | Game servers                            | --            |
-| [Janus](./janus.md)                 | External landing pages                  | --            |
-| [OpenSpeedTest](./openspeedtest.md) | Public bandwidth testing                | --            |
-| Forgejo                             | Git hosting (planned)                   | OIDC          |
-| Grafana                             | Monitoring dashboards (planned)         | OIDC          |
-| Plausible                           | Analytics (planned)                     | --            |
+| Service                                  | Purpose                                 | SSO Method    |
+| ---------------------------------------- | --------------------------------------- | ------------- |
+| [Jellyfin](./jellyfin.md)                | Media streaming                         | OIDC (plugin) |
+| [Media Stack](./media-stack.md)          | Media automation (Sonarr, Radarr, etc.) | Internal-only |
+| [Nextcloud](./nextcloud.md)              | File sync + collaboration               | OIDC          |
+| [Vaultwarden](./vaultwarden.md)          | Password management                     | Native OIDC   |
+| [Pelican](./pelican.md)                  | Game servers                            | --            |
+| [Janus](./janus.md)                      | External landing pages                  | --            |
+| [OpenSpeedTest](./openspeedtest.md)      | Public bandwidth testing                | --            |
+| [Hermes Dashboard](./hermes-dashboard.md) | Remote Hermes desktop/backend access    | OIDC          |
+| Forgejo                                  | Git hosting (planned)                   | OIDC          |
+| Grafana                                  | Monitoring dashboards (planned)         | OIDC          |
+| Plausible                                | Analytics (planned)                     | --            |
 
 ## Cluster Service Inventory
 
@@ -46,6 +47,7 @@ Application services running in the K3s cluster. For platform-level components (
 | Vaultwarden   | `vaultwarden/server:1.36.0`                               | 80   | `vaultwarden` | Password management          |
 | Pelican Panel | --                                                        | 80   | `pelican`     | Game server management       |
 | OpenSpeedTest | `docker.io/openspeedtest/latest:latest`                   | 3000 | `speedtest`   | Public bandwidth testing     |
+| Hermes Dashboard | external process on `athena-hephaestus`                | 9119 | `hermes`      | Remote Hermes dashboard      |
 
 ## Common Patterns
 
