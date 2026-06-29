@@ -1,0 +1,149 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: email-oauth2-proxy-data
+  namespace: email-oauth2-proxy
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email-oauth2-proxy
+  namespace: email-oauth2-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: email-oauth2-proxy
+  strategy:
+    type: Recreate  # Required for RWO token cache volume
+  template:
+    metadata:
+      labels:
+        app: email-oauth2-proxy
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/critical
+                    operator: Exists
+      initContainers:
+        - name: render-config
+          image: alpine:3.22
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              tenant_id="${MICROSOFT_TENANT_ID:-common}"
+
+              cat > /config/emailproxy.config <<EOF
+              [SMTP-1587]
+              server_address = smtp.office365.com
+              server_port = 587
+              server_starttls = True
+              local_address = 0.0.0.0
+
+              [${MICROSOFT_ACCOUNT}]
+              permission_url = https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize
+              token_url = https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/token
+              oauth2_scope = https://outlook.office.com/SMTP.Send offline_access
+              redirect_uri = https://smtproxy.yggdrasil.mia.cx
+              redirect_listen_address = http://0.0.0.0:8080
+              client_id = ${MICROSOFT_CLIENT_ID}
+              client_secret = ${MICROSOFT_CLIENT_SECRET}
+              EOF
+          env:
+            - name: MICROSOFT_ACCOUNT
+              valueFrom:
+                secretKeyRef:
+                  name: email-oauth2-proxy-secrets
+                  key: microsoft-account
+            - name: MICROSOFT_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: email-oauth2-proxy-secrets
+                  key: microsoft-client-id
+            - name: MICROSOFT_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: email-oauth2-proxy-secrets
+                  key: microsoft-client-secret
+            - name: MICROSOFT_TENANT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: email-oauth2-proxy-secrets
+                  key: microsoft-tenant-id
+                  optional: true
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      containers:
+        - name: email-oauth2-proxy
+          image: blacktirion/email-oauth2-proxy-docker:latest
+          imagePullPolicy: Always
+          ports:
+            - name: smtp
+              containerPort: 1587
+            - name: web
+              containerPort: 8080
+          env:
+            - name: CACHE_STORE
+              value: /data/credstore.config
+            - name: LOCAL_SERVER_AUTH
+              value: "true"
+            - name: LOGFILE
+              value: "true"
+            - name: DEBUG
+              value: "false"
+          readinessProbe:
+            tcpSocket:
+              port: smtp
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: smtp
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              memory: 64Mi
+              cpu: 50m
+            limits:
+              memory: 256Mi
+              cpu: 250m
+      volumes:
+        - name: config
+          emptyDir: {}
+        - name: data
+          persistentVolumeClaim:
+            claimName: email-oauth2-proxy-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: email-oauth2-proxy
+  namespace: email-oauth2-proxy
+spec:
+  selector:
+    app: email-oauth2-proxy
+  ports:
+    - name: smtp
+      port: 587
+      targetPort: smtp
+    - name: web
+      port: 8080
+      targetPort: web

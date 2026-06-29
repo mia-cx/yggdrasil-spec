@@ -1,0 +1,18 @@
+## Authentik-protected web endpoint for OAuth setup/callbacks.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: email-oauth2-proxy
+  namespace: email-oauth2-proxy
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`smtproxy.yggdrasil.mia.cx`)
+      kind: Rule
+      middlewares:
+        - name: authentik
+          namespace: kube-system
+      services:
+        - name: email-oauth2-proxy
+          port: 8080
+  tls: {}

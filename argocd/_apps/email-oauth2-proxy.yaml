@@ -1,0 +1,21 @@
+## Email OAuth2 Proxy — Basic SMTP auth to Microsoft OAuth2
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: email-oauth2-proxy
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+    targetRevision: main
+    path: argocd/email-oauth2-proxy
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: email-oauth2-proxy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
