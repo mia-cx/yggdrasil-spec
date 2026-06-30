@@ -39,7 +39,7 @@ spec:
             - /bin/sh
             - -ec
           args:
-            - exec npx -y @softeria/ms-365-mcp-server --http 3000 --org-mode --read-only --preset outlook
+            - exec npx -y @softeria/ms-365-mcp-server --http 3000 --org-mode --preset outlook,tasks
           ports:
             - name: http
               containerPort: 3000
@@ -68,10 +68,10 @@ spec:
             # mapped to the public Authentik-protected ingress during login.
             - name: MS365_MCP_ALLOWED_REDIRECT_URIS
               value: https://hermes.mia.cx/mcp-oauth/ms365/callback,https://hermes.yggdrasil.mia.cx/mcp-oauth/ms365/callback
-            # Keep delegated Graph access to the signed-in user's own Outlook data.
-            # Avoid tenant-wide/user-list/shared-mailbox scopes unless explicitly needed later.
+            # Keep delegated Graph access to the signed-in user's own mail, calendar, and tasks.
+            # Mail.Send, shared-mailbox, contact-write, and tenant directory scopes stay excluded.
             - name: MS365_MCP_ALLOWED_SCOPES
-              value: User.Read Mail.Read Calendars.Read Contacts.Read
+              value: User.Read Mail.ReadWrite Calendars.ReadWrite Tasks.ReadWrite
           readinessProbe:
             httpGet:
               path: /

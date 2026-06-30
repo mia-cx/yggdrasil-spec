@@ -43,10 +43,10 @@ http://10.0.128.5:3000/mcp
 The deployment sets:
 
 ```txt
-MS365_MCP_ALLOWED_SCOPES=User.Read Mail.Read Calendars.Read Contacts.Read
+MS365_MCP_ALLOWED_SCOPES=User.Read Mail.ReadWrite Calendars.ReadWrite Tasks.ReadWrite
 ```
 
-That keeps access delegated to the signed-in user's own Outlook data and avoids shared mailbox / tenant directory / app-only mail access.
+That keeps access delegated to the signed-in user's own mail, calendar, and tasks. Mail sending, shared mailbox access, contact writes, and tenant directory scopes stay excluded unless explicitly added later.
 
 ## Known OAuth routing note
 
