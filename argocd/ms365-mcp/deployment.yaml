@@ -104,3 +104,21 @@ spec:
     - name: http
       port: 3000
       targetPort: http
+---
+## Private LAN/VPN endpoint for Hermes. This exposes /mcp and /token without
+## Traefik/Authentik/public ingress; public browser auth still only uses the
+## /authorize IngressRoute.
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms365-mcp-private
+  namespace: ms365-mcp
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.128.5
+  selector:
+    app: ms365-mcp
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http

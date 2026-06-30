@@ -32,7 +32,11 @@ kubectl create secret generic ms365-mcp-secrets -n ms365-mcp \
 
 Only `/authorize` is exposed publicly and it is protected by the existing Authentik Traefik middleware.
 
-`/mcp` stays cluster-internal for Hermes.
+`/mcp` stays off public ingress. Hermes should use the private kube-vip LoadBalancer endpoint:
+
+```txt
+http://10.0.128.5:3000/mcp
+```
 
 ## Scope boundary
 
@@ -44,11 +48,6 @@ MS365_MCP_ALLOWED_SCOPES=User.Read Mail.Read Calendars.Read Contacts.Read
 
 That keeps access delegated to the signed-in user's own Outlook data and avoids shared mailbox / tenant directory / app-only mail access.
 
-## Known OAuth routing caveat
+## Known OAuth routing note
 
-Current `@softeria/ms-365-mcp-server` advertises `/token` under `MS365_MCP_PUBLIC_URL` too. This repo currently keeps the public IngressRoute limited to `/authorize` per policy, so Hermes may still need either:
-
-1. a small Hermes/softeria-side callback/token routing patch, or
-2. an explicit decision to expose `/token` as well.
-
-Do not expose more paths without revisiting that security tradeoff.
+Public ingress intentionally exposes only `/authorize`. Hermes uses the private kube-vip service for `/mcp`, OAuth metadata, and `/token`, so those endpoints are not browser/public routes.
