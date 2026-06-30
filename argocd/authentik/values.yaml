@@ -5,14 +5,14 @@ authentik:
   postgresql:
     password: ""  # Will use existingSecret
   email:
-    from: noreply@id.mia.cx
-    host: smtppro.zoho.eu
+    from: "Hecate | authentik <noreply@id.mia.cx>"
+    host: email-oauth2-proxy.email-oauth2-proxy
     password: ""  # Set via AUTHENTIK_EMAIL__PASSWORD env below
-    port: 465
+    port: 587
     timeout: 30
-    use_ssl: true
+    use_ssl: false
     use_tls: false
-    username: mia@mia.cx
+    username: noreply@mia.cx
 
 global:
   env:
