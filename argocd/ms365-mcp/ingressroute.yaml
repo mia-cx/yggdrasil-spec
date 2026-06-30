@@ -1,0 +1,19 @@
+## Public OAuth entrypoint only.
+## /mcp stays cluster-internal for Hermes; /authorize is browser-facing and Authentik-protected.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ms365-mcp-authorize
+  namespace: ms365-mcp
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`ms365-mcp.yggdrasil.mia.cx`) && Path(`/authorize`)
+      kind: Rule
+      middlewares:
+        - name: authentik
+          namespace: kube-system
+      services:
+        - name: ms365-mcp
+          port: 3000
+  tls: {}

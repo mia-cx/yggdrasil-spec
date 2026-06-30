@@ -1,0 +1,21 @@
+## MS365 MCP Server — Microsoft Graph MCP endpoint for Hermes
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ms365-mcp
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+    targetRevision: main
+    path: argocd/ms365-mcp
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ms365-mcp
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
