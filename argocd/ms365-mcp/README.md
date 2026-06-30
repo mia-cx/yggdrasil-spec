@@ -43,10 +43,10 @@ http://10.0.128.5:3000/mcp
 The deployment sets:
 
 ```txt
-MS365_MCP_ALLOWED_SCOPES=User.Read Mail.ReadWrite Calendars.ReadWrite Tasks.ReadWrite
+MS365_MCP_ALLOWED_SCOPES=User.Read Mail.ReadWrite Mail.ReadWrite.Shared Mail.Send Mail.Send.Shared Calendars.ReadWrite Calendars.ReadWrite.Shared Tasks.ReadWrite Tasks.ReadWrite.Shared
 ```
 
-That keeps access delegated to the signed-in user's own mail, calendar, and tasks. Mail sending, shared mailbox access, contact writes, and tenant directory scopes stay excluded unless explicitly added later.
+That keeps access delegated to the signed-in user's own resources plus shared mailboxes, calendars, and task lists they already have access to. Tenant directory, contacts, and mailbox-settings scopes stay excluded unless explicitly added later.
 
 ## Known OAuth routing note
 
