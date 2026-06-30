@@ -52,11 +52,9 @@ spec:
               local_address = 0.0.0.0
 
               [${MICROSOFT_ACCOUNT}]
-              permission_url = https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize
               token_url = https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/token
-              oauth2_scope = https://outlook.office.com/SMTP.Send offline_access
-              redirect_uri = https://smtproxy.yggdrasil.mia.cx
-              redirect_listen_address = http://0.0.0.0:8080
+              oauth2_scope = https://outlook.office365.com/.default
+              oauth2_flow = client_credentials
               client_id = ${MICROSOFT_CLIENT_ID}
               client_secret = ${MICROSOFT_CLIENT_SECRET}
               EOF

@@ -15,23 +15,17 @@ kubectl -n email-oauth2-proxy create secret generic email-oauth2-proxy-secrets \
   --from-literal=microsoft-tenant-id='<tenant-id-or-common>'
 ```
 
-Register `https://smtproxy.yggdrasil.mia.cx` as a web redirect URI in the Microsoft app registration. Traefik terminates HTTPS, protects the proxy's web endpoint with the shared Authentik middleware, and forwards to port `8080`.
+The Entra app must have the Office 365 Exchange Online **Application** permission `SMTP.SendAsApp` with admin consent. The proxy uses OAuth client credentials (`oauth2_flow = client_credentials`), so no browser redirect URI or first interactive OAuth authorization is required.
 
-## First OAuth authorization
+In Exchange Online, register the Entra service principal and grant it access to the sender mailbox, for example:
 
-1. Start an SMTP port-forward:
-   ```sh
-   kubectl -n email-oauth2-proxy port-forward svc/email-oauth2-proxy 587:587
-   ```
-2. Trigger one SMTP login against the proxy using the Microsoft account as the username and your chosen proxy password as the password. Use no SMTP TLS/STARTTLS between the client and proxy. With `swaks`:
-   ```sh
-   swaks --server 127.0.0.1 --port 587 --auth LOGIN \
-     --auth-user noreply@mia.cx --auth-password '<proxy-password>' \
-     --quit-after AUTH
-   ```
-3. Open the authorization URL from the pod logs, finish Authentik/Microsoft login, and let it redirect to `https://smtproxy.yggdrasil.mia.cx`.
-
-The OAuth token cache is stored in `email-oauth2-proxy-data` at `/data/credstore.config`. The SMTP password used during authorization is the password consumers must keep using.
+```powershell
+Connect-ExchangeOnline
+New-ServicePrincipal -AppId '<application-client-id>' -ObjectId '<enterprise-application-object-id>' -DisplayName 'email-oauth2-proxy'
+$sp = Get-ServicePrincipal -Identity 'email-oauth2-proxy'
+Add-MailboxPermission -Identity 'noreply@mia.cx' -User $sp.Identity -AccessRights FullAccess
+Set-CASMailbox noreply@mia.cx -SmtpClientAuthenticationDisabled $false
+```
 
 ## Consumer settings
 
@@ -40,7 +34,7 @@ Use this service from in-cluster apps:
 - Host: `email-oauth2-proxy.email-oauth2-proxy.svc.cluster.local`
 - Port: `587`
 - Username: Microsoft mailbox, e.g. `noreply@mia.cx`
-- Password: the proxy password used during first authorization
+- Password: choose a stable proxy password on the first successful SMTP login, then reuse that same password for every consumer. The proxy uses it to encrypt cached OAuth tokens; it is not the Microsoft account password or Entra client secret.
 - TLS/STARTTLS to proxy: disabled
 
 Examples:
