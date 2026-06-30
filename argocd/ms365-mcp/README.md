@@ -43,10 +43,10 @@ http://10.0.128.5:3000/mcp
 The deployment sets:
 
 ```txt
-MS365_MCP_ALLOWED_SCOPES=User.Read Mail.ReadWrite Mail.ReadWrite.Shared Mail.Send Mail.Send.Shared Calendars.ReadWrite Calendars.ReadWrite.Shared Tasks.ReadWrite Tasks.ReadWrite.Shared
+MS365_MCP_ALLOWED_SCOPES=User.Read Mail.ReadWrite Mail.ReadWrite.Shared Mail.Send Mail.Send.Shared Calendars.ReadWrite Calendars.ReadWrite.Shared Tasks.ReadWrite Tasks.ReadWrite.Shared MailboxSettings.Read MailboxSettings.ReadWrite
 ```
 
-That keeps access delegated to the signed-in user's own resources plus shared mailboxes, calendars, and task lists they already have access to. Tenant directory, contacts, and mailbox-settings scopes stay excluded unless explicitly added later.
+That keeps access delegated to the signed-in user's own resources plus shared mailboxes, calendars, and task lists they already have access to. Mailbox settings are included so Hermes can create/update Outlook sorting rules after triage patterns stabilize. Tenant directory and contacts scopes stay excluded unless explicitly added later.
 
 ## Known OAuth routing note
 

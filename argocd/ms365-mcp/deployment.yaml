@@ -70,9 +70,10 @@ spec:
               value: https://hermes.mia.cx/mcp-oauth/ms365/callback,https://hermes.yggdrasil.mia.cx/mcp-oauth/ms365/callback
             # Delegated Graph access for the signed-in user's own resources plus
             # shared mailboxes/calendars/task lists they already have access to.
-            # Tenant directory, contacts, and mailbox-settings scopes stay excluded.
+            # Tenant directory and contacts scopes stay excluded.
+            # MailboxSettings.ReadWrite enables Outlook mail rules once triage patterns stabilize.
             - name: MS365_MCP_ALLOWED_SCOPES
-              value: User.Read Mail.ReadWrite Mail.ReadWrite.Shared Mail.Send Mail.Send.Shared Calendars.ReadWrite Calendars.ReadWrite.Shared Tasks.ReadWrite Tasks.ReadWrite.Shared
+              value: User.Read Mail.ReadWrite Mail.ReadWrite.Shared Mail.Send Mail.Send.Shared Calendars.ReadWrite Calendars.ReadWrite.Shared Tasks.ReadWrite Tasks.ReadWrite.Shared MailboxSettings.Read MailboxSettings.ReadWrite
           readinessProbe:
             httpGet:
               path: /
