@@ -63,8 +63,9 @@ spec:
               value: "true"
             - name: MS365_MCP_OUTPUT_FORMAT
               value: toon
-            - name: MS365_MCP_PUBLIC_URL
-              value: https://ms365-mcp.yggdrasil.mia.cx
+            # Do not set MS365_MCP_PUBLIC_URL: Hermes reaches /mcp and /token through an
+            # internal/forwarded URL, while the browser-facing /authorize URL is manually
+            # mapped to the public Authentik-protected ingress during login.
             - name: MS365_MCP_ALLOWED_REDIRECT_URIS
               value: https://hermes.mia.cx/mcp-oauth/ms365/callback,https://hermes.yggdrasil.mia.cx/mcp-oauth/ms365/callback
             # Keep delegated Graph access to the signed-in user's own Outlook data.
