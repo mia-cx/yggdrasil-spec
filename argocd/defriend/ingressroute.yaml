@@ -1,0 +1,47 @@
+## Defriend Discord OAuth callback.
+## Redirect URI: https://defriend.mia.cx/callback
+## The one-shot listener runs on athena-hephaestus and binds 0.0.0.0:8787.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: defriend-oauth-callback
+  namespace: defriend
+spec:
+  ports:
+    - name: http
+      port: 8787
+      targetPort: 8787
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: defriend-oauth-callback-external
+  namespace: defriend
+  labels:
+    kubernetes.io/service-name: defriend-oauth-callback
+addressType: IPv4
+endpoints:
+  - addresses:
+      - "10.0.3.2"  # athena-hephaestus
+    conditions:
+      ready: true
+ports:
+  - name: http
+    port: 8787
+    protocol: TCP
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: defriend-oauth-callback
+  namespace: defriend
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`defriend.mia.cx`) && (Path(`/install`) || Path(`/callback`))
+      kind: Rule
+      services:
+        - name: defriend-oauth-callback
+          port: 8787
+  tls: {}
