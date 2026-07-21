@@ -25,8 +25,36 @@ GitOps continuous delivery -- automatically syncs all manifests and Helm charts 
 
 ```bash
 kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl apply --server-side --force-conflicts -n argocd \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/v3.4.5/manifests/install.yaml
 kubectl wait --for=condition=Available -n argocd deployment/argocd-server --timeout=120s
+```
+
+The version is pinned so upgrades are deliberate. Server-side apply is required because
+the ApplicationSet CRD is too large for kubectl's client-side `last-applied` annotation.
+
+### Upgrade
+
+Review the upstream release notes, update the pinned version above, then apply the same
+official manifest server-side and verify every Argo workload:
+
+```bash
+kubectl apply --server-side --force-conflicts -n argocd \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/v3.4.5/manifests/install.yaml
+kubectl get pods -n argocd
+kubectl get applications -n argocd
+```
+
+Argo CD 3.3.1 used a non-idempotent `ln -s` command in the repo-server
+`copyutil` init container. If that old pod reinitializes with its `emptyDir` contents
+still present, it can crash with `/bin/ln: Already exists`. Recreate the pod to recover,
+then backport the idempotent command until the pinned upgrade is applied:
+
+```bash
+kubectl delete pod -n argocd -l app.kubernetes.io/name=argocd-repo-server
+kubectl patch deployment argocd-repo-server -n argocd --type=json \
+  -p='[{"op":"replace","path":"/spec/template/spec/initContainers/0/args/0","value":"/bin/cp /usr/local/bin/argocd /var/run/argocd/argocd && /bin/ln -sf /var/run/argocd/argocd /var/run/argocd/argocd-cmp-server"}]'
+kubectl rollout status deployment/argocd-repo-server -n argocd --timeout=180s
 ```
 
 **CLI (optional):**
