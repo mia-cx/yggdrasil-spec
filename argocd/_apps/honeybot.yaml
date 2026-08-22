@@ -8,7 +8,7 @@ spec:
   project: default
   sources:
     - repoURL: https://github.com/mia-cx/honeybot.git
-      targetRevision: v1.1.1
+      targetRevision: v1.1.3
       path: charts/honeybot
       helm:
         releaseName: honeybot
