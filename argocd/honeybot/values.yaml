@@ -7,6 +7,10 @@ secret:
   create: false
   existingSecret: honeybot-secrets
 
+env:
+  GLOBAL_AUTH_MODE: team
+  GLOBAL_AUTH_TEAM_ID: "1523848476851437578"
+
 persistence:
   enabled: true
   storageClass: longhorn
