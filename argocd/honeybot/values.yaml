@@ -1,0 +1,29 @@
+image:
+  repository: ghcr.io/mia-cx/honeybot
+  tag: v1.1.0
+  pullPolicy: IfNotPresent
+
+secret:
+  create: false
+  existingSecret: honeybot-secrets
+
+persistence:
+  enabled: true
+  storageClass: longhorn
+  size: 5Gi
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: workloads/critical
+              operator: Exists
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi

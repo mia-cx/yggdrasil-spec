@@ -1,0 +1,28 @@
+## Honeybot — Discord moderation bot
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: honeybot
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/mia-cx/honeybot.git
+      targetRevision: v1.1.0
+      path: charts/honeybot
+      helm:
+        releaseName: honeybot
+        valueFiles:
+          - $values/argocd/honeybot/values.yaml
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: honeybot
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
