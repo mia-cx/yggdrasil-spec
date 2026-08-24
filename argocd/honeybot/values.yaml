@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/mia-cx/honeybot
-  tag: v1.1.3
+  tag: v1.1.4
   pullPolicy: IfNotPresent
 
 secret:
