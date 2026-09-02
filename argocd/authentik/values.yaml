@@ -2,6 +2,8 @@ authentik:
   secret_key: ""  # Will use existingSecret
   error_reporting:
     enabled: false
+  web:
+    base_url: https://id.mia.cx
   postgresql:
     password: ""  # Will use existingSecret
   email:
