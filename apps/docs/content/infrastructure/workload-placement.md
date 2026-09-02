@@ -19,7 +19,7 @@ Low-level cluster components run **unconstrained** so the scheduler can place th
 | Longhorn    | none     | Storage; place via topology or leave to scheduler |
 | Traefik     | none     | Ingress; ArgoCD Helm chart has no affinity    |
 | CoreDNS     | none     | Cluster DNS |
-| cert-manager controller | **critical** (when deployed) | Not in this repo; where you install it, add `workloads/critical` affinity so it doesn’t land on experimental nodes |
+| cert-manager controller | **critical** | ArgoCD Helm values set `global.nodeSelector.workloads/critical=true` |
 | cloudflare-ddns | **critical** | Constrained so DNS updates don’t run on experimental hardware |
 
 **Replication:** Kubernetes does **not** auto-scale replica count by node count. Set `replicas` explicitly (e.g. 2 for HA) or use a **DaemonSet** (one pod per node). Use **topology spread constraints** to spread pods across zones/nodes; replicas are still fixed (e.g. `maxSkew: 1`, `whenUnsatisfiable: ScheduleAnyway` to prefer spreading). Keep replicas ≤ number of nodes that can run the workload.

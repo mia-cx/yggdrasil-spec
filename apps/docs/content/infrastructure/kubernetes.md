@@ -178,7 +178,8 @@ kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.6.0/depl
 **cert-manager:**
 
 ```bash
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.0/cert-manager.yaml
+kubectl get application -n argocd cert-manager
+kubectl wait --for=condition=Available -n cert-manager deployment/cert-manager-webhook --timeout=120s
 ```
 
 **Cloudflare ClusterIssuer:** See [Traefik -- TLS](./traefik.md#setup).

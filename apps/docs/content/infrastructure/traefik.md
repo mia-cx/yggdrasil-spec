@@ -28,10 +28,12 @@ Ingress controller and reverse proxy. Deployed via ArgoCD using the official [tr
 
 ### TLS via cert-manager
 
-Install cert-manager for automated wildcard certificates using Cloudflare DNS-01:
+The cert-manager controller is deployed by ArgoCD from the official Helm chart.
+Its version and Helm values are pinned in `argocd/_apps/cert-manager.yaml`; CRDs
+are owned and upgraded by the same Application.
 
 ```bash
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.0/cert-manager.yaml
+kubectl get application -n argocd cert-manager
 kubectl wait --for=condition=Available -n cert-manager deployment/cert-manager-webhook --timeout=120s
 ```
 
@@ -43,11 +45,12 @@ kubectl create secret generic cloudflare-api-token \
   --from-literal=api-token="YOUR_CLOUDFLARE_API_TOKEN"
 ```
 
-Deploy ClusterIssuer, wildcard Certificate, and default TLS store:
+The `cert-manager-config` and `traefik` Applications deploy the ClusterIssuer,
+wildcard Certificate, and default TLS store. To reconcile them manually:
 
 ```bash
-kubectl apply -f argocd/cert-manager/
-kubectl apply -f argocd/traefik/tls-store.yaml
+kubectl annotate application -n argocd cert-manager-config argocd.argoproj.io/refresh=hard --overwrite
+kubectl annotate application -n argocd traefik argocd.argoproj.io/refresh=hard --overwrite
 ```
 
 ### Verify Certificate
@@ -60,7 +63,7 @@ kubectl get secret wildcard-tls -n kube-system
 
 ## Configuration
 
-Traefik is managed by ArgoCD via **`argocd/_apps/traefik.yaml`**. Values live in **`argocd/traefik/values.yaml`**; companion manifests (middlewares, TLS store) are in the same directory. Push changes to the repo and ArgoCD auto-syncs.
+Traefik is managed by ArgoCD via **`argocd/_apps/traefik.yaml`**. Values live in **`argocd/traefik/values.yaml`**; companion manifests (middlewares, TLS store) are in the same directory. cert-manager is managed independently via **`argocd/_apps/cert-manager.yaml`**. Push changes to the repo and ArgoCD auto-syncs.
 
 To disable K3s built-in Traefik before migrating:
 
