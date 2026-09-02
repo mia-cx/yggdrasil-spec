@@ -4,6 +4,9 @@ kind: Application
 metadata:
   name: cert-manager-config
   namespace: argocd
+  annotations:
+    # The cert-manager Application installs the CRDs and controller first.
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
   source:

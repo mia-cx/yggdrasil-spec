@@ -1,0 +1,36 @@
+## cert-manager controller — official Helm chart
+## ClusterIssuer and Certificate resources are managed separately by cert-manager-config.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  annotations:
+    # Install the CRDs and controller before cert-manager-config is reconciled.
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  source:
+    repoURL: https://charts.jetstack.io
+    chart: cert-manager
+    targetRevision: v1.21.1
+    helm:
+      releaseName: cert-manager
+      valuesObject:
+        crds:
+          enabled: true
+          keep: true
+        global:
+          nodeSelector:
+            workloads/critical: "true"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # CRDs are too large for client-side apply annotations.
+      - ServerSideApply=true
