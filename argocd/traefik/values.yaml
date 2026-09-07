@@ -58,16 +58,15 @@ providers:
     allowCrossNamespace: true
 
 # Access logs
-logs:
-  access:
-    enabled: true
-    format: json
-    fields:
-      headers:
-        defaultmode: keep
-        names:
-          X-Forwarded-For: keep
-          X-Forwarded-Proto: keep
+accessLog:
+  enabled: true
+  format: json
+  fields:
+    headers:
+      defaultMode: keep
+      names:
+        X-Forwarded-For: keep
+        X-Forwarded-Proto: keep
 
 # Entrypoint forwardedHeaders not exposed as chart values — use CLI args
 # Trust X-Forwarded-* from LAN (10.0.0.0/8) and Netbird overlay (100.64.0.0/10)
