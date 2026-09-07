@@ -38,8 +38,6 @@ controllers:
             memory: 4Gi
 
   node:
-    annotations:
-      argocd.argoproj.io/sync-options: Force=true,Replace=true
     type: daemonset
     pod:
       affinity:
