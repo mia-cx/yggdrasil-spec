@@ -1,5 +1,5 @@
 ## Helm values for Prefetcharr on K3s
-## Chart: bjw-s/app-template (v3)
+## Chart: bjw-s/app-template (v5)
 ## Repo: https://bjw-s-labs.github.io/helm-charts
 ##
 ## Watches Jellyfin activity and tells Sonarr to fetch
