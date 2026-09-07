@@ -6,8 +6,6 @@
 
 controllers:
   main:
-    annotations:
-      argocd.argoproj.io/sync-options: Force=true,Replace=true
     pod:
       securityContext:
         fsGroup: 82  # www-data GID (Alpine); makes PVCs writable
