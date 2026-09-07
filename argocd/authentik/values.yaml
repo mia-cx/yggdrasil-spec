@@ -67,7 +67,7 @@ worker:
 postgresql:
   enabled: true
   image:
-    tag: "18.4-bookworm"
+    tag: "18.6-bookworm"
   auth:
     existingSecret: authentik-secrets
     secretKeys:
