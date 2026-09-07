@@ -7,8 +7,6 @@
 
 controllers:
   main:
-    annotations:
-      argocd.argoproj.io/sync-options: Force=true,Replace=true
     type: deployment
     replicas: 1
     pod:
@@ -40,6 +38,8 @@ controllers:
             memory: 4Gi
 
   node:
+    annotations:
+      argocd.argoproj.io/sync-options: Force=true,Replace=true
     type: daemonset
     pod:
       affinity:
