@@ -29,7 +29,7 @@ spec:
                     operator: Exists
       containers:
         - name: queue
-          image: ghcr.io/pelican-dev/panel:latest
+          image: ghcr.io/pelican-dev/panel:latest@sha256:45cecf27176630ac628ebc9badc0ad273bdaa9bf441648c363dd8daeb9cc3bff
           imagePullPolicy: IfNotPresent
           command:
             - php

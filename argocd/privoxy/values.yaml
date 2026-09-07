@@ -22,7 +22,7 @@ controllers:
       main:
         image:
           repository: docker.io/vimagick/privoxy
-          tag: latest
+          tag: latest@sha256:8db03d3e5a36800e2c7e32f17b47e21e18f476bf492f0a50e2fc43073f6bb21f
           pullPolicy: IfNotPresent
         resources:
           requests:

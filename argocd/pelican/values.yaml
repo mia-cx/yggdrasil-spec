@@ -20,7 +20,7 @@ controllers:
       main:
         image:
           repository: ghcr.io/pelican-dev/panel
-          tag: latest
+          tag: latest@sha256:45cecf27176630ac628ebc9badc0ad273bdaa9bf441648c363dd8daeb9cc3bff
           pullPolicy: IfNotPresent
         env:
           XDG_DATA_HOME: /pelican-data

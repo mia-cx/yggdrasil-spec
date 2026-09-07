@@ -28,7 +28,7 @@ controllers:
       config-merger:
         image:
           repository: docker.io/library/alpine
-          tag: "3.19"
+          tag: "3.22.5"
           pullPolicy: IfNotPresent
         command:
           - /bin/sh

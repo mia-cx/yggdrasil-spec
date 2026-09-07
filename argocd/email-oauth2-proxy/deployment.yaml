@@ -37,7 +37,7 @@ spec:
                     operator: Exists
       initContainers:
         - name: render-config
-          image: alpine:3.22
+          image: alpine:3.22.5
           command:
             - /bin/sh
             - -ec
@@ -85,7 +85,7 @@ spec:
               mountPath: /config
       containers:
         - name: email-oauth2-proxy
-          image: blacktirion/email-oauth2-proxy-docker:latest
+          image: blacktirion/email-oauth2-proxy-docker:2026.07.03.1
           imagePullPolicy: Always
           ports:
             - name: smtp

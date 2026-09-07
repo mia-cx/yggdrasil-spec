@@ -34,7 +34,7 @@ spec:
           mountPath: /config
       containers:
       - name: cloudflare-ddns
-        image: favonia/cloudflare-ddns:latest
+        image: favonia/cloudflare-ddns:1.17.0
         command: ["/bin/sh", "-c"]
         args:
         - |
