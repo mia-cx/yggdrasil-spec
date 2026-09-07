@@ -9,12 +9,17 @@
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
-    "prettier": "^3.7.4",
-    "turbo": "^2.8.1",
+    "prettier": "^3.9.6",
+    "turbo": "^2.10.12",
     "typescript": "5.9.2"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=18"
+  },
+  "pnpm": {
+    "overrides": {
+      "speech-rule-engine@4.1.4>@xmldom/xmldom": "0.9.12"
+    }
   }
 }
