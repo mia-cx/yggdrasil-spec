@@ -26,6 +26,9 @@ controllers:
         env:
           TZ: Europe/Amsterdam
           LOG_LEVEL: INFO
+          # Kubernetes cgroup v2 is not detected as a container by Tunarr.
+          # Set the documented data directory explicitly so the PVC is used.
+          TUNARR_DATABASE_PATH: /config/tunarr
         resources:
           requests:
             cpu: 100m
