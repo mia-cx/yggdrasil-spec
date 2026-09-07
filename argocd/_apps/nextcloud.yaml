@@ -10,7 +10,7 @@ spec:
     # Helm chart
     - repoURL: https://nextcloud.github.io/helm/
       chart: nextcloud
-      targetRevision: 9.0.6  # Latest published chart; keep image pinned separately
+      targetRevision: 9.2.6  # Keep the application image pinned separately
       helm:
         releaseName: nextcloud
         valueFiles:
