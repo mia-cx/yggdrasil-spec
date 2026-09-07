@@ -5,7 +5,7 @@
 ## disabling K3s Traefik: add --disable=traefik to K3s server args.
 
 image:
-  tag: "3.6.25"
+  tag: "3.7.13"
 
 # Keep externalTrafficPolicy: Local so Traefik preserves the real client IP.
 # kube-vip service election makes the VIP follow nodes that have a local Traefik pod,
