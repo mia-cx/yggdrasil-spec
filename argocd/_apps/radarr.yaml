@@ -27,6 +27,7 @@ spec:
     namespace: media
   syncPolicy:
     automated:
+      enabled: false
       prune: true
       selfHeal: true
     syncOptions:
