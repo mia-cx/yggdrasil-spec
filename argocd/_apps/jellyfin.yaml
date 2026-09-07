@@ -10,7 +10,7 @@ spec:
     # Helm chart
     - repoURL: https://bjw-s-labs.github.io/helm-charts
       chart: app-template
-      targetRevision: 3.6.0  # Update to latest: helm search repo bjw-s/app-template
+      targetRevision: 5.1.0  # Update to latest: helm search repo bjw-s/app-template
       helm:
         releaseName: jellyfin
         valueFiles:

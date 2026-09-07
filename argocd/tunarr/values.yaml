@@ -8,6 +8,8 @@
 
 controllers:
   main:
+    annotations:
+      argocd.argoproj.io/sync-options: Force=true,Replace=true
     strategy: Recreate  # Required for RWO volume — prevents rollout blocking
     pod:
       affinity:
