@@ -1,6 +1,6 @@
 # NetBird management resilience with a home primary
 
-Research date: 2026-09-14. Decision input for [issue #6](https://github.com/mia-cx/yggdrasil-spec/issues/6), under [map #5](https://github.com/mia-cx/yggdrasil-spec/issues/5). No deployment decision or infrastructure change accompanies this report.
+Research date: 2026-09-14. Decision input for [Management resilience with a home primary](https://github.com/mia-cx/yggdrasil-spec/issues/6), under [Private Yggdrasil access with NetBird and Hecate](https://github.com/mia-cx/yggdrasil-spec/issues/5). No deployment decision or infrastructure change accompanies this report.
 
 I recommend a home primary with an independent VPS relay and tested off-site recovery first. A dormant management standby is a possible later addition. Automatic management failover introduces state ownership and identity recovery work that a relay alone avoids.
 
@@ -43,7 +43,7 @@ Preserve these as one recovery set:
 2. **Runtime identity and secrets.** Preserve the full data directory and deployed configuration, rather than guessing individual key files. Keep image versions, secret references and proxy configuration with the restore manifest. Upstream documents separate backup layouts for combined and older containers. [Backup guide](https://docs.netbird.io/selfhosted/maintenance/backup)
 3. **Relay configuration.** Preserve matching Management/relay authentication secrets, advertised relay URLs and TLS provisioning. External relays require a public address; upstream lists 1 CPU and 1 GB RAM as its baseline. This sizes a relay, not a combined recovery host. [External relay guide](https://docs.netbird.io/selfhosted/maintenance/scaling/set-up-external-relays)
 4. **Hecate identity.** Back up Authentik PostgreSQL and applicable static volumes. Preserve its OIDC provider/client configuration and signing material. Database-backed configuration and imported certificates belong to Authentik's recovery set. [Authentik backup guide](https://docs.goauthentik.io/sys-mgmt/ops/backup-restore/)
-5. **Peer identities.** Persist each routing peer's own state. Management recovery cannot repair a pod that regenerates its identity on every restart. This requirement follows the observed routing-pod behavior in [issue #6](https://github.com/mia-cx/yggdrasil-spec/issues/6).
+5. **Peer identities.** Persist each routing peer's own state. Management recovery cannot repair a pod that regenerates its identity on every restart. This requirement follows the observed routing-pod behavior in [Management resilience with a home primary](https://github.com/mia-cx/yggdrasil-spec/issues/6).
 
 Preserve Authentik's `AUTHENTIK_SECRET_KEY` too. Changing it invalidates active sessions. Current Authentik stores sessions in PostgreSQL; verify the deployed version before designing recovery. [Authentik configuration](https://docs.goauthentik.io/install-config/configuration/)
 
