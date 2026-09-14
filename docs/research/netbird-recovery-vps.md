@@ -4,9 +4,9 @@ Retrieved 2026-09-14. Prices and product availability can change; confirm the fi
 
 ## Workload and sizing
 
-NetBird's combined self-hosted server (Management, Signal, Relay and STUN) requires at least 1 vCPU and 2 GB RAM, plus public TCP 80/443 and UDP 3478 ([NetBird quickstart](https://docs.netbird.io/selfhosted/selfhosted-quickstart)). For Yggdrasil, 2 vCPU and 4 GB RAM is the sensible floor: it leaves room for the independent WireGuard recovery endpoint, monitoring, and an inactive recovery Management surface without making the smallest supported configuration the recovery ceiling.
+NetBird's combined self-hosted server (Management, Signal, Relay and STUN) requires at least 1 vCPU and 2 GB RAM, plus public TCP 80/443 and UDP 3478 ([NetBird quickstart](https://docs.netbird.io/selfhosted/selfhosted-quickstart)). For Yggdrasil, 2 vCPU and 4 GB RAM is the sensible floor: it leaves room for an independent secondary NetBird repair mesh, monitoring, and relay traffic without making the smallest supported configuration the recovery ceiling.
 
-The WireGuard keepalive tunnel supplies an independent repair path. It does **not** synchronize NetBird Management state or fence concurrent writers. A VPS recovery copy must be passive, receive tested state backups or replication, and be promoted under a single-writer fencing procedure. It is not a community-edition active-active pair.
+The repair mesh is a separate NetBird network with its own Management state. It does not replicate or promote the home-primary network, which avoids shared-state fencing and split brain. Repair devices keep profiles for both networks and manually switch to the repair profile during an incident; NetBird currently permits multiple profiles but activates only one at a time ([NetBird profiles](https://docs.netbird.io/client/profiles)).
 
 ## Advertised options
 
@@ -21,16 +21,22 @@ Sources: [OVHcloud Netherlands pricing and transfer terms](https://www.ovhcloud.
 
 The approximate Dutch totals for Hetzner and netcup are calculations from the providers' displayed German-VAT prices and published ex-VAT components. Checkout is authoritative.
 
+## Infrastructure as code
+
+Both leading candidates have first-party-supported Terraform/OpenTofu providers. Hetzner's `hcloud_server` supports creation, deletion, SSH keys, attached firewalls, stable Primary IPs and up to 32 KiB of cloud-init `user_data` ([server resource](https://registry.terraform.io/providers/hetznercloud/hcloud/latest/docs/resources/server.html), [firewall resource](https://registry.terraform.io/providers/hetznercloud/hcloud/latest/docs/resources/firewall), [Primary IP resource](https://registry.terraform.io/providers/hetznercloud/hcloud/latest/docs/resources/primary_ip)). That is enough to provision the machine and bootstrap the repair stack from this repository in one OpenTofu workflow.
+
+OVHcloud's `ovh_vps` can order a VPS, choose its OS and install a public SSH key; its provider can also manage IP firewall rules ([VPS resource](https://registry.terraform.io/providers/ovh/ovh/latest/docs/resources/vps), [firewall resource](https://registry.terraform.io/providers/ovh/ovh/latest/docs/resources/ip_firewall_rule)). The VPS resource does not expose cloud-init or general `user_data`, so a second configuration mechanism is still needed after provisioning.
+
 ## Judgment
 
-**Choose OVHcloud VPS-1 in Germany as the primary recommendation.** It clears the practical 2-vCPU/4-GB floor, includes both public address families and a small daily recovery point, and costs €4.61/month for a Dutch customer. Its 500 Mbps unmetered link is unusually well matched to a public Relay: OVHcloud explicitly describes the European offer as suitable for VPNs, proxies, streaming, and sustained high transfer. It is enough for possible relayed Jellyfin use; the home uplink and Jellyfin server will probably become the limit first.
+**Choose Hetzner CX23 in Falkenstein or Nuremberg as the primary recommendation when repository-driven provisioning is the priority.** It clears the practical 2-vCPU/4-GB floor, and its provider covers the server, stable addresses, firewall and cloud-init bootstrap. Its approximate Dutch total is €7.24/month with IPv4. The 20 TB monthly allowance is ample for control-plane and recovery traffic and likely enough for occasional relayed media.
 
-OVHcloud VPS-2 is the **bandwidth-heavy alternative** at €8.72/month including Dutch VAT: 4 vCores, 8 GB RAM, 75 GB NVMe, 1 Gbps and unlimited traffic. Buy it only if measurements show many simultaneous relayed streams, or if the promoted recovery Management stack needs more memory. Starting with VPS-1 is low risk because OVHcloud advertises in-place resource upgrades.
+OVHcloud VPS-1 is the **bandwidth-heavy alternative** at €4.61/month including Dutch VAT. Its 500 Mbps unmetered link, included addresses and daily one-day backup are unusually strong at this price. Choose it if Relay transfer matters more than a single-tool bootstrap; the server and firewall can still be ordered through OpenTofu, but configuring the operating system needs a second step. OVHcloud VPS-2 raises capacity to 4 vCores, 8 GB RAM, 75 GB NVMe and 1 Gbps for €8.72/month including Dutch VAT.
 
-Hetzner CX23 is the strongest metered alternative. Its 20 TB allowance is ample for control-plane and recovery traffic and likely enough for occasional relayed media. For scale, one continuous 20 Mbps stream transfers roughly 6.5 TB in a 30-day month, so 20 TB is about three such streams continuously before overhead. That is generous for fallback traffic but not unlimited; alert on transfer use.
+For scale, one continuous 20 Mbps stream transfers roughly 6.5 TB in a 30-day month, so Hetzner's 20 TB is about three such streams continuously before overhead. That is generous for fallback traffic but not unlimited; alert on transfer use.
 
 netcup offers the most storage and an Amsterdam location at a low price, but its public product page does not quantify “Traffic included.” That prevents certifying it for bandwidth-heavy Jellyfin relay duty before purchase. It remains a good control-plane candidate if netcup confirms the allowance and port speed in the cart or in writing.
 
 Scaleway is geographically attractive and does not bill egress, but its 2 GB plan sits exactly at NetBird's minimum and excludes both storage and IPv4 from the displayed price. It is less capacity for more money once the required extras are added.
 
-Whichever provider is chosen, expose only TCP 80/443, UDP 3478, the chosen WireGuard UDP port, and tightly restricted administration. Test direct peer connectivity, forced Relay streaming, recovery-tunnel access, state restoration, promotion fencing, and return to the home primary before treating the VPS as failover infrastructure.
+Whichever provider is chosen, expose only TCP 80/443, UDP 3478, and tightly restricted administration. Test direct peer connectivity, forced Relay streaming, switching a restarted client to the repair profile, access while home NetBird/Hecate/K3s DNS are unavailable, and return to the home profile before treating the VPS as recovery infrastructure.
