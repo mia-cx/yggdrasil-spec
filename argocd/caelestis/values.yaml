@@ -1,0 +1,37 @@
+image:
+  repository: ghcr.io/mia-riezebos/caelestis-backend
+  tag: sha-ea53519b39713a2edce4640204e09975ecd15ad9
+  digest: sha256:13964db727f454e3594d0e3990c2d40113b4d15eba2aa1d8f2ca3a811716e513
+  pullPolicy: IfNotPresent
+frontend:
+  image:
+    repository: ghcr.io/mia-riezebos/caelestis-frontend
+    tag: sha-ea53519b39713a2edce4640204e09975ecd15ad9
+    digest: sha256:afbceecd707150350fbe928a2ed2c8e64beb9727f87d817d48b6ecd6299df58c
+    pullPolicy: IfNotPresent
+
+server:
+  name: TAC
+  origin: https://tac.caelest.is
+  season: 0
+  basePath: /backend
+  openAccess: false
+  existingSecret: caelestis-server
+
+database:
+  adapter: postgres
+  host: caelestis-database-rw.caelestis.svc
+  existingSecret: caelestis-database-app
+  tls:
+    mode: verify-full
+    existingSecret: caelestis-database-ca
+
+storage:
+  adapter: filesystem
+persistence:
+  storageClass: longhorn
+  size: 20Gi
+
+nodeSelector:
+  workloads/critical: "true"
+  kubernetes.io/arch: amd64
