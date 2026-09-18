@@ -1,32 +1,48 @@
-# TAC Caelestis
+# Caelestis
 
-- Frontend: https://tac.caelest.is
-- Backend for the userscript: https://tac.caelest.is/backend
+One Caelestis server per wplace alliance, all under `caelest.is`. Each alliance is a directory in
+`tenants/`; the `caelestis` ApplicationSet turns every directory into an Application named
+`caelestis-<name>` in the shared `caelestis` namespace.
 
-The upstream Helm chart runs the Bun backend and Node frontend in one pod. A dedicated two-instance
-CNPG cluster holds the database. A 20 GiB Longhorn volume holds objects shared by the two containers.
-The chart uses one replica with Recreate updates to preserve backend ownership and volume access.
+Per tenant, one `values.yaml` feeds two charts:
 
-Traefik routes `/backend` directly to the backend and all other paths to the frontend.
-The frontend handles its public read-only WebSocket endpoint at `/api/v1/telemetry/live`.
-HTTP redirects to HTTPS. The `caelestis-tls` certificate covers `caelest.is` and `*.caelest.is` and renews
-through the existing `letsencrypt-cloudflare` issuer.
+- The upstream Caelestis chart at `deploy/helm/caelestis` runs the Bun backend and Node frontend in one
+  pod with a 20 GiB Longhorn object volume. One replica with Recreate updates preserves backend
+  ownership and volume access.
+- The local `tenant` chart adds a dedicated two-instance CNPG cluster and the Traefik routes:
+  `/backend` to the backend, everything else to the frontend, HTTP redirected to HTTPS.
 
-The initial images come from the successful Caelestis PR #403 CI run (34929261635), source merge
-commit `ea53519b39713a2edce4640204e09975ecd15ad9`. Values pin their GHCR digests and retain the commit tag for provenance.
-This initial image pair targets amd64; both Yggdrasil nodes support it.
+`shared/` holds the wildcard `caelestis-tls` certificate for `caelest.is` and `*.caelest.is` (renewed by
+the `letsencrypt-cloudflare` issuer) and the HTTPS redirect middleware.
 
-Provisioning:
+The Caelestis chart revision is pinned once in `_apps/caelestis.yaml` and applies to every tenant.
+Image digests are pinned per tenant.
 
-1. Publish the tested backend and frontend GHCR images and make the packages public.
-   This deployment's backend image selects Bun.
-2. Give the existing Cloudflare token in `cert-manager` Zone Read and DNS Edit access to `caelest.is`.
-   The DNS-only `tac.caelest.is` CNAME points to `yggdrasil.mia.cx`.
-3. Create `caelestis-server` in namespace `caelestis` with separate random `ADMIN_TOKEN` and
-   `CAELESTIS_READ_TOKEN` entries. Keep their values outside Git. CNPG creates its own database credentials.
+## Tenants
 
-Use the bootstrap admin token to add this server in the userscript. The frontend receives only the
-read-only token. Access is private until an administrator creates invitation tokens.
+| Tenant | Frontend                  | Backend                            |
+| ------ | ------------------------- | ---------------------------------- |
+| tac    | https://tac.caelest.is    | https://tac.caelest.is/backend     |
 
-Back up the PostgreSQL database and object volume together before upgrades, with application writes
-stopped. CNPG replication and Longhorn replicas do not replace backups.
+TAC keeps its original `caelestis-database` cluster name through `tenant.database.name`.
+
+## Adding an alliance
+
+1. Copy `tenants/tac` to `tenants/<name>`. Set `server.name`, `server.origin`, `tenant.host` to
+   `<name>.caelest.is`, `server.existingSecret` to `<name>-server`, and the three database entries to
+   `<name>-database-rw.caelestis.svc`, `<name>-database-app`, `<name>-database-ca`.
+   Remove `tenant.database.name`.
+2. Add the DNS-only `<name>.caelest.is` CNAME to `yggdrasil.mia.cx`.
+3. Create secret `<name>-server` in namespace `caelestis` with random `ADMIN_TOKEN` and
+   `CAELESTIS_READ_TOKEN` entries. Keep the values outside Git. CNPG creates the database credentials.
+4. Merge. Use the admin token to add the server in the userscript; the frontend receives only the
+   read-only token. Access is private until an administrator creates invitation tokens.
+
+## Removing an alliance
+
+Delete the tenant directory. Prune removes the pod, routes and CNPG cluster; the object PVC and the
+`<name>-server` secret remain until deleted by hand. Back up the database and object volume together
+first, with writes stopped.
+
+Back up the same way before chart upgrades. CNPG replication and Longhorn replicas do not replace
+backups.
