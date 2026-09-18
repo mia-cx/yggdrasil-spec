@@ -1,0 +1,8 @@
+# Read by both the upstream Caelestis chart and this tenant chart from one tenants/<name>/values.yaml.
+tenant:
+  host: ''
+  database:
+    # Defaults to <release>-database. TAC overrides it to keep its existing cluster.
+    name: ''
+    instances: 2
+    size: 10Gi

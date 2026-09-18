@@ -1,33 +1,47 @@
-## Caelestis — Bun backend, Node frontend, and dedicated PostgreSQL cluster
+## Caelestis — one Application per alliance under argocd/caelestis/tenants/<name>
+## Each tenant runs the upstream chart (Bun backend, Node frontend) plus a dedicated CNPG cluster and Traefik routes
 apiVersion: argoproj.io/v1alpha1
-kind: Application
+kind: ApplicationSet
 metadata:
   name: caelestis
   namespace: argocd
 spec:
-  project: default
-  sources:
-    - repoURL: https://github.com/mia-riezebos/Caelestis.git
-      targetRevision: d0afe08d0ad2e7b1e633bd391bf07f5385786401
-      path: deploy/helm/caelestis
-      helm:
-        releaseName: tac
-        valueFiles:
-          - $values/argocd/caelestis/values.yaml
-    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
-      targetRevision: main
-      ref: values
-    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
-      targetRevision: main
-      path: argocd/caelestis
-      directory:
-        exclude: '{values.yaml,README.md}'
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: caelestis
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+        revision: main
+        directories:
+          - path: argocd/caelestis/tenants/*
+  template:
+    metadata:
+      name: caelestis-{{ .path.basename }}
+    spec:
+      project: default
+      sources:
+        - repoURL: https://github.com/mia-riezebos/Caelestis.git
+          targetRevision: d0afe08d0ad2e7b1e633bd391bf07f5385786401
+          path: deploy/helm/caelestis
+          helm:
+            releaseName: '{{ .path.basename }}'
+            valueFiles:
+              - $values/{{ .path.path }}/values.yaml
+        - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+          targetRevision: main
+          path: argocd/caelestis/tenant
+          helm:
+            releaseName: '{{ .path.basename }}'
+            valueFiles:
+              - $values/{{ .path.path }}/values.yaml
+        - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: caelestis
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

@@ -1,0 +1,21 @@
+## Caelestis shared — wildcard certificate and HTTPS redirect used by every tenant
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: caelestis-shared
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+    targetRevision: main
+    path: argocd/caelestis/shared
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: caelestis
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

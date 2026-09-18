@@ -1,18 +1,17 @@
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: caelestis-database
-  namespace: caelestis
+  name: {{ include "tenant.database" . }}
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   imageName: ghcr.io/cloudnative-pg/postgresql:18.6-system-trixie
-  instances: 2
+  instances: {{ .Values.tenant.database.instances }}
   affinity:
     nodeSelector:
       workloads/critical: "true"
   storage:
-    size: 10Gi
+    size: {{ .Values.tenant.database.size }}
     storageClass: longhorn
   bootstrap:
     initdb:

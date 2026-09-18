@@ -35,3 +35,8 @@ persistence:
 nodeSelector:
   workloads/critical: "true"
   kubernetes.io/arch: amd64
+
+tenant:
+  host: tac.caelest.is
+  database:
+    name: caelestis-database
