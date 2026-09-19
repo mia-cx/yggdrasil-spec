@@ -12,9 +12,9 @@ The frontend handles its public read-only WebSocket endpoint at `/api/v1/telemet
 HTTP redirects to HTTPS. The `caelestis-tls` certificate covers `caelest.is` and `*.caelest.is` and renews
 through the existing `letsencrypt-cloudflare` issuer.
 
-The initial images come from the successful Caelestis PR #403 CI run (34929261635), source merge
-commit `ea53519b39713a2edce4640204e09975ecd15ad9`. Values pin their GHCR digests and retain the commit tag for provenance.
-This initial image pair targets amd64; both Yggdrasil nodes support it.
+Images and chart come from the Caelestis server release `server-backend-0.7.0-frontend-0.6.1`.
+Values pin the GHCR digests of the semantic tags `0.7.0` (Bun backend) and `0.6.1` (frontend); the
+Application pins the chart to the same release tag. Both Yggdrasil nodes run the amd64 variant.
 
 Provisioning:
 
