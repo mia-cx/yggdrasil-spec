@@ -12,8 +12,8 @@ The frontend handles its public read-only WebSocket endpoint at `/api/v1/telemet
 HTTP redirects to HTTPS. The `caelestis-tls` certificate covers `caelest.is` and `*.caelest.is` and renews
 through the existing `letsencrypt-cloudflare` issuer.
 
-Images and chart come from the Caelestis server release `server-backend-0.9.0-frontend-0.7.0`.
-Values pin the GHCR digests of the semantic tags `0.9.0` (Bun backend) and `0.7.0` (frontend); the
+Images and chart come from the Caelestis server release `server-backend-0.9.0-frontend-0.7.1`.
+Values pin the GHCR digests of the semantic tags `0.9.0` (Bun backend) and `0.7.1` (frontend); the
 Application pins the chart to the same release tag. Both Yggdrasil nodes run the amd64 variant.
 
 Provisioning:

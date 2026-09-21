@@ -6,8 +6,8 @@ image:
 frontend:
   image:
     repository: ghcr.io/mia-riezebos/caelestis-frontend
-    tag: 0.7.0
-    digest: sha256:f9dd2127523e2b3b93c466b3df3508d8672dd0418546acf82bf8e8f382b57b64
+    tag: 0.7.1
+    digest: sha256:93bb482fb1ae1e0404dc66cab47f388f120df98703a124a67090ffbcb157f619
     pullPolicy: IfNotPresent
 
 server:
