@@ -4,6 +4,8 @@ title: Resilience Nodes (Hosted DR)
 
 # Resilience Nodes Roadmap
 
+This is an earlier proposal, not the selected first-site recovery architecture. See [Multi-site resilience](./multi-site-resilience.md) for current discussion of cluster boundaries and storage. The [NetBird Wayfinder map](https://github.com/mia-cx/yggdrasil-spec/issues/5) holds the accepted first-site decisions; cross-site K3s quorum and overlay-VIP behavior remain unproven here.
+
 A small number of **hosted nodes** (outside the homelab) that keep the Kubernetes cluster and GitOps configs available when the homelab is down. No PVC data is replicated to these nodes — **configs only**, so they stay slim and cheap.
 
 ## Goal

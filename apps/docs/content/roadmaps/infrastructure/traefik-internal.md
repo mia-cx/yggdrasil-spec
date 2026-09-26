@@ -1,47 +1,46 @@
 ---
-title: Traefik Internal (Secondary Instance)
+title: Private Traefik
 ---
 
-# Secondary Traefik for Internal-Only Services
+# Private Traefik
 
-A **planned** secondary Traefik instance dedicated to internal-only traffic (LAN, Netbird overlay), instead of relying on the internal-only IP allowlist middleware on the primary Traefik.
+A separate private Traefik is part of the [accepted DNS/ingress decision](https://github.com/mia-cx/yggdrasil-spec/issues/10#issuecomment-5742199940). This page describes its end state, not a completed deployment.
 
-## Motivation
+## Target boundary
 
-- **Physical separation** — Different process, config, and network exposure; internal traffic never touches the external Traefik.
-- **Failure isolation** — Misconfig or crash on the primary Traefik does not affect internal services.
-- **Simpler security boundary** — Internal Traefik listens only on ClusterIP (or a dedicated internal VIP); no LoadBalancer, no public exposure.
-- **Defense in depth** — Avoids relying on middleware that could misconfigure or default to allow.
+After their approved cutover, private applications require NetBird even on the home LAN. Public applications remain on public Traefik. In the end state, an application uses both only when approved endpoint exceptions require it.
 
-## Scope
+| Component                    | Public Traefik                                 | Private Traefik target                                  |
+| ---------------------------- | ---------------------------------------------- | ------------------------------------------------------- |
+| Service exposure             | Existing LoadBalancer VIP                      | ClusterIP only                                          |
+| Client path                  | Existing public entrance                       | Explicit NetBird resource through cluster routing peers |
+| Routes                       | Public services and approved public exceptions | Private service hostnames                               |
+| DNS for disconnected clients | Existing public DNS                            | Public Janus binding, not the private origin            |
+| Certificates                 | Existing public ingress certificates           | Namespace-local Secret using Cloudflare DNS-01          |
 
-- **In scope:** Deploy a second Traefik instance (e.g. `traefik-internal` Helm release) in a dedicated namespace; ClusterIP Service only; IngressRoutes for internal services (panel, Radarr, Sonarr, etc.); DNS / split-horizon so internal clients reach the internal instance.
-- **Out of scope:** Duplicating TLS setup (internal can reuse existing certs or a separate store); changes to Authentik forward-auth (internal routes can still use it if needed).
+The private listener has no LAN VIP, NodePort, host-port binding, or public router forward. Separate ingress selection prevents public Traefik from loading private routes. Backend and workload restrictions must also reject direct access.
 
-## Current State
+A shared HTTPS destination does not provide per-service NetBird permissions. The [Jellyfin network cutoff](../../infrastructure/netbird.md#jellyfin-network-cutoff) requires a separately enforceable destination that other permitted listeners cannot bypass. A distinct hostname or resource label alone is insufficient. Keep the existing Jellyfin URL; the endpoint design and active-flow cutoff remain validation gates. Other services use Hecate or native application permissions unless separately isolated. Trusted workload-to-workload traffic gets explicit permissions rather than a blanket LAN exception.
 
-- Primary Traefik handles all ingress; internal services use the `internal-only` middleware (IP allowlist).
-- See [Traefik](../../infrastructure/traefik.md) for existing config; internal-only middleware lives in `argocd/traefik/middlewares.yaml`.
+The second process separates routing configuration. It does not remove shared K3s failure modes or isolate compromised workloads by itself.
 
-## Target Design
+## Canary isolation
 
-| Component        | Primary Traefik      | Internal Traefik        |
-| ---------------- | -------------------- | ----------------------- |
-| Namespace        | `kube-system`        | `traefik-internal`      |
-| Service type     | LoadBalancer (VIP)   | ClusterIP only          |
-| Entrypoints      | web (80), websecure (443) | Same ports, different Service |
-| IngressRoutes    | Public + some internal (with middleware) | Internal-only routes |
-| Providers        | Kubernetes CRD       | Same; watch selected namespaces or labels |
+Use the distinct `traefik-internal` CRD ingress class and configure the private provider to select it. Keep existing public routes and provider settings unchanged. Use a compatible class annotation or field without changing shared CRD ownership as an installation side effect.
 
-Internal clients (LAN, Netbird) resolve `*.yggdrasil.mia.cx` via split-horizon DNS to the internal Traefik Service IP or a dedicated internal ingress host. External clients continue to use the primary Traefik VIP.
+Reference namespace-local certificate Secrets from private routes. Do not introduce another default TLSStore, TLSOption, or IngressClass: those resources can affect the current controller despite a separate route class. The [canary isolation evidence](https://github.com/mia-cx/yggdrasil-spec/issues/12#issuecomment-5743501773) includes the inspected Traefik version and source behavior.
 
-## Decisions to Document
+## Migration boundary
 
-- Which namespace(s) the internal Traefik watches for IngressRoutes (all vs. labeled).
-- How internal DNS points to the internal instance (ClusterIP vs. NodePort for Netbird/VPN clients).
-- Whether to migrate existing internal IngressRoutes in bulk or incrementally.
+Prove NetBird stability using canaries and obtain Mia's sign-off before any production service requires it. Keep current Traefik and its existing routes unchanged throughout setup and the pilot. Prepare private ingress alongside that path; existing service access remains available while users adopt Hecate/native authentication and NetBird.
 
-## Related Docs
+Each service moves only after its readiness checks and Mia's approval. Coordinate that service's private DNS, public Janus binding, public-origin removal, and backend restrictions. This temporary coexistence is preparation, not a permanent public bypass. Services not yet migrated retain their existing routes.
 
-- [Traefik](../../infrastructure/traefik.md) — Primary Traefik config, middlewares, TLS.
-- [DNS](../../infrastructure/dns.md) — Split-horizon resolution for `*.yggdrasil.mia.cx`.
+## Remaining implementation decisions
+
+The [accepted K3s integration](https://github.com/mia-cx/yggdrasil-spec/issues/12#issuecomment-5743564646) selects the operator routing pool, node clients, workload boundaries, and DNS contract. [Choose migration order and acceptance checks](https://github.com/mia-cx/yggdrasil-spec/issues/14) selects pilot criteria, per-service sequencing, and rollback. Concrete version pins, manifests, and validation require separate implementation authorization.
+
+## Related documentation
+
+- [DNS](../../infrastructure/dns.md)
+- [Traefik](../../infrastructure/traefik.md)

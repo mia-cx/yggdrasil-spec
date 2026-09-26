@@ -4,7 +4,42 @@ title: DNS
 
 # DNS
 
-## Overview
+## Accepted target
+
+The [accepted DNS/ingress decision](https://github.com/mia-cx/yggdrasil-spec/issues/10#issuecomment-5742199940) replaces the legacy setup below through gradual per-service cutovers. This is an approved plan, not a deployed configuration.
+
+| Consumer after a private service's cutover  | Private service name                                       | Public names                             |
+| ------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------- |
+| NetBird-connected human device              | Explicit private alias and resource route                  | Public records through AdGuard filtering |
+| NetBird-connected service peer              | Explicit records and authorized machine path where needed  | Unfiltered upstream DNS                  |
+| Disconnected device, including the home LAN | Janus connection page                                      | Existing public DNS                      |
+| Kubernetes workload                         | Local Service DNS, or an approved exact HTTPS-name mapping | Unfiltered upstream DNS                  |
+
+Keep existing service URLs. NetBird Custom Zones hold explicit aliases, while the Kubernetes operator owns generated Service records. Private web traffic reaches a separate ClusterIP-only Traefik through cluster routing peers. DNS does not enforce access; routing, workload policy, and application permissions do.
+
+Keep normal Kubernetes CoreDNS at `10.43.0.10`. Retire the extra DNS VIP `10.0.128.3`, both competing DNS Services, and whole-zone overrides only after consumer migration. Hecate, NetBird, and unrelated public services retain public DNS.
+
+### Human DNS filtering
+
+AdGuard Home runs in Docker on the primary NetBird management VM, outside K3s. A dedicated NetBird sidecar provides its planned mesh entrance without publishing host DNS ports. Human-device groups receive filtered DNS with unfiltered outage fallback. Services, infrastructure bootstrap, and Repair use independent unfiltered DNS. Private records remain in NetBird, not AdGuard.
+
+### Node and application resolution
+
+The [accepted K3s integration](https://github.com/mia-cx/yggdrasil-spec/issues/12#issuecomment-5743564646) keeps ordinary pods on CoreDNS and uses exact-name mappings where canonical HTTPS URLs must be retained. Backend egress targets identify the actual mesh host, not a frontend alias pointing back to Traefik.
+
+Keep maintenance-client enrollment from taking over host DNS. In inspected NetBird client v0.78.1, client-side `--disable-dns` leaves the local resolver available while disabling OS configuration changes. Management-side DNS disablement is different. [Service DNS evidence](https://github.com/mia-cx/yggdrasil-spec/issues/12#issuecomment-5743310500) covers explicit application resolver views and their canary checks. Host bootstrap and Repair retain independent resolution.
+
+### Migration boundary
+
+First prove NetBird stability with a canary/client pilot and obtain Mia's sign-off before any production service requires the mesh. Leave current Traefik, its routes, public DNS, and required legacy DNS paths unchanged through that phase. Installing NetBird does not authorize switching everyone's DNS or replacing service pages with Janus.
+
+Move one service at a time when its users and native clients are ready, Hecate/native authentication works, and Mia approves its cutover. Coordinate private DNS, Janus, public-origin removal, and backend restrictions for that service. Other services retain their existing access. After a private cutover, rollback must not silently restore public origin access.
+
+The resolution defines record-type behavior, certificates, bootstrap, and acceptance checks. [Choose migration order and acceptance checks](https://github.com/mia-cx/yggdrasil-spec/issues/14) plans their sequence. Current manifests remain migration evidence, not instructions to apply the target now.
+
+## Legacy overview
+
+The remaining sections preserve the earlier configuration for migration reference. LAN bypasses and wildcard DNS forwarding below are not the replacement design or instructions to deploy it.
 
 | Property | Value                                             |
 | -------- | ------------------------------------------------- |
@@ -14,7 +49,7 @@ title: DNS
 
 Split-horizon DNS provides different resolution depending on whether the client is on Netbird or (for LAN) using a DNS server that returns the Traefik VIP.
 
-## LAN (same network, no Netbird)
+## Legacy LAN access (without NetBird)
 
 When you’re on WiFi at home, your device usually uses the router or public DNS. Those resolve `*.yggdrasil.mia.cx` to the public IP, so traffic goes out and back in and Traefik sees the public IP → **internal-only** returns Forbidden.
 
@@ -28,12 +63,12 @@ To have it work internally from the same network, LAN clients must resolve `*.yg
 
 After LAN DNS returns 10.0.128.2, open `https://radarr.yggdrasil.mia.cx` from the same network; it should hit Traefik with your LAN IP and pass internal-only.
 
-## How It Works (Netbird)
+## Legacy NetBird DNS flow
 
 1. **Not on Netbird:** DNS resolves via Cloudflare, which serves Janus landing pages ("Connect to Yggdrasil to access this service")
 2. **On Netbird:** Domain resources intercept `*.mia.cx` queries, route through exit nodes, which resolve via K3s CoreDNS to the Traefik VIP
 
-## Architecture
+## Legacy architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -55,7 +90,7 @@ After LAN DNS returns 10.0.128.2, open `https://radarr.yggdrasil.mia.cx` from th
                               └──────────────────────────────┘
 ```
 
-## Setup
+## Legacy setup
 
 ### Layer 1 -- Netbird Domain Resources
 
@@ -93,7 +128,7 @@ kubectl apply -f argocd/cloudflare-ddns/deployment.yaml
 kubectl apply -f argocd/cloudflare-ddns/daemonset.yaml
 ```
 
-## Verification
+## Legacy verification
 
 ```bash
 # Test external resolution

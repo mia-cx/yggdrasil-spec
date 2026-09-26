@@ -244,7 +244,7 @@ FlareSolverr, Privoxy, and Prefetcharr are internal-only services with no web UI
 
 ### 403 Forbidden — Traefik vs app
 
-- **Traefik (internal-only):** Rejects when the client IP is not in 10.0.0.0/8 or 100.64.0.0/10 (e.g. you're resolving the hostname via public DNS so traffic goes out and back in; see [DNS — LAN](../infrastructure/dns.md#lan-same-network-no-netbird)).
+- **Traefik (internal-only):** Rejects when the client IP is not in 10.0.0.0/8 or 100.64.0.0/10 (e.g. you're resolving the hostname via public DNS so traffic goes out and back in; see [Legacy LAN DNS](../infrastructure/dns.md#legacy-lan-access-without-netbird)).
 - **App (e.g. Radarr):** Can return 403 for auth or “external” connection rules. To see who returned 403, enable Traefik access logs (see [Traefik — Verify client IP](../infrastructure/traefik.md#verify-client-ip-access-logs)) and check the log line for that request: if the request reached the backend and the backend status is 403, the app returned it. In Radarr go to **Settings → General → Security**: if “Authentication” is “Required for external addresses”, the app treats the request as external when it doesn’t see a local client IP; ensure Traefik is sending `X-Forwarded-For` (Traefik does this by default; the Radarr IngressRoute uses the `forwarded-proto` middleware so the app gets `X-Forwarded-Proto: https` as well).
 
 ## Storage

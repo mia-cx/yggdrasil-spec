@@ -4,7 +4,15 @@ title: Janus
 
 # Janus
 
-## Overview
+## Planning status
+
+The [accepted DNS/ingress decision](https://github.com/mia-cx/yggdrasil-spec/issues/10#issuecomment-5742199940) uses exact Cloudflare Worker Custom Domains for selected private service names. Janus provides NetBird and Hecate connection instructions, never a proxy to the private application. Keep responses uncached and avoid logging or reflecting callback queries, cookies, credentials, and request bodies.
+
+Bind a production hostname to Janus only during that service's approved private cutover. Keep current Traefik and existing service access working during NetBird setup. Public services, including Nextcloud, remain outside Janus.
+
+The wildcard routes, service list, and code below are legacy examples, not the accepted deployment recipe or evidence of a deployed Worker.
+
+## Legacy overview
 
 | Property | Value                  |
 | -------- | ---------------------- |
@@ -20,7 +28,7 @@ When a user tries to access `jellyfin.yggdrasil.mia.cx` without being connected 
 2. Janus Worker intercepts the request
 3. Returns a friendly page explaining how to connect
 
-## Deployment
+## Legacy deployment
 
 **Via Cloudflare Dashboard:**
 
@@ -35,7 +43,7 @@ cd apps/janus
 npx wrangler deploy
 ```
 
-## Configuration
+## Legacy configuration
 
 ### Worker Code
 
