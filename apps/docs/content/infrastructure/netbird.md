@@ -12,6 +12,8 @@ Explicit private records and resource routes replace the wildcard forwarding bel
 
 The same VM hosts Dockerized AdGuard Home for human-device DNS filtering, with unfiltered outage fallback. Service, bootstrap, and Repair DNS remain independent and unfiltered. This is an approved plan, not a deployed configuration.
 
+The primary NetBird VM (`yggdrasil-olympus-1`, 10.0.1.4) exists; foundation is in progress and it does not yet serve the mesh.
+
 ## Accepted K3s integration
 
 The [K3s integration resolution](https://github.com/mia-cx/yggdrasil-spec/issues/12#issuecomment-5743564646) separates node maintenance, application routing, and recovery:
