@@ -1,9 +1,14 @@
 # Traefik static config for the NetBird VM proxy.
 entryPoints:
   # Backend for the cluster Traefik. Plain HTTP entrypoint; Traefik accepts
-  # both HTTP/1.1 and h2c (prior-knowledge HTTP/2) here.
+  # both HTTP/1.1 and h2c (prior-knowledge HTTP/2) here. Trust X-Forwarded-*
+  # only from the LAN/K3s node range so the cluster Traefik's forwarded
+  # scheme and client IP pass through (matches argocd/traefik LAN trust).
   web:
     address: ":8080"
+    forwardedHeaders:
+      trustedIPs:
+        - "10.0.0.0/16"
   # Direct diagnosis/bypass path with its own certificate.
   websecure:
     address: ":8443"
