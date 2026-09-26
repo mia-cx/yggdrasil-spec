@@ -55,6 +55,9 @@ sudo cp .env.example .env && sudo chmod 600 .env
 # admin email/password, and fresh random values, e.g.:
 #   openssl rand -base64 32        # NETBIRD_AUTH_SECRET, NB_SESSION_COOKIE_ENCRYPTION_KEY
 #   openssl rand -base64 32        # NETBIRD_STORE_ENCRYPTION_KEY
+#   openssl rand -hex 24           # NETBIRD_ADMIN_PASSWORD
+# .env is sourced as shell code, so every value must stay shell-safe:
+# no $, spaces, quotes, or backticks (hex/base64 output is safe).
 sudo bash -c 'set -a; . ./.env; set +a; \
   export NETBIRD_ADMIN_PASSWORD_HASH=$(htpasswd -bnBC 12 "" "$NETBIRD_ADMIN_PASSWORD" | tr -d ":\n"); \
   envsubst < config.yaml.tmpl > config.yaml'
