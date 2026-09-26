@@ -21,7 +21,7 @@ title: Architecture
 | -------------- | ---- | --------- | -------- | ---- | -------------------------------- |
 | Storage LXC    | LXC  | 1GB RAM   | 10.0.1.2 | 1002 | MergerFS + NFS exports           |
 | K3s VM         | VM   | 16GB RAM  | 10.0.1.3 | 1003 | Kubernetes workloads             |
-| Netbird LXC    | LXC  | 512MB-1GB | 10.0.1.4 | 1004 | Overlay network management       |
+| NetBird VM     | VM   | 4GB RAM   | 10.0.1.4 | 1004 | Overlay network management       |
 | Wings VM       | VM   | 4-8GB RAM | 10.0.1.6 | 1006 | Pelican/Pterodactyl game servers |
 | Workstation VM | VM   | 48GB RAM  | 10.0.3.1 | 3001 | Gaming/Blender + GPU             |
 
@@ -41,7 +41,7 @@ Download disks, will join Proxmox cluster after migration.
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
-│  │ Storage LXC  │  │ Netbird LXC  │  │ Wings VM     │       │
+│  │ Storage LXC  │  │ NetBird VM   │  │ Wings VM     │       │
 │  │ (10.0.1.2)   │  │ (10.0.1.4)   │  │ (10.0.1.6)   │       │
 │  │ MergerFS     │  │ WireGuard    │  │ Docker +     │       │
 │  │ NFS exports  │  │ Management   │  │ Game servers │       │
