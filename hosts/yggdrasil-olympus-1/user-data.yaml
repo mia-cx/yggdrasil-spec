@@ -28,18 +28,17 @@ packages:
   - qemu-guest-agent
 
 write_files:
-  - path: /etc/apt/sources.list.d/docker.list
-    permissions: "0644"
-    content: |
-      deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian trixie stable
   - path: /usr/local/sbin/olympus-bootstrap.sh
     permissions: "0755"
     content: |
       #!/bin/sh
       set -e
+      # Docker repo: key first, then the source list, then apt update. Order
+      # matters because the packages module may run before this script.
       install -m 0755 -d /etc/apt/keyrings
       curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
       chmod a+r /etc/apt/keyrings/docker.asc
+      echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian trixie stable" > /etc/apt/sources.list.d/docker.list
       apt-get update
       DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin qemu-guest-agent
       mkdir -p /opt/netbird
