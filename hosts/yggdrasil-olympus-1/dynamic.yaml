@@ -1,0 +1,56 @@
+# Traefik dynamic config (file provider) for netbird.mia.cx.
+# Path split follows the official self-hosted Traefik template for
+# netbird-server 0.79.0: gRPC services need h2c; relay/signal/management
+# WebSockets, the REST API, and the embedded IdP stay plain HTTP because
+# WebSockets cannot ride h2c. The dashboard is the catch-all.
+http:
+  routers:
+    netbird-grpc-http:
+      rule: "Host(`netbird.mia.cx`) && (PathPrefix(`/signalexchange.SignalExchange/`) || PathPrefix(`/management.ManagementService/`) || PathPrefix(`/management.ProxyService/`))"
+      entryPoints: [web]
+      service: netbird-server-h2c
+      priority: 100
+    netbird-backend-http:
+      rule: "Host(`netbird.mia.cx`) && (PathPrefix(`/relay`) || PathPrefix(`/ws-proxy/`) || PathPrefix(`/api`) || PathPrefix(`/oauth2`))"
+      entryPoints: [web]
+      service: netbird-server
+      priority: 100
+    netbird-dashboard-http:
+      rule: "Host(`netbird.mia.cx`)"
+      entryPoints: [web]
+      service: netbird-dashboard
+      priority: 1
+    netbird-grpc-https:
+      rule: "Host(`netbird.mia.cx`) && (PathPrefix(`/signalexchange.SignalExchange/`) || PathPrefix(`/management.ManagementService/`) || PathPrefix(`/management.ProxyService/`))"
+      entryPoints: [websecure]
+      service: netbird-server-h2c
+      tls:
+        certResolver: letsencrypt
+      priority: 100
+    netbird-backend-https:
+      rule: "Host(`netbird.mia.cx`) && (PathPrefix(`/relay`) || PathPrefix(`/ws-proxy/`) || PathPrefix(`/api`) || PathPrefix(`/oauth2`))"
+      entryPoints: [websecure]
+      service: netbird-server
+      tls:
+        certResolver: letsencrypt
+      priority: 100
+    netbird-dashboard-https:
+      rule: "Host(`netbird.mia.cx`)"
+      entryPoints: [websecure]
+      service: netbird-dashboard
+      tls:
+        certResolver: letsencrypt
+      priority: 1
+  services:
+    netbird-server:
+      loadBalancer:
+        servers:
+          - url: "http://netbird-server:80"
+    netbird-server-h2c:
+      loadBalancer:
+        servers:
+          - url: "h2c://netbird-server:80"
+    netbird-dashboard:
+      loadBalancer:
+        servers:
+          - url: "http://dashboard:80"

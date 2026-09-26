@@ -1,0 +1,55 @@
+name: netbird
+
+x-default: &default
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 100m
+      max-file: "2"
+
+services:
+  # VM-local reverse proxy. :8080 is the plain HTTP backend for the cluster
+  # Traefik (accepts HTTP/1.1 and h2c); :8443 terminates TLS directly for
+  # diagnosis and K3s-independent access.
+  traefik:
+    <<: *default
+    image: traefik:v3.7.13
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    environment:
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
+    volumes:
+      - ./traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ./dynamic.yaml:/etc/traefik/dynamic.yaml:ro
+      - traefik_letsencrypt:/letsencrypt
+    networks: [netbird]
+
+  # Combined server: Management + Signal + Relay (+ embedded IdP at /oauth2).
+  netbird-server:
+    <<: *default
+    image: netbirdio/netbird-server:0.79.0
+    volumes:
+      - netbird_data:/var/lib/netbird
+      - ./config.yaml:/etc/netbird/config.yaml:ro
+    command: ["--config", "/etc/netbird/config.yaml"]
+    networks: [netbird]
+
+  dashboard:
+    <<: *default
+    image: netbirdio/dashboard:v2.92.0
+    env_file: ./dashboard.env
+    networks: [netbird]
+
+volumes:
+  netbird_data:
+  traefik_letsencrypt:
+
+networks:
+  netbird:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+          gateway: 172.30.0.1

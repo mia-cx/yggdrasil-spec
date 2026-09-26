@@ -1,0 +1,28 @@
+# Traefik static config for the NetBird VM proxy.
+entryPoints:
+  # Backend for the cluster Traefik. Plain HTTP entrypoint; Traefik accepts
+  # both HTTP/1.1 and h2c (prior-knowledge HTTP/2) here.
+  web:
+    address: ":8080"
+  # Direct diagnosis/bypass path with its own certificate.
+  websecure:
+    address: ":8443"
+
+providers:
+  file:
+    filename: /etc/traefik/dynamic.yaml
+    watch: true
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: security@mia.cx
+      storage: /letsencrypt/acme.json
+      # DNS-01 keeps renewal independent of K3s and inbound port 80.
+      dnsChallenge:
+        provider: cloudflare
+        resolvers:
+          - "1.1.1.1:53"
+
+log:
+  level: INFO
