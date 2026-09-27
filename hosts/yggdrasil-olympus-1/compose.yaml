@@ -57,9 +57,57 @@ services:
     volumes:
       - netbird_router:/var/lib/netbird
 
+  # AdGuard Home sidecar for human mesh devices. The netbird-dns peer owns the
+  # network namespace: AdGuard joins it, so mesh DNS traffic enters over
+  # wt0 directly and never touches a host port. The NetBird resolver is parked
+  # on 127.0.0.153:5053 so it does not fight AdGuard for :53. The admin UI
+  # binds only the dns-bridge address 172.30.1.2 — the host publish reaches
+  # it, the mesh interface does not.
+  netbird-dns:
+    <<: *default
+    image: netbirdio/netbird:0.79.0
+    cap_add: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE]
+    environment:
+      - NB_SETUP_KEY=${NB_DNS_SETUP_KEY}
+      - NB_MANAGEMENT_URL=https://netbird.mia.cx
+      - NB_HOSTNAME=olympus-dns
+      - NB_DNS_RESOLVER_ADDRESS=127.0.0.153:5053
+    volumes:
+      - netbird_dns:/var/lib/netbird
+    ports:
+      - "10.0.1.4:3000:3000"
+    networks:
+      dns:
+        ipv4_address: 172.30.1.2
+
+  adguard:
+    <<: *default
+    image: adguard/adguardhome:v0.107.79
+    network_mode: service:netbird-dns
+    depends_on: [netbird-dns]
+    # Refuse to start without the rendered config: AdGuard would otherwise
+    # serve its unauthenticated setup wizard on the published admin port.
+    # Overriding entrypoint clears the image Cmd, so command restates it.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - 'test -s /opt/adguardhome/conf/AdGuardHome.yaml || { echo "adguard/conf/AdGuardHome.yaml missing: render it first (README)" >&2; exit 1; }; exec /opt/adguardhome/AdGuardHome "$$@"'
+      - adguard
+    command:
+      - "--no-check-update"
+      - "-c"
+      - "/opt/adguardhome/conf/AdGuardHome.yaml"
+      - "-w"
+      - "/opt/adguardhome/work"
+    volumes:
+      - ./adguard/conf:/opt/adguardhome/conf
+      - adguard_work:/opt/adguardhome/work
+
 volumes:
   netbird_data:
   netbird_router:
+  netbird_dns:
+  adguard_work:
   traefik_letsencrypt:
 
 networks:
@@ -69,3 +117,9 @@ networks:
       config:
         - subnet: 172.30.0.0/24
           gateway: 172.30.0.1
+  dns:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.1.0/24
+          gateway: 172.30.1.1

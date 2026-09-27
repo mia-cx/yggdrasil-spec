@@ -57,12 +57,18 @@ sudo cp .env.example .env && sudo chmod 600 .env
 #   openssl rand -base64 32        # NETBIRD_AUTH_SECRET, NB_SESSION_COOKIE_ENCRYPTION_KEY
 #   openssl rand -base64 32        # NETBIRD_STORE_ENCRYPTION_KEY
 #   openssl rand -hex 24           # NETBIRD_ADMIN_PASSWORD
+#   openssl rand -hex 24           # ADGUARD_ADMIN_PASSWORD
 # .env is sourced as shell code, so every value must stay shell-safe:
 # no $, spaces, quotes, or backticks (hex/base64 output is safe).
 sudo bash -c 'set -a; . ./.env; set +a; \
   export NETBIRD_ADMIN_PASSWORD_HASH=$(htpasswd -bnBC 12 "" "$NETBIRD_ADMIN_PASSWORD" | tr -d ":\n"); \
   envsubst < config.yaml.tmpl > config.yaml'
 sudo chmod 600 config.yaml
+sudo bash -c 'set -a; . ./.env; set +a; \
+  export ADGUARD_ADMIN_PASSWORD_HASH=$(htpasswd -bnBC 12 "" "$ADGUARD_ADMIN_PASSWORD" | tr -d ":\n"); \
+  mkdir -p adguard/conf; \
+  envsubst "\$ADGUARD_ADMIN_PASSWORD_HASH" < adguard.yaml.tmpl > adguard/conf/AdGuardHome.yaml'
+sudo chmod 600 adguard/conf/AdGuardHome.yaml
 sudo docker compose up -d
 sudo docker compose ps
 ```
@@ -131,10 +137,9 @@ NetBird objects (all in the primary account, by name):
 - Group `routers-olympus` — holds the routing peer.
 - Network `olympus-lan` — resource `10.0.0.0/16`, routing group
   `routers-olympus`, masquerade on, metric 9999.
-- Policy `olympus-lan` — grants a source group access to that resource. The
-  intended source is the JWT group `svc-lan`; until Hecate issues it, the
-  temporary `test-lan` group stands in. The `Default` policy is untouched;
-  network resources are only reachable through policies that target them.
+- Policy `olympus-lan` — grants the JWT-issued `svc-lan` group access to
+  that resource. The `Default` policy is untouched; network resources are
+  only reachable through policies that target them.
 
 No ufw rule is needed: NetBird inserts its own wt0 accept rules ahead of
 ufw/Docker and enforces access through NetBird policies.
@@ -148,6 +153,49 @@ sudo docker compose up -d netbird-router
 sudo docker compose exec netbird-router netbird status -d
 # expect: Interface type: Kernel, Networks: 10.0.0.0/16
 ```
+
+## AdGuard DNS for human devices
+
+`netbird-dns` is a second NetBird peer; `adguard` shares its network
+namespace (`network_mode: service:`), so AdGuard's `:53` sits directly on the
+peer's mesh address — no host port for DNS. The NetBird resolver is parked
+on `127.0.0.153:5053` (`NB_DNS_RESOLVER_ADDRESS`) to stay off `:53`. The
+admin UI is the only published port and binds the dns-bridge address
+`172.30.1.2:3000`, which the host publishes as `http://10.0.1.4:3000` — it
+is not on the peer's mesh address (user `admin`, password in `.env`, also
+copied to `~/.config/yggdrasil/adguard-admin.env` on the admin Mac).
+
+NetBird objects (by name): group `dns-adguard`; nameserver group `adguard`
+with upstreams `[<sidecar mesh IP>:53, 1.1.1.1:53]` — ordered within one
+group, so 1.1.1.1 only answers when AdGuard fails (unfiltered outage
+fallback); policies `dns-adguard` (UDP 53) and `dns-adguard-tcp` (TCP 53)
+allow the human group -> `dns-adguard`. The API silently drops a second
+protocol rule inside one policy, so each protocol gets its own policy. The
+nameserver group and both policy sources are `netbird-enroll`. Every SSO
+personal device carries it, because group propagation copies the
+signing-in user's JWT groups onto the peer. So servers, routers, sidecars,
+K3s nodes and other service peers always enroll with setup keys, never
+with SSO: they never carry `netbird-enroll` and keep unfiltered host DNS.
+
+`adguard/conf/AdGuardHome.yaml` is rendered from `adguard.yaml.tmpl` (minimal
+file; v0.107.79 writes `schema_version: 34` and fills defaults). AdGuard
+rewrites its YAML at runtime: the template is the source of truth and
+re-rendering overwrites UI edits. The initial deployment renders it
+(rebuild steps above); the `adguard` container refuses to start without the
+rendered file, so a forgotten render fails closed instead of serving the
+setup wizard. To re-render after editing the template:
+
+```bash
+sudo bash -c 'set -a; . ./.env; set +a; \
+  export ADGUARD_ADMIN_PASSWORD_HASH=$(htpasswd -bnBC 12 "" "$ADGUARD_ADMIN_PASSWORD" | tr -d ":\n"); \
+  mkdir -p adguard/conf; \
+  envsubst "\$ADGUARD_ADMIN_PASSWORD_HASH" < adguard.yaml.tmpl > adguard/conf/AdGuardHome.yaml'
+sudo chmod 600 adguard/conf/AdGuardHome.yaml
+sudo docker compose restart adguard
+```
+
+If the `netbird_dns` volume is lost, the re-enrolled sidecar gets a new mesh
+IP — update the first nameserver in the `adguard` nameserver group.
 
 ## Upgrading versions
 

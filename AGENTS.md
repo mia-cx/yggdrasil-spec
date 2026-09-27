@@ -91,9 +91,9 @@ This repository currently includes the OpenTofu scaffold and example Cloudflare 
 
 ## AdGuard filtering boundary
 
-- Accepted scope: all human mesh devices receive AdGuard filtering; services and infrastructure use unfiltered DNS. This is planning-only.
-- Accepted outage policy: human devices fall back to unfiltered DNS when AdGuard is unavailable. Verify client-side failover and recovery before rollout.
-- Accepted placement: AdGuard Home runs in Docker on the primary NetBird management VM, outside K3s. The planned mesh entrance uses a dedicated NetBird sidecar without published host DNS ports.
+- Scope (live): human mesh devices (`netbird-enroll`) get AdGuard filtering; services and infrastructure use unfiltered DNS.
+- Outage policy (live): human devices fall back to unfiltered DNS when AdGuard is unavailable, through `1.1.1.1` as the second nameserver in the same `adguard` nameserver group. Re-verify failover after changing that group.
+- Placement (live): AdGuard Home runs in Docker on the primary NetBird VM, outside K3s, in the network namespace of the `olympus-dns` NetBird sidecar; no host DNS port is published.
 - Distribute the AdGuard primary nameserver to human-device groups, not `All`. Keep service peers outside those groups, including administrator-owned servers.
 - Private records remain in NetBird Custom Zones. Distinguish Management-side DNS disablement from the client --disable-dns flag: inspected client v0.78.1 preserves its local DNS service while leaving OS resolver settings untouched. Read the [service DNS evidence](https://github.com/mia-cx/yggdrasil-spec/issues/12#issuecomment-5743310500) before configuring application lookups.
 - DNS assignment is per peer, not per process. Services sharing a human device need an explicit unfiltered resolver path.
