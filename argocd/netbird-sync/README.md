@@ -23,6 +23,8 @@ One Secret, `netbird-sync` in namespace `netbird-sync`, not in Git:
 Recreate (values via files/stdin, never argv):
 
 ```bash
+set -euo pipefail
+
 # Authentik token — also wired into the blueprint via values.yaml
 openssl rand -hex 32 | tr -d '\n' > /tmp/ak-token
 kubectl --context default -n authentik create secret generic \
@@ -41,12 +43,23 @@ curl -sf -H "Authorization: Token $ADMIN_PAT" -H 'Content-Type: application/json
 kubectl --context default -n authentik get secret authentik-secrets \
   -o jsonpath='{.data.email-password}' | base64 -d > /tmp/smtp-pass
 
+test -s /tmp/ak-token && test -s /tmp/nb-token
 kubectl --context default -n netbird-sync create secret generic netbird-sync \
   --from-file=netbird-token=/tmp/nb-token \
   --from-file=authentik-token=/tmp/ak-token \
   --from-file=smtp-password=/tmp/smtp-pass \
   --from-literal=alert-to='<alert recipient>'
 rm /tmp/ak-token /tmp/nb-token /tmp/smtp-pass
+```
+
+Create both Secrets before ArgoCD syncs the authentik app. If
+`authentik/netbird-sync-authentik` is created or rotated later, restart so
+the pods pick up the env — a missing or stale `NETBIRD_SYNC_AUTHENTIK_TOKEN`
+makes the blueprint's `!Env` fail:
+
+```bash
+kubectl --context default -n authentik rollout restart \
+  deploy/authentik-worker deploy/authentik-server
 ```
 
 ## Manual run

@@ -43,6 +43,7 @@ global:
           optional: true
     # Token value for the netbird-sync service account, read by its blueprint
     # (!Env). Optional: a missing Secret fails the blueprint, not Authentik.
+    # Create before sync; restart worker after rotating.
     - name: NETBIRD_SYNC_AUTHENTIK_TOKEN
       valueFrom:
         secretKeyRef:

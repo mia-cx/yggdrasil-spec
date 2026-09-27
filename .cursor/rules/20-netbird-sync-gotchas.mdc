@@ -27,6 +27,8 @@ alwaysApply: false
   (`authentik-blueprint-netbird-sync`) so a missing
   `NETBIRD_SYNC_AUTHENTIK_TOKEN` env can't fail the NetBird login blueprint.
 - The NetBird PAT expires in 365 days (max the API allows); expiry shows up
-  as the failure email, then rotate per the README.
+  as the failure email, then rotate per the README. After rotating the
+  Authentik token Secret, restart authentik worker+server — env loads only
+  at pod start and the blueprint `!Env` fails until then.
 - No package.json reaches the pod (ConfigMap mount), so keep the TS
   CJS-safe: no top-level await; Node's module detection handles the imports.
