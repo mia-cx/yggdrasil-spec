@@ -58,3 +58,10 @@ policies.
 - Add CoreDNS server blocks to the existing `mia.server` key, not a new
   `.server` key. The `reload` plugin picks up edits to the existing key
   without a restart; a new key is only certain to load at CoreDNS startup.
+- The spread is `maxSkew: 1` with `DoNotSchedule` and no `minDomains`. Once a
+  lost node's Node object is deleted, all four routers schedule on the
+  survivor. While the dead node still exists, the survivor keeps only its own
+  two, and with two etcd members a down node also stops the API. After a node
+  returns or is replaced,
+  `kubectl -n netbird-operator rollout restart deploy/networkrouter-k8s-routers`
+  restores the 2/2 spread.
