@@ -215,13 +215,8 @@ const run = async (): Promise<void> => {
   const permissions = new Map<string, readonly string[]>();
   for (const u of users) {
     if (u.idp_id !== hecateIdp.id) continue;
-    let sub: string;
-    try {
-      sub = decodeDexUserId(u.id).sub;
-    } catch {
-      console.warn(`user ${u.id.slice(0, 8)}: undecodable id, skipping`);
-      continue;
-    }
+    // Undecodable Hecate-idp ids fail the run (see lib.ts).
+    const sub = decodeDexUserId(u.id).sub;
     const akPk = activeByUid.get(sub);
     if (akPk === undefined) continue; // deleted or inactive in Hecate
     permissions.set(sub, await claimGroupsForUser(mapping.pk, akPk));
