@@ -42,8 +42,24 @@ services:
     env_file: ./dashboard.env
     networks: [netbird]
 
+  # Olympus LAN routing peer. Host network so routed mesh traffic leaves via
+  # the VM's LAN (masqueraded); kernel WireGuard. Setup key auto-group:
+  # routers-olympus. Spent after the first enrollment; state lives in the volume.
+  netbird-router:
+    <<: *default
+    image: netbirdio/netbird:0.79.0
+    network_mode: host
+    cap_add: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE]
+    environment:
+      - NB_SETUP_KEY=${NB_ROUTER_SETUP_KEY}
+      - NB_MANAGEMENT_URL=https://netbird.mia.cx
+      - NB_HOSTNAME=olympus-router
+    volumes:
+      - netbird_router:/var/lib/netbird
+
 volumes:
   netbird_data:
+  netbird_router:
   traefik_letsencrypt:
 
 networks:

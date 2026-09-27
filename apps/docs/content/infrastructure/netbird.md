@@ -14,6 +14,12 @@ The same VM hosts Dockerized AdGuard Home for human-device DNS filtering, with u
 
 The primary NetBird VM (`yggdrasil-olympus-1`, 10.0.1.4) exists; foundation is in progress and it does not yet serve the mesh.
 
+## Olympus LAN route
+
+Deployed: a `netbird-router` client container on `yggdrasil-olympus-1` routes the mesh into the 10.0.0.0/16 LAN through the NetBird Network resource `olympus-lan`, with masquerade so LAN devices see VM-local traffic.
+
+Access is granted only by the `olympus-lan` policy, whose source group is the JWT-issued `svc-lan`; the temporary `test-lan` group stands in until [#25](https://github.com/mia-cx/yggdrasil-spec/issues/25) delivers `svc-lan`. The `Default` policy does not grant it: network resources are reachable only through policies that target them. Operations are in the [host README](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/yggdrasil-olympus-1/README.md#lan-routing-client).
+
 ## Accepted K3s integration
 
 The [K3s integration resolution](https://github.com/mia-cx/yggdrasil-spec/issues/12#issuecomment-5743564646) separates node maintenance, application routing, and recovery:
