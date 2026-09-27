@@ -1,0 +1,21 @@
+## netbird-sync writes only its own alert-state ConfigMap in its namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: netbird-sync
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: netbird-sync
+subjects:
+  - kind: ServiceAccount
+    name: netbird-sync
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: netbird-sync

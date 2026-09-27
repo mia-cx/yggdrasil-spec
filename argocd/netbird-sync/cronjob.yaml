@@ -1,0 +1,102 @@
+## netbird-sync — hourly Hecate -> NetBird permission sync.
+## Aligns jwt-issued NetBird auto_groups with each active Hecate user's
+## permission claim, evaluated through the Authentik scope-mapping test (the
+## same code path as sign-in). Emails once on failure start and recovery.
+##
+## 1. Create the namespace and the Secret (values live outside Git; the
+##    exact commands are in README.md):
+##   kubectl --context default create namespace netbird-sync
+##   kubectl --context default -n netbird-sync create secret generic netbird-sync \
+##     --from-file=netbird-token=... --from-file=authentik-token=... \
+##     --from-file=smtp-password=... --from-literal=alert-to=...
+##
+## 2. DRY_RUN is "true" below: flip to "false" once a dry-run log looks right.
+##    Manual run: kubectl --context default -n netbird-sync \
+##      create job --from=cronjob/netbird-sync sync-manual-$(date +%s)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: netbird-sync
+spec:
+  schedule: "17 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 300
+      template:
+        spec:
+          serviceAccountName: netbird-sync
+          restartPolicy: Never
+          containers:
+            - name: sync
+              image: node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
+              command: ["node", "/app/main.ts"]
+              securityContext:
+                runAsNonRoot: true
+                runAsUser: 1000
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 48Mi
+                limits:
+                  cpu: 200m
+                  memory: 192Mi
+              env:
+                - name: NETBIRD_API_URL
+                  value: https://netbird.mia.cx/api
+                - name: NETBIRD_IDP_NAME
+                  value: Hecate
+                - name: AUTHENTIK_URL
+                  value: http://authentik-server.authentik.svc
+                - name: AUTHENTIK_MAPPING_NAME
+                  value: NetBird profile with permissions
+                - name: SMTP_HOST
+                  value: email-oauth2-proxy.email-oauth2-proxy
+                - name: SMTP_PORT
+                  value: "587"
+                - name: SMTP_USER
+                  value: noreply@mia.cx
+                - name: ALERT_FROM
+                  value: NetBird sync <noreply@mia.cx>
+                - name: STATE_CONFIGMAP
+                  value: netbird-sync-state
+                - name: DRY_RUN
+                  value: "true"
+                # Lets fetch() trust the cluster CA for the k8s API calls.
+                - name: NODE_EXTRA_CA_CERTS
+                  value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                - name: NETBIRD_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: netbird-sync
+                      key: netbird-token
+                - name: AUTHENTIK_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: netbird-sync
+                      key: authentik-token
+                - name: SMTP_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: netbird-sync
+                      key: smtp-password
+                - name: ALERT_TO
+                  valueFrom:
+                    secretKeyRef:
+                      name: netbird-sync
+                      key: alert-to
+              volumeMounts:
+                - name: script
+                  mountPath: /app
+                  readOnly: true
+          volumes:
+            - name: script
+              configMap:
+                name: netbird-sync-script
