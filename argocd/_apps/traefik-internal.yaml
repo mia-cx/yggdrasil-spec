@@ -1,0 +1,36 @@
+## Private Traefik — mesh-only ingress for NetBird-cutover services.
+## Same chart as public, isolated by the traefik-internal ingress class.
+## skipCrds: the public traefik app owns the CRDs already.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik-internal
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://traefik.github.io/charts
+      chart: traefik
+      targetRevision: 41.4.0 # Update: helm search repo traefik/traefik
+      helm:
+        releaseName: traefik-internal
+        skipCrds: true
+        valueFiles:
+          - $values/argocd/traefik-internal/values.yaml
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      path: argocd/traefik-internal
+      directory:
+        exclude: "{values.yaml,README.md}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik-internal
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,77 @@
+## Private Traefik — same chart as the public instance, isolated by class.
+## Mesh-only: reachable only through NetBird routing pods, never through the
+## public Traefik or the LAN.
+
+image:
+  tag: "3.7.13"
+
+# No IngressClass object: the public instance keeps the default. Private
+# routes opt in per IngressRoute via the annotation below.
+ingressClass:
+  enabled: false
+
+providers:
+  kubernetesCRD:
+    # The public Traefik's provider class is unset, so it processes only
+    # routes with no class annotation or class `traefik`. Annotated
+    # `kubernetes.io/ingress.class: traefik-internal` routes land here only.
+    ingressClass: traefik-internal
+    # Explicit list, not cluster-wide: new namespaces opt in deliberately.
+    namespaces:
+      - canary
+    allowCrossNamespace: false
+  kubernetesIngress:
+    enabled: false
+
+# No chart Service: each private service gets its own entrypoint port and a
+# hand-written pinned ClusterIP (see canary-service.yaml) so NetBird
+# L3/L4 policies can address it.
+service:
+  enabled: false
+
+# One entrypoint per private service. kube-proxy maps the service's
+# ClusterIP:443 to this pod port; the ports below stay unexposed.
+ports:
+  canary:
+    port: 10001
+    expose:
+      default: false
+    protocol: TCP
+
+# Same HA shape as the public instance.
+deployment:
+  replicas: 2
+
+# With 2 replicas plus required anti-affinity, a surge pod cannot schedule;
+# roll one pod at a time.
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 0
+    maxUnavailable: 1
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: workloads/critical
+              operator: Exists
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/instance: traefik-internal-traefik-internal
+        topologyKey: kubernetes.io/hostname
+
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/instance: traefik-internal-traefik-internal
