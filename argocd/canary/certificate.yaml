@@ -1,0 +1,14 @@
+# Namespace-local certificate for the canary route. cert-manager issues it
+# via the shared DNS-01 issuer; nothing outside the canary namespace reads it.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: canary-tls
+  namespace: canary
+spec:
+  secretName: canary-tls
+  dnsNames:
+    - canary.mia.cx
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer

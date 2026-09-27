@@ -1,0 +1,25 @@
+# NetBird resource for the canary destination. The operator creates a Network
+# resource addressed at the canary Service ClusterIP; the res-canary group is
+# what policies reference (svc-canary peers get TCP 443 via policy `canary`).
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-canary
+  namespace: traefik-internal
+spec:
+  name: res-canary
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: canary
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: canary
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-canary
