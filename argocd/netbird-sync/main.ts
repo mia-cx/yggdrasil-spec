@@ -68,7 +68,7 @@ interface AkUser {
 const fetchAllAuthentikUsers = async (): Promise<AkUser[]> => {
   const users: AkUser[] = [];
   let url: string | null =
-    `${env.authentikUrl}/api/v3/core/users/?page_size=100`;
+    `${env.authentikUrl}/api/v3/core/users/?page_size=100&include_groups=false`;
   while (url) {
     const page = (await fetchJson(url, env.authentikToken, "Bearer")) as {
       results: AkUser[];
@@ -76,7 +76,7 @@ const fetchAllAuthentikUsers = async (): Promise<AkUser[]> => {
     };
     users.push(...page.results);
     url = page.pagination.next
-      ? `${env.authentikUrl}/api/v3/core/users/?page=${page.pagination.next}&page_size=100`
+      ? `${env.authentikUrl}/api/v3/core/users/?page=${page.pagination.next}&page_size=100&include_groups=false`
       : null;
   }
   return users;
