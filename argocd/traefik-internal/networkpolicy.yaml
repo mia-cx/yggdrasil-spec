@@ -1,0 +1,27 @@
+# The private Traefik accepts only mesh-routed traffic: the operator's routing
+# pods masquerade, so mesh flows arrive from routing-pod IPs. Anything not
+# through NetBird (LAN, pod-to-pod, NodePort) is refused at the pod. Each new
+# private service adds its entrypoint port to the list below.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: traefik-internal
+  namespace: traefik-internal
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: traefik-internal-traefik-internal
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: netbird-operator
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: networkrouter
+              app.kubernetes.io/instance: k8s-routers
+      ports:
+        - protocol: TCP
+          port: 10001

@@ -30,6 +30,9 @@ Each private service gets its own enforceable network destination:
 - A NetBird policy granting a `svc-*` permission group TCP 443 to the
   resource group, and a NetBird DNS zone per exact hostname answering the
   pinned IP.
+- NetworkPolicies on both ends: Traefik admits only the routing pods on the
+  service's entrypoint port, and the backend admits only the Traefik pods
+  (see `networkpolicy.yaml` here and `argocd/canary/networkpolicy.yaml`).
 
 | Service | Entrypoint port | ClusterIP   | Resource group | Permission group | Hostname      |
 | ------- | --------------- | ----------- | -------------- | ---------------- | ------------- |
@@ -39,12 +42,15 @@ Each private service gets its own enforceable network destination:
 
 1. Pick an unused entrypoint port and a free `10.43.0.x` IP (from
    `10.43.0.128/25`); add both to the table above.
-2. Add `ports.<service>` in `values.yaml` (`expose.default: false`).
+2. Add `ports.<service>` in `values.yaml` (`expose.default: false`) and add
+   the port to the NetworkPolicy in this directory.
 3. Write the pinned ClusterIP Service and the `Group` + `NetworkResource`
    in this directory.
 4. Deploy the app, its Certificate, and a class-annotated IngressRoute
    (`entryPoints: [<service>]`) in its own namespace; add the namespace to
-   `providers.kubernetesCRD.namespaces`.
+   `providers.kubernetesCRD.namespaces`. Give the backend an Ingress
+   NetworkPolicy that admits only the `traefik-internal` pods (see
+   `argocd/canary/networkpolicy.yaml`), so nothing can skip the mesh path.
 5. Create the NetBird policy and DNS zone below.
 
 ## Live NetBird objects

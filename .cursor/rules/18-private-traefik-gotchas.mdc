@@ -26,7 +26,10 @@ alwaysApply: false
   dynamic allocator never assigns from.
 - The operator's `NetworkResource` with `serviceRef` creates an IP resource at
   the Service ClusterIP plus an A record in `svc.olympus.yggdrasil.mia.cx`.
-- New private namespaces must be added to
-  `providers.kubernetesCRD.namespaces` in `values.yaml`; the instance watches
-  nothing else.
+- New private namespaces must be added to `providers.kubernetesCRD.namespaces`
+  in `values.yaml`; the instance watches nothing else.
+- Without NetworkPolicies any pod could reach a private ClusterIP and skip
+  the mesh path. Traefik admits only routing pods per entrypoint port (they
+  masquerade, so mesh traffic arrives from their IPs); backends admit only
+  the Traefik pods.
 
