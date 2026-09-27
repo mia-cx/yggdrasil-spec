@@ -13,7 +13,7 @@ At-a-glance lookups. For detailed command recipes, see [Runbooks](./operations/r
 | Proxmox host   | 10.0.1.1   | --   |
 | Storage LXC    | 10.0.1.2   | 1002 |
 | K3s VM         | 10.0.1.3   | 1003 |
-| Netbird LXC    | 10.0.1.4   | 1004 |
+| NetBird VM     | 10.0.1.4   | 1004 |
 | Wings VM       | 10.0.1.6   | 1006 |
 | Old Server     | 10.0.1.8   | --   |
 | Old Server K3s | 10.0.1.9   | 1009 |

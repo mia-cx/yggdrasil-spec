@@ -20,7 +20,7 @@ A **catalog** of cloud-init–ready images (and LXC templates) needed for Proxmo
 | **Wings VM**               | Pelican game servers  | Debian/Ubuntu | NoCloud       | Hostname, Docker, Wings daemon; VM 10.0.1.6, VMID 1006.                                                                       |
 | **Storage LXC**            | MergerFS + NFS        | debian-13     | LXC config    | 10.0.1.2, VMID 1002; FUSE passthrough; bind mounts.                                                                           |
 | **Authentik LXC** (legacy) | Identity (standalone) | debian-12     | LXC config    | 10.0.1.3, VMID 1003; Docker Compose; reference only (now in K8s).                                                             |
-| **Netbird LXC**            | Overlay network mgmt  | debian-12     | LXC config    | 10.0.1.4, VMID 1004; Netbird daemon.                                                                                          |
+| **NetBird VM**             | Overlay network mgmt  | debian-13     | NoCloud       | 10.0.1.4, VMID 1004 (`yggdrasil-olympus-1`); combined NetBird server + Traefik.                                               |
 
 ## Scope by Image
 
@@ -56,12 +56,12 @@ A **catalog** of cloud-init–ready images (and LXC templates) needed for Proxmo
 - **Post-clone:** Host adds bind mounts in `/etc/pve/lxc/<vmid>.conf`; inside LXC: fstab, MergerFS, NFS export.
 - **See:** [Storage LXC](../../infrastructure/storage.md).
 
-### 5. Netbird LXC
+### 5. NetBird VM
 
-- **Source:** Proxmox LXC template `debian-12-standard`.
-- **Output:** LXC template with Netbird repo, package, and default config skeleton.
-- **user-data / script:** Hostname, Netbird install, join token (from config drive or env).
-- **See:** [Infrastructure index](../../infrastructure/index.md), [Migration §Netbird](../../operations/migration.md#netbird-lxc).
+- **Source:** Debian 13 genericcloud image (`yggdrasil-olympus-1`, VMID 1004).
+- **Output:** VM with Docker CE, ufw, and the NetBird stack under `/opt/netbird`.
+- **user-data / script:** `hosts/yggdrasil-olympus-1/` in this repo.
+- **See:** [Infrastructure index](../../infrastructure/index.md), [NetBird](../../infrastructure/netbird.md).
 
 ### 6. Authentik LXC (legacy)
 
@@ -104,7 +104,7 @@ Standard first-boot modules to include across VM templates. Reference: [Kubernet
 - **Install:** `curl -fsSL https://get.docker.com | sh` or `apt install -y docker.io`
 - **Add user to group:** `usermod -aG docker <username>`
 - **Enable:** `systemctl enable --now docker`
-- Used by: Wings VM, Authentik LXC (legacy), Netbird LXC.
+- Used by: Wings VM, Authentik LXC (legacy), NetBird VM.
 
 ### unattended-upgrades
 
@@ -133,7 +133,7 @@ Standard first-boot modules to include across VM templates. Reference: [Kubernet
 | ----- | ----------------- | ----------------------------------------- |
 | **A** | K3s VM template   | K3s (for node onboarding)                 |
 | **B** | Wings VM template | Wings                                     |
-| **C** | LXC templates     | Storage, Netbird (Authentik optional)     |
+| **C** | VM/LXC templates  | Storage, NetBird (Authentik optional)     |
 | **D** | Proxmox netboot   | Proxmox host (integrates with PXE server) |
 
 ## Related Docs

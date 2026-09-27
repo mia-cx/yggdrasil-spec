@@ -60,7 +60,7 @@ CIDR allocation at the primary site. Other sites follow the same /24 roles with 
 | 10.0.1.1 | -    | Proxmox host             |
 | 10.0.1.2 | 1002 | Storage LXC (NFS)        |
 | 10.0.1.3 | 1003 | K3s VM                   |
-| 10.0.1.4 | 1005 | Netbird LXC (management) |
+| 10.0.1.4 | 1004 | NetBird VM (yggdrasil-olympus-1) |
 | 10.0.1.5 | 1006 | Wings VM (game servers)  |
 | 10.0.1.7 | -    | spare                    |
 

@@ -1,0 +1,54 @@
+#cloud-config
+# Cloud-init user-data for yggdrasil-olympus-1 (VMID 1004, NetBird server).
+# Deployed as a Proxmox snippet: local:snippets/yggdrasil-olympus-1-user-data.yaml
+hostname: yggdrasil-olympus-1
+preserve_hostname: false
+
+# Proxmox regenerates the cidata ISO (and its instance-id) on each start, so
+# per-instance modules re-run every boot. Keep the host keys stable and let
+# the bootstrap script no-op once it has run.
+ssh_deletekeys: false
+
+users:
+  - name: mia
+    groups: [sudo, docker]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGygei6nTgxgiH63NRY5h02BZTK/85XX2kCBhlbTBm6R mia@Iris.local
+
+package_update: true
+packages:
+  - curl
+  - ca-certificates
+  - gnupg
+  - ufw
+  - apache2-utils
+  - gettext-base
+  - qemu-guest-agent
+
+write_files:
+  - path: /usr/local/sbin/olympus-bootstrap.sh
+    permissions: "0755"
+    content: |
+      #!/bin/sh
+      set -e
+      # Docker repo: key first, then the source list, then apt update. Order
+      # matters because the packages module may run before this script.
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+      chmod a+r /etc/apt/keyrings/docker.asc
+      echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian trixie stable" > /etc/apt/sources.list.d/docker.list
+      apt-get update
+      DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin qemu-guest-agent
+      mkdir -p /opt/netbird
+      ufw default deny incoming
+      ufw default allow outgoing
+      ufw allow from 10.0.0.0/16 to any port 22 proto tcp
+      ufw allow from 10.0.0.0/16 to any port 8080 proto tcp
+      ufw allow from 10.0.0.0/16 to any port 8443 proto tcp
+      ufw --force enable
+      touch /opt/netbird/.bootstrap-done
+
+runcmd:
+  - '[ -f /opt/netbird/.bootstrap-done ] || /usr/local/sbin/olympus-bootstrap.sh'
