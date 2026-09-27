@@ -100,6 +100,16 @@ describe("planUserUpdates", () => {
     ]);
   });
 
+  it("throws when a Hecate-idp user has a malformed id", () => {
+    const bad: NbUser = {
+      id: "not-a-dex-id",
+      role: "user",
+      idp_id: "idp-hecate",
+      auto_groups: [],
+    };
+    assert.throws(() => plan([bad], new Map()), /undecodable Hecate id/);
+  });
+
   it("never touches non-Hecate users", () => {
     const local: NbUser = {
       id: "x",

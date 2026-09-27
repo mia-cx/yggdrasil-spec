@@ -110,11 +110,15 @@ export const planUserUpdates = ({
   for (const u of users) {
     if (u.idp_id !== hecateIdpId) continue;
 
+    // A Hecate-idp user whose id doesn't decode means the id format changed
+    // upstream — fail loudly rather than silently skipping revocations.
     let sub: string;
     try {
       sub = decodeDexUserId(u.id).sub;
-    } catch {
-      continue; // not a Dex-issued id; cannot be matched to Hecate
+    } catch (err) {
+      throw new Error(
+        `user ${u.id.slice(0, 8)}: undecodable Hecate id: ${err instanceof Error ? err.message : err}`,
+      );
     }
 
     const desired = permissions.get(sub) ?? [];

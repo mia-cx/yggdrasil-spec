@@ -10,7 +10,9 @@ alwaysApply: false
 
 - A Hecate user's NetBird `id` is Dex's base64 protobuf: field 1 = Authentik
   `sub`, field 2 = connector id. Decode with varint lengths; accept url-safe
-  and unpadded variants. A user whose id doesn't decode isn't a Hecate user.
+  and unpadded variants. A Hecate-idp user whose id doesn't decode fails the
+  run — a silent skip would hide an upstream id-format change and stop
+  revocations.
 - Only `issued: "jwt"` NetBird groups are managed — they're created by
   sign-in sync, never by this job. `api`-issued groups on a user are always
   preserved; claim names with no group are reported, never created.
