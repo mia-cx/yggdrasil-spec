@@ -16,13 +16,23 @@ kubectl create secret generic netbird-mgmt-api-key -n netbird-operator \
 
 The operator looks up the referenced NetBird DNS zone by Name and builds
 records from that Name. Create the zone first with both Name and domain set
-to `svc.olympus.yggdrasil.mia.cx`. The zone's distribution group is
-`k3s-nodes` as a required placeholder: the API rejects an empty list, and the
-node clients run `--disable-dns` so they ignore it anyway. The DNS work
-switches it to `netbird-enroll`.
+to `svc.olympus.yggdrasil.mia.cx`. Its distribution group is `netbird-enroll`
+(the API rejects an empty list).
 
 The sidecar-injection pod webhook only matches namespaces labelled
 `netbird.io/sidecar-injection=enabled`.
+
+## No NetBird client on K3s nodes
+
+K3s hosts run no NetBird client. The client's nftables rules crash k3s's
+bundled kube-router netpol controller (`cmp sreg undef`,
+[kube-router#1788](https://github.com/cloudnativelabs/kube-router/issues/1788),
+[k3s#11493](https://github.com/k3s-io/k3s/issues/11493)), and with two etcd
+members one crashing node takes the cluster down. Node SSH goes through the
+`olympus-lan` router instead: resources `hydra-olympus-1-ssh` and
+`hydra-olympus-2-ssh` sit in group `k3s-nodes-ssh`, and policy
+`ssh-to-k3s-nodes` grants `svc-ssh` TCP 22 only. The primary mesh has no
+`Default` All-to-All policy: access exists only through explicit policies.
 
 ## Gotchas
 
@@ -39,5 +49,10 @@ The sidecar-injection pod webhook only matches namespaces labelled
   `NB_MANAGEMENT_URL` counts as a config override. The NetworkRouter
   `workloadOverride` sets it back to `false` (upstream removed it on main).
 - Pod DNS resolves `*.mia.cx` to the Traefik VIP, but the relay/STUN server
-  lives on the Repair VPS. The NetworkRouter sets a `hostAliases` entry for
-  `netbird-relay.mia.cx` so the relay check can pass.
+  lives on the Repair VPS. The `netbird.server` key in
+  `argocd/k3s/coredns-custom.yaml` forwards `netbird-relay.mia.cx` and
+  `netbird-repair.mia.cx` to real DNS so pods reach the relay.
+- CoreDNS evaluates `import /etc/coredns/custom/*.server` only at startup.
+  A new `.server` key takes effect after
+  `kubectl -n kube-system rollout restart deployment/coredns`; editing an
+  existing key reloads on its own.
