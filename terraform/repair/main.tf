@@ -117,7 +117,8 @@ resource "hcloud_server" "repair" {
   lifecycle {
     # Editing stack files must never silently rebuild a stateful server.
     # A rebuild is explicit: tofu apply -replace=hcloud_server.repair
-    ignore_changes = [user_data]
+    # ssh_keys is create-only and absent after a tofu import.
+    ignore_changes = [user_data, ssh_keys]
   }
 }
 

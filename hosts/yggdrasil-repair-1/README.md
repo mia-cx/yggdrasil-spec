@@ -105,9 +105,9 @@ tofu import cloudflare_dns_record.netbird_relay_a 75fd0dd1afc13e40321b1fcc68a9db
 tofu import cloudflare_dns_record.netbird_relay_aaaa 75fd0dd1afc13e40321b1fcc68a9dbdd/e78a6bad5010bed60690e5932e893f0e
 ```
 
-After a fresh import the first `tofu plan` marks the server for replacement:
-`ssh_keys` is a create-only attribute the provider cannot read back, so the
-imported state lacks it. Rebuild with `-replace` only when you intend to.
+`ssh_keys` is a create-only attribute the provider cannot read back after an
+import, so the server ignores changes to it; a fresh import plans no
+replacement. Rebuild with `-replace` only when you intend to.
 
 The primary IPs carry `delete_protection` and `prevent_destroy`; the
 firewall opens TCP 22/80/443, UDP 3478 (Repair STUN), UDP 3479 (primary-mesh
