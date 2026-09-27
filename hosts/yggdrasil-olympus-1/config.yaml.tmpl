@@ -10,11 +10,16 @@ server:
   authSecret: "${NETBIRD_AUTH_SECRET}"
   dataDir: "/var/lib/netbird"
 
-  # Temporary: the router does not forward UDP 3478, so the embedded STUN is
-  # disabled and peers use the public Cloudflare STUN server until relay/STUN
-  # moves to the Repair VPS (#23).
+  # Primary-mesh relay and STUN run on the Repair VPS (hosts/yggdrasil-repair-1).
+  # Setting relays turns off the embedded relay. The secret is shared only with
+  # that relay.
   stuns:
-    - uri: "stun:stun.cloudflare.com:3478"
+    - uri: "stun:netbird-relay.mia.cx:3479"
+  relays:
+    addresses:
+      - "rels://netbird-relay.mia.cx:443"
+    credentialsTTL: "12h"
+    secret: "${NETBIRD_RELAY_AUTH_SECRET}"
 
   auth:
     issuer: "https://netbird.mia.cx/oauth2"
