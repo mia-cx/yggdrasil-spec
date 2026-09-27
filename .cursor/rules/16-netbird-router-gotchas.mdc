@@ -9,9 +9,10 @@ alwaysApply: false
 
 - `netbird-router` runs in `network_mode: host` with kernel WireGuard on
   `wt0`; it masquerades routed mesh traffic out `eth0` to the 10.0.0.0/16 LAN.
-- Lazy connections are on: the first request to a routed LAN address triggers
-  ICE + WG handshake and can take ~25s. A 10-15s curl timeout loses the race;
-  retry once before diagnosing.
+- Keep lazy connections off (account setting `lazy_connection_enabled:
+  false`). With them on, an off-LAN client never finished connecting to
+  `olympus-router` (stuck on "Connecting", no relay attempt), so every LAN
+  route failed. Turning them off connected it P2P within seconds.
 - No ufw rule is needed for routed traffic, and ufw is not the gate for mesh
   traffic. NetBird inserts `iifname "wt0" accept` (and `oifname "wt0" ct state
   related,established accept`) into the iptables-nft filter INPUT/FORWARD
