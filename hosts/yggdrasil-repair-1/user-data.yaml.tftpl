@@ -1,0 +1,66 @@
+#cloud-config
+# Cloud-init user-data for yggdrasil-repair-1 (Hetzner CX23, Repair mesh).
+# Rendered by terraform/repair via templatefile(); the stack files below are
+# embedded into /opt/netbird by write_files. No secrets in this file: .env
+# and config.yaml are generated on the host by repair-bootstrap.sh.
+hostname: yggdrasil-repair-1
+preserve_hostname: false
+
+users:
+  - name: mia
+    groups: [sudo, docker]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGygei6nTgxgiH63NRY5h02BZTK/85XX2kCBhlbTBm6R mia@Iris.local
+
+disable_root: true
+ssh_pwauth: false
+
+package_update: true
+packages:
+  - curl
+  - ca-certificates
+  - gnupg
+  - apache2-utils
+  - gettext-base
+  - unattended-upgrades
+
+write_files:
+  - path: /etc/ssh/sshd_config.d/10-hardening.conf
+    permissions: "0644"
+    content: |
+      PermitRootLogin no
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+  - path: /usr/local/sbin/repair-bootstrap.sh
+    permissions: "0755"
+    content: |
+      ${indent(6, bootstrap_sh)}
+  - path: /opt/netbird/compose.yaml
+    permissions: "0644"
+    content: |
+      ${indent(6, compose_yaml)}
+  - path: /opt/netbird/traefik.yaml
+    permissions: "0644"
+    content: |
+      ${indent(6, traefik_yaml)}
+  - path: /opt/netbird/dynamic.yaml
+    permissions: "0644"
+    content: |
+      ${indent(6, dynamic_yaml)}
+  - path: /opt/netbird/config.yaml.tmpl
+    permissions: "0644"
+    content: |
+      ${indent(6, config_yaml_tmpl)}
+  - path: /opt/netbird/dashboard.env
+    permissions: "0644"
+    content: |
+      ${indent(6, dashboard_env)}
+  - path: /opt/netbird/.env.example
+    permissions: "0644"
+    content: |
+      ${indent(6, env_example)}
+
+runcmd:
+  - '[ -f /opt/netbird/.bootstrap-done ] || /usr/local/sbin/repair-bootstrap.sh'

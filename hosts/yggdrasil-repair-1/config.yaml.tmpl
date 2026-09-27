@@ -1,0 +1,37 @@
+# Combined NetBird server config, rendered with envsubst from .env at deploy
+# time (see README). ${VARS} are placeholders, not shell syntax in the output.
+server:
+  listenAddress: ":80"
+  exposedAddress: "https://netbird-repair.mia.cx:443"
+  metricsPort: 9090
+  healthcheckAddress: ":9000"
+  logLevel: "info"
+  logFile: "console"
+  authSecret: "${NETBIRD_AUTH_SECRET}"
+  dataDir: "/var/lib/netbird"
+
+  # No stuns/relays overrides: the Repair mesh uses this server's local STUN
+  # (UDP 3478) and local relay (/relay), so it shares nothing with the
+  # primary mesh.
+
+  auth:
+    issuer: "https://netbird-repair.mia.cx/oauth2"
+    signKeyRefreshEnabled: true
+    sessionCookieEncryptionKey: "${NB_SESSION_COOKIE_ENCRYPTION_KEY}"
+    dashboardRedirectURIs:
+      - "https://netbird-repair.mia.cx/nb-auth"
+      - "https://netbird-repair.mia.cx/nb-silent-auth"
+    cliRedirectURIs:
+      - "http://localhost:53000/"
+    # Initial local admin for the embedded IdP. Password is a bcrypt hash.
+    owner:
+      email: "${NETBIRD_ADMIN_EMAIL}"
+      password: "${NETBIRD_ADMIN_PASSWORD_HASH}"
+
+  reverseProxy:
+    trustedHTTPProxies:
+      - "172.31.0.0/24"
+
+  store:
+    engine: "sqlite"
+    encryptionKey: "${NETBIRD_STORE_ENCRYPTION_KEY}"
