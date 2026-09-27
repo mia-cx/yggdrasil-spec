@@ -53,16 +53,32 @@ curl -sk -o /dev/null -w '%{http_code}' https://<repair-ip>:8006/  # Proxmox
 On the host: `systemctl status netbird-repair`,
 `journalctl -u netbird-repair`, and `ss -ulpn | grep 51821`. Before/after
 install, `nft list ruleset | grep -ic netbird`, `iptables-save | grep -ic
-netbird`, `ip -br link`, and `cat /etc/resolv.conf` must be unchanged except
-for the UDP 51821 listener.
+netbird`, `ip -br link`, and `cat /etc/resolv.conf` must match the
+pre-install baseline — 0 NetBird rules and no `wt*` interface on
+single-client hosts (dual-mesh hosts legitimately have the primary client's
+`wt0` and its rules) — plus one new UDP 51821 listener.
 
 ## Rotate or re-enroll
 
-Create a fresh setup key on the Repair mesh and re-run `install.sh` the same
-way; the script rewrites the key file and re-enrolls. Delete the old peer in
-the dashboard.
+Re-running `install.sh` over the existing `config.json` reconnects the same
+peer — a new identity needs the old state moved aside. From LAN or the
+console (not through the host's Repair IP, which dies with the service):
+
+```bash
+systemctl stop netbird-repair
+mv /var/lib/netbird-repair/config.json \
+  /var/lib/netbird-repair/config.json.bak-$(date +%F)
+# then run install.sh with the new key on stdin as in Install above
+```
+
+Confirm the new peer is Connected in the Repair dashboard, then delete the
+old peer and the `config.json.bak-*` file.
 
 ## Remove
+
+Run this from LAN or the Proxmox console, never through the host's Repair
+IP: `disable --now` stops the client and drops that session before the
+cleanup below can run.
 
 ```bash
 systemctl disable --now netbird-repair

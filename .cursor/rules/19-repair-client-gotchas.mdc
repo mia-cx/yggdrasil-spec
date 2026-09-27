@@ -29,6 +29,8 @@ alwaysApply: false
 - Hosts without root SSH (hydra-olympus-1): upload files and run install.sh
   through `qm guest exec <vmid> --pass-stdin 1 -- bash -c '...'` on the
   Proxmox host; the setup key rides stdin end to end.
-- Verify after install: `nft list ruleset | grep -ic netbird` and
-  `iptables-save | grep -ic netbird` must stay 0, no `wt*` interface,
-  resolv.conf unchanged, UDP 51821 owned by the netbird-repair process.
+- Verify after install against the pre-install baseline, not absolute zero:
+  firewall rule counts, interfaces, and resolv.conf must match it (0 NetBird
+  rules and no `wt*` on single-client hosts; dual-mesh hosts legitimately
+  have the primary client's `wt0` and ~26 nft rules). New surface is only
+  the UDP 51821 listener owned by the netbird-repair process.

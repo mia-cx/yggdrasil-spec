@@ -38,7 +38,6 @@ install -d -o netbird-repair -g netbird-repair -m 0750 "$STATE" /var/log/netbird
 # --- binary --------------------------------------------------------------
 if ! "$PREFIX/netbird" version 2>/dev/null | grep -q "$VERSION"; then
   tmp=$(mktemp -d)
-  trap 'rm -rf "$tmp"' EXIT
   curl -fsSL "$BASE/$TARBALL" -o "$tmp/$TARBALL"
   curl -fsSL "$BASE/$SUMS" -o "$tmp/$SUMS"
   (cd "$tmp" && grep " $TARBALL\$" "$SUMS" | sha256sum --check -)
@@ -52,7 +51,14 @@ key_file="$STATE/setup-key"
 umask 077
 cat >"$key_file"
 chown netbird-repair:netbird-repair "$key_file"
-[ -s "$key_file" ] || { echo "empty setup key on stdin" >&2; rm -f "$key_file"; exit 1; }
+# From here on the key is on disk; always remove it (and any download tmp
+# dir) on any exit, success or failure.
+cleanup() {
+  rm -f "$key_file"
+  [ -n "${tmp:-}" ] && rm -rf "$tmp"
+}
+trap cleanup EXIT
+[ -s "$key_file" ] || { echo "empty setup key on stdin" >&2; exit 1; }
 
 # --- unit ----------------------------------------------------------------
 install -m 0644 "$SCRIPT_DIR/netbird-repair.service" "$UNIT"
@@ -61,19 +67,23 @@ systemctl enable netbird-repair
 systemctl restart netbird-repair
 
 # --- enroll --------------------------------------------------------------
-for i in $(seq 30); do
+for _ in $(seq 30); do
   $NB_CLI status --check live >/dev/null 2>&1 && break
   sleep 1
 done
 $NB_CLI up --setup-key-file "$key_file" --hostname "$NB_HOSTNAME" \
   --management-url "$MGMT" --wireguard-port "$WG_PORT"
 
-for i in $(seq 30); do
+for _ in $(seq 30); do
   $NB_CLI status -d 2>/dev/null | grep -q 'Management: Connected' && break
   sleep 1
 done
+if ! $NB_CLI status -d 2>/dev/null | grep -q 'Management: Connected'; then
+  echo "enrollment failed: Management never connected" >&2
+  $NB_CLI status -d >&2 || true
+  exit 1
+fi
 $NB_CLI status -d | grep -E '^(Daemon|Management|Signal|FQDN|NetBird IP)'
-rm -f "$key_file"
 
 echo "listeners:"
 ss -ulpn | grep -E '51821|netbird' || true
