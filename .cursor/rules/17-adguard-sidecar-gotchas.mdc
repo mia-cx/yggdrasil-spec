@@ -28,3 +28,9 @@ alwaysApply: false
 - Keep `ratelimit: 0` in the AdGuard config: only mesh peers can reach it,
   and the default 20 qps drop is a failure that pushes devices onto the
   unfiltered fallback.
+- The `adguard` service guards its entrypoint on a rendered
+  `AdGuardHome.yaml` so a forgotten render fails closed instead of serving
+  the unauthenticated setup wizard on :3000. Overriding `entrypoint` clears
+  the image's Cmd, so `command` must restate it verbatim
+  (`--no-check-update -c /opt/adguardhome/conf/AdGuardHome.yaml -w
+  /opt/adguardhome/work`); check it again when bumping the image tag.

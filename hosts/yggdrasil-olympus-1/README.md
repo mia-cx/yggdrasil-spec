@@ -57,12 +57,18 @@ sudo cp .env.example .env && sudo chmod 600 .env
 #   openssl rand -base64 32        # NETBIRD_AUTH_SECRET, NB_SESSION_COOKIE_ENCRYPTION_KEY
 #   openssl rand -base64 32        # NETBIRD_STORE_ENCRYPTION_KEY
 #   openssl rand -hex 24           # NETBIRD_ADMIN_PASSWORD
+#   openssl rand -hex 24           # ADGUARD_ADMIN_PASSWORD
 # .env is sourced as shell code, so every value must stay shell-safe:
 # no $, spaces, quotes, or backticks (hex/base64 output is safe).
 sudo bash -c 'set -a; . ./.env; set +a; \
   export NETBIRD_ADMIN_PASSWORD_HASH=$(htpasswd -bnBC 12 "" "$NETBIRD_ADMIN_PASSWORD" | tr -d ":\n"); \
   envsubst < config.yaml.tmpl > config.yaml'
 sudo chmod 600 config.yaml
+sudo bash -c 'set -a; . ./.env; set +a; \
+  export ADGUARD_ADMIN_PASSWORD_HASH=$(htpasswd -bnBC 12 "" "$ADGUARD_ADMIN_PASSWORD" | tr -d ":\n"); \
+  mkdir -p adguard/conf; \
+  envsubst "\$ADGUARD_ADMIN_PASSWORD_HASH" < adguard.yaml.tmpl > adguard/conf/AdGuardHome.yaml'
+sudo chmod 600 adguard/conf/AdGuardHome.yaml
 sudo docker compose up -d
 sudo docker compose ps
 ```
@@ -172,9 +178,10 @@ group, so they keep unfiltered host DNS.
 `adguard/conf/AdGuardHome.yaml` is rendered from `adguard.yaml.tmpl` (minimal
 file; v0.107.79 writes `schema_version: 34` and fills defaults). AdGuard
 rewrites its YAML at runtime: the template is the source of truth and
-re-rendering overwrites UI edits. On a fresh VM, render it before the first
-`sudo docker compose up -d` — without it AdGuard starts its unauthenticated
-setup wizard on :3000. Render like `config.yaml`:
+re-rendering overwrites UI edits. The initial deployment renders it
+(rebuild steps above); the `adguard` container refuses to start without the
+rendered file, so a forgotten render fails closed instead of serving the
+setup wizard. To re-render after editing the template:
 
 ```bash
 sudo bash -c 'set -a; . ./.env; set +a; \
