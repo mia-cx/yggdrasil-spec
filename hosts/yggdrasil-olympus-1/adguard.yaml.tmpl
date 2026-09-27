@@ -1,0 +1,30 @@
+# Rendered to /opt/netbird/adguard/conf/AdGuardHome.yaml on the VM (root 0600)
+# with: envsubst '$ADGUARD_ADMIN_PASSWORD_HASH'
+# Minimal file on purpose: AdGuard Home v0.107.79 fills in the rest and writes
+# schema_version 34. It rewrites this YAML at runtime, so the template is the
+# source of truth — re-rendering overwrites UI edits.
+users:
+  - name: admin
+    password: $ADGUARD_ADMIN_PASSWORD_HASH
+http:
+  address: 0.0.0.0:3000
+dns:
+  bind_hosts:
+    - 0.0.0.0
+  port: 53
+  # Only mesh peers reach this listener (inside the netbird-dns netns), so
+  # disable rate limiting: the default 20 qps drop would push human devices
+  # onto the unfiltered fallback.
+  ratelimit: 0
+  upstream_dns:
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.quad9.net/dns-query
+  bootstrap_dns:
+    - 1.1.1.1
+    - 9.9.9.9
+filters:
+  - enabled: true
+    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
+    name: AdGuard DNS filter
+    id: 1
+schema_version: 34

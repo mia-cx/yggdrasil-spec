@@ -1,0 +1,30 @@
+---
+description: AdGuard-on-NetBird sidecar gotchas
+globs:
+  - hosts/yggdrasil-olympus-1/*.yaml
+  - hosts/yggdrasil-olympus-1/*.tmpl
+alwaysApply: false
+---
+
+# AdGuard sidecar gotchas
+
+- AdGuard Home accepts a minimal `AdGuardHome.yaml`; v0.107.79 fills defaults
+  and writes `schema_version: 34`. The template must pin 34 — a lower value
+  makes AdGuard migrate and rewrite the file on start.
+- AdGuard rewrites its YAML at runtime. `adguard.yaml.tmpl` is the source of
+  truth; re-rendering silently discards UI edits.
+- The `adguard` container shares the `netbird-dns` netns
+  (`network_mode: service:`): AdGuard owns `:53` there, so the NetBird peer's
+  resolver must park elsewhere via `NB_DNS_RESOLVER_ADDRESS` (env form of
+  `--dns-resolver-address`) or they fight over the port.
+- Rendering `envsubst` through nested `ssh ... 'sudo bash -c "..."'` quoting
+  expands the variable-name argument too early and leaves the literal
+  `$VAR` in the output. Push a script file and run it instead.
+- NetBird 0.79 tries nameservers inside one nameserver group in order and
+  fails over only on errors (timeout, SERVFAIL, REFUSED); two groups covering
+  the same domain race in parallel and first answer wins. The fallback must
+  therefore be the second nameserver in the `adguard` group — a second
+  primary group would race AdGuard and leak unfiltered answers.
+- Keep `ratelimit: 0` in the AdGuard config: only mesh peers can reach it,
+  and the default 20 qps drop is a failure that pushes devices onto the
+  unfiltered fallback.

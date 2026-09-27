@@ -149,6 +149,45 @@ sudo docker compose exec netbird-router netbird status -d
 # expect: Interface type: Kernel, Networks: 10.0.0.0/16
 ```
 
+## AdGuard DNS for human devices
+
+`netbird-dns` is a second NetBird peer; `adguard` shares its network
+namespace (`network_mode: service:`), so AdGuard's `:53` sits directly on the
+peer's mesh address — no host port for DNS. The NetBird resolver is parked
+on `127.0.0.153:5053` (`NB_DNS_RESOLVER_ADDRESS`) to stay off `:53`. The
+admin UI is the only published port and binds the LAN address only:
+`http://10.0.1.4:3000` (user `admin`, password in `.env`, also copied to
+`~/.config/yggdrasil/adguard-admin.env` on the admin Mac).
+
+NetBird objects (by name): group `dns-adguard`; nameserver group `adguard`
+with upstreams `[<sidecar mesh IP>:53, 1.1.1.1:53]` — ordered within one
+group, so 1.1.1.1 only answers when AdGuard fails (unfiltered outage
+fallback); policy `dns-adguard` allows the human group -> `dns-adguard` on
+udp/tcp 53. Both the nameserver group and the policy source are meant for
+`netbird-enroll` — every SSO personal device carries it — with `test-humans`
+standing in until Hecate issues it. Service and infrastructure peers
+(routers, sidecars, K3s nodes) are never in that group, so they keep
+unfiltered host DNS.
+
+`adguard/conf/AdGuardHome.yaml` is rendered from `adguard.yaml.tmpl` (minimal
+file; v0.107.79 writes `schema_version: 34` and fills defaults). AdGuard
+rewrites its YAML at runtime: the template is the source of truth and
+re-rendering overwrites UI edits. On a fresh VM, render it before the first
+`sudo docker compose up -d` — without it AdGuard starts its unauthenticated
+setup wizard on :3000. Render like `config.yaml`:
+
+```bash
+sudo bash -c 'set -a; . ./.env; set +a; \
+  export ADGUARD_ADMIN_PASSWORD_HASH=$(htpasswd -bnBC 12 "" "$ADGUARD_ADMIN_PASSWORD" | tr -d ":\n"); \
+  mkdir -p adguard/conf; \
+  envsubst "\$ADGUARD_ADMIN_PASSWORD_HASH" < adguard.yaml.tmpl > adguard/conf/AdGuardHome.yaml'
+sudo chmod 600 adguard/conf/AdGuardHome.yaml
+sudo docker compose restart adguard
+```
+
+If the `netbird_dns` volume is lost, the re-enrolled sidecar gets a new mesh
+IP — update the first nameserver in the `adguard` nameserver group.
+
 ## Upgrading versions
 
 Image tags are pinned in `compose.yaml`. Bump the tag, then
