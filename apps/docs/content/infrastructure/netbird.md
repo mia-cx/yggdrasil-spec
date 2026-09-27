@@ -97,6 +97,8 @@ The same VPS also runs a standalone `netbirdio/relay` for the primary mesh: `rel
 
 Host details live in `hosts/yggdrasil-repair-1/README.md` (stack, secrets, backups, device enrollment) and `hosts/yggdrasil-olympus-1/README.md` (external relay rotation). The VPS, its IPs, firewall, and DNS records are managed by `terraform/repair` (OpenTofu); rebuilds are explicit `tofu apply -replace=hcloud_server.repair`.
 
+Selected hosts run an independent Repair client: `netbird-repair.service`, one unprivileged netstack-mode daemon per host enrolled to the Repair mesh. Local forwarding maps the host's Repair address to loopback, so the mesh policy's TCP 22 reaches `sshd` on `127.0.0.1` — the recovery path when the primary mesh or LAN is broken. It writes no kernel firewall rules, creates no interfaces, and leaves host DNS alone, which is what makes it safe on the K3s nodes. Install, rotate, remove, and the per-host table live in `hosts/repair-clients/README.md`.
+
 ## Hecate permission groups
 
 Every private service has a `svc-<service>` group in Hecate: `svc-prowlarr`, `svc-sonarr`, `svc-radarr`, `svc-lidarr`, `svc-readarr`, `svc-sabnzbd`, `svc-qbittorrent`, `svc-tdarr`, `svc-tunarr`, `svc-longhorn`, `svc-argocd`, `svc-proxmox`, `svc-pelican`, `svc-hermes`, `svc-seerr`, `svc-jellyfin`, `svc-lan`, `svc-ssh`, and `svc-canary`. The `netbird-enroll` group is the enrollment permission; the NetBird application requires it.
