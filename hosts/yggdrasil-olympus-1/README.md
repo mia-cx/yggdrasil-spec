@@ -6,7 +6,8 @@ nothing migrated from it. Public HTTPS goes through the K3s Traefik, which
 forwards to the VM Traefik on `:8080`. Guest port `:8443` answers directly
 with its own certificate for diagnosis and K3s-independent access.
 
-Stack: Traefik v3.7.13, netbird-server 0.79.0, dashboard v2.92.0.
+Stack: Traefik v3.7.13, netbird-server 0.79.0, dashboard v2.92.0, and a
+netbird 0.79.0 client (netbird-router) that routes the mesh into the LAN.
 Hecate SSO replaces the embedded IdP in a later step; relay/STUN moves to the
 Repair VPS later too — `config.yaml.tmpl` marks the temporary Cloudflare STUN.
 
@@ -117,6 +118,36 @@ in `config.yaml.tmpl`, so a rebuild must recreate them:
 
 3. Sign in once through Hecate with an account in `role-admin` so NetBird
    recreates the JWT-issued groups.
+
+## LAN routing client
+
+`netbird-router` is a NetBird client peer, not part of the server: host
+network, kernel WireGuard (`wt0`), masquerading mesh traffic onto the LAN.
+It restarts with the rest of the stack (`restart: unless-stopped` from the
+compose anchor), so a VM reboot needs no manual step.
+
+NetBird objects (all in the primary account, by name):
+
+- Group `routers-olympus` — holds the routing peer.
+- Network `olympus-lan` — resource `10.0.0.0/16`, routing group
+  `routers-olympus`, masquerade on, metric 9999.
+- Policy `olympus-lan` — grants a source group access to that resource. The
+  intended source is the JWT group `svc-lan`; until Hecate issues it, the
+  temporary `test-lan` group stands in. The `Default` policy is untouched;
+  network resources are only reachable through policies that target them.
+
+No ufw rule is needed: NetBird inserts its own wt0 accept rules ahead of
+ufw/Docker and enforces access through NetBird policies.
+
+Enrolling after a rebuild or a lost `netbird_router` volume: mint a one-off
+setup key (auto-group `routers-olympus`, 24h expiry) in the dashboard or via
+the admin API, set `NB_ROUTER_SETUP_KEY` in `.env`, then:
+
+```bash
+sudo docker compose up -d netbird-router
+sudo docker compose exec netbird-router netbird status -d
+# expect: Interface type: Kernel, Networks: 10.0.0.0/16
+```
 
 ## Upgrading versions
 

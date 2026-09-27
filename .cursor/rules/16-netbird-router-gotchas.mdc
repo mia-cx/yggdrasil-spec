@@ -1,0 +1,23 @@
+---
+description: NetBird olympus-router and LAN-routing gotchas
+globs:
+  - hosts/yggdrasil-olympus-1/*.yaml
+alwaysApply: false
+---
+
+# NetBird LAN router gotchas
+
+- `netbird-router` runs in `network_mode: host` with kernel WireGuard on
+  `wt0`; it masquerades routed mesh traffic out `eth0` to the 10.0.0.0/16 LAN.
+- Lazy connections are on: the first request to a routed LAN address triggers
+  ICE + WG handshake and can take ~25s. A 10-15s curl timeout loses the race;
+  retry once before diagnosing.
+- No ufw rule is needed for routed traffic, and ufw is not the gate for mesh
+  traffic. NetBird inserts `iifname "wt0" accept` (and `oifname "wt0" ct state
+  related,established accept`) into the iptables-nft filter INPUT/FORWARD
+  chains ahead of ufw/Docker, and enforces its own ACLs in `table ip netbird`
+  (`netbird-acl-forward-filter` -> `netbird-rt-fwd`, drop otherwise). Access is
+  decided by NetBird policies, not the host firewall.
+- `NB_ROUTER_SETUP_KEY` is a one-off key spent at first enrollment. If the
+  volume `netbird_router` is ever deleted, mint a fresh setup key before
+  recreating the container.
