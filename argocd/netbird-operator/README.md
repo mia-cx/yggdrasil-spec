@@ -31,8 +31,11 @@ bundled kube-router netpol controller (`cmp sreg undef`,
 members one crashing node takes the cluster down. Node SSH goes through the
 `olympus-lan` router instead: resources `hydra-olympus-1-ssh` and
 `hydra-olympus-2-ssh` sit in group `k3s-nodes-ssh`, and policy
-`ssh-to-k3s-nodes` grants `svc-ssh` TCP 22 only. The primary mesh has no
-`Default` All-to-All policy: access exists only through explicit policies.
+`ssh-to-k3s-nodes` grants `svc-ssh` TCP 22 only. `svc-lan` is full Olympus
+LAN access for administrators (only `role-admin` carries it), so it includes
+node SSH; `svc-ssh` grants node SSH without the rest of the LAN. The primary
+mesh has no `Default` All-to-All policy: access exists only through explicit
+policies.
 
 ## Gotchas
 
