@@ -1,0 +1,14 @@
+---
+description: Hetzner Repair VPS and OpenTofu gotchas
+globs:
+  - terraform/repair/**
+  - hosts/yggdrasil-repair-1/**
+alwaysApply: false
+---
+
+# Hcloud Repair VPS gotchas
+
+- Primary IPs created by a server order start with `auto_delete=true`. Land `auto_delete=false` in a targeted apply before any server replacement, or a replace deletes them.
+- A plan showing `assignee_id -> (known after apply)` on the primary IPs is harmless: the provider skips unknown assignee values on update. Attach IPs through the server's `public_net`, not `assignee_id`.
+- `templatefile` `indent()` leaves the first line unindented, so the `${indent(...)}` call itself must sit indented inside `content: |` blocks in cloud-init templates.
+- `hcloud_server.repair` has `ignore_changes = [user_data]`; stack edits never rebuild it. Rebuild only with `tofu apply -replace=hcloud_server.repair`.

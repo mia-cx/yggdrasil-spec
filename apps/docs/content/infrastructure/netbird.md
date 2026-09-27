@@ -77,6 +77,14 @@ Retain [default NetBird behavior](https://github.com/mia-cx/yggdrasil-spec/issue
 
 Verify this behavior during the pilot. It does not establish availability of every application's own authentication path during a Hecate outage.
 
+## Repair mesh and external relay
+
+A Hetzner VPS (`yggdrasil-repair-1`, `178.105.231.90`) runs an independent NetBird stack for the Repair mesh at `netbird-repair.mia.cx`: combined `netbird-server` (Management, Signal, embedded Relay + STUN on UDP 3478, embedded IdP with a local admin), the dashboard, and Traefik with Let's Encrypt HTTP-01. It depends on nothing at home: no Hecate, no cluster, no LAN.
+
+The same VPS also runs a standalone `netbirdio/relay` for the primary mesh: `rels://netbird-relay.mia.cx:443` (WebSocket relay through Traefik) plus STUN on UDP 3479. The two roles share only the host; the Repair mesh uses its own embedded relay, and the only shared secret is `NETBIRD_RELAY_AUTH_SECRET` in each host's `/opt/netbird/.env`.
+
+Host details live in `hosts/yggdrasil-repair-1/README.md` (stack, secrets, backups, device enrollment) and `hosts/yggdrasil-olympus-1/README.md` (external relay rotation). The VPS, its IPs, firewall, and DNS records are managed by `terraform/repair` (OpenTofu); rebuilds are explicit `tofu apply -replace=hcloud_server.repair`.
+
 ## Permission revocation
 
 Mia approved a [24-hour revocation bound](https://github.com/mia-cx/yggdrasil-spec/issues/13#issuecomment-5848158959) for NetBird access to private services, replacing the earlier immediate-revocation requirement. After a permission removal in Hecate, running streams and sessions may finish, but new requests must fail within 24 hours. Unrelated grants and other users' access stay intact.
