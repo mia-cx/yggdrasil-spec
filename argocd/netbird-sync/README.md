@@ -24,7 +24,7 @@ Recreate (values via files/stdin, never argv):
 
 ```bash
 # Authentik token — also wired into the blueprint via values.yaml
-openssl rand -hex 32 > /tmp/ak-token
+openssl rand -hex 32 | tr -d '\n' > /tmp/ak-token
 kubectl --context default -n authentik create secret generic \
   netbird-sync-authentik --from-file=token=/tmp/ak-token
 
@@ -35,7 +35,7 @@ USER_ID=$(curl -sf -H "Authorization: Token $ADMIN_PAT" \
   | jq -r .id)
 curl -sf -H "Authorization: Token $ADMIN_PAT" -H 'Content-Type: application/json' \
   "https://netbird.mia.cx/api/users/$USER_ID/tokens" \
-  -d '{"name":"netbird-sync","expires_in":365}' | jq -r .plain_token \
+  -d '{"name":"netbird-sync","expires_in":365}' | jq -j .plain_token \
   > /tmp/nb-token
 
 kubectl --context default -n authentik get secret authentik-secrets \
