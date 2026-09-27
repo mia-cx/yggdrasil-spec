@@ -143,7 +143,7 @@ const k8sState = async (
     return cm.data?.failing === "true";
   }
 
-  // Merge-patch, not PUT: PUT on an existing object needs resourceVersion.
+  // Merge-patch touches only the one key; 404 means first run, so create it.
   let res = await fetch(`${base}/${name}`, {
     method: "PATCH",
     headers: { ...headers, "Content-Type": "application/merge-patch+json" },
