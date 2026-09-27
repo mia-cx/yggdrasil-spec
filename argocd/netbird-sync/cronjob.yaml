@@ -10,7 +10,7 @@
 ##     --from-file=netbird-token=... --from-file=authentik-token=... \
 ##     --from-file=smtp-password=... --from-literal=alert-to=...
 ##
-## 2. DRY_RUN is "true" below: flip to "false" once a dry-run log looks right.
+## 2. DRY_RUN is "false" below; set "true" to log the plan without writing.
 ##    Manual run: kubectl --context default -n netbird-sync \
 ##      create job --from=cronjob/netbird-sync sync-manual-$(date +%s)
 apiVersion: batch/v1
@@ -68,7 +68,7 @@ spec:
                 - name: STATE_CONFIGMAP
                   value: netbird-sync-state
                 - name: DRY_RUN
-                  value: "true"
+                  value: "false"
                 # Lets fetch() trust the cluster CA for the k8s API calls.
                 - name: NODE_EXTRA_CA_CERTS
                   value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt

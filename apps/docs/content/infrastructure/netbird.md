@@ -115,7 +115,7 @@ Mia approved a [24-hour revocation bound](https://github.com/mia-cx/yggdrasil-sp
 
 Paid NetBird IdP Sync is out of scope; Community Edition syncs JWT groups only at sign-in. An hourly scheduled job in K3s covers what sign-in sync misses. It reads each user's effective permissions from Hecate and sets their NetBird groups through the Management API. User group propagation then applies them to all owned peers. For each TV it applies the intersection of the owner's current permissions and the TV's allowlist. The same job handles grants and removals.
 
-The job is deployed at `argocd/netbird-sync` (CronJob `netbird-sync`, hourly, `DRY_RUN` first). It matches each Hecate-authenticated NetBird user to an Authentik user by decoding the `sub` out of the Dex-encoded NetBird user id, and gets exactly the sign-in claim by evaluating the "NetBird profile with permissions" scope mapping through Authentik's mapping test API. Only `jwt`-issued groups are edited; `api`-issued and non-Hecate users are never touched. TV peer handling follows in #29.
+The job is deployed at `argocd/netbird-sync` (CronJob `netbird-sync`, hourly). It matches each Hecate-authenticated NetBird user to an Authentik user by decoding the `sub` out of the Dex-encoded NetBird user id, and gets exactly the sign-in claim by evaluating the "NetBird profile with permissions" scope mapping through Authentik's mapping test API. Only `jwt`-issued groups are edited; `api`-issued and non-Hecate users are never touched. TV peer handling follows in #29.
 
 TV owners and allowlists live in Hecate. This repository holds only the job's code and settings, never personal data such as names, emails, or device-to-person mappings.
 

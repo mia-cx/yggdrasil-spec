@@ -6,8 +6,8 @@ the Authentik scope-mapping test endpoint â€” the same code path sign-in uses â€
 and updates only `jwt`-issued `auto_groups` via the NetBird Management API.
 It never creates groups and never touches non-Hecate (local, service) users.
 
-`DRY_RUN` ships as `"true"` in `cronjob.yaml`: the job logs its plan and
-writes nothing. Flip to `"false"` once a dry-run log looks right.
+`DRY_RUN` is `"false"` in `cronjob.yaml`. Set it to `"true"` to log the plan
+without writing anything, for example after changing the matching logic.
 
 ## Secrets
 
