@@ -208,19 +208,9 @@ oidc:
   clientSecret: <from-authentik>
 ```
 
-### Exit Nodes (K3s DaemonSet)
+### K3s routing pods and node clients
 
-Exit nodes run in K3s for redundancy across nodes. Create a setup key in the Netbird admin UI (Setup Keys → auto-groups for exit node group).
-
-```bash
-kubectl create secret generic netbird-setup-key \
-  -n netbird \
-  --from-literal=key="YOUR_SETUP_KEY"
-
-kubectl apply -f argocd/netbird/exit-node-daemonset.yaml
-```
-
-Exit nodes connect to management server at `https://netbird.mia.cx` (10.0.1.4).
+The `netbird-operator` ArgoCD app deploys chart 0.8.0 and the `k8s-routers` NetworkRouter: four routing pods, spread two per node by a `DoNotSchedule` topology constraint. Each K3s host is meant to run a pinned OS-level NetBird client in the `k3s-nodes` group with host DNS untouched; enrollment is blocked because it crash-loops K3s (see the node README's known issue). SSH to nodes arrives via the `ssh-to-k3s-nodes` policy (TCP 22, source `svc-ssh`). Node enrollment grants no pod access. See [argocd/netbird-operator/README.md](https://github.com/mia-cx/yggdrasil-spec/blob/main/argocd/netbird-operator/README.md) and [hosts/k3s-nodes/README.md](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/k3s-nodes/README.md).
 
 ## Configuration
 
@@ -316,8 +306,8 @@ See also: [DNS](./dns.md)
 ## Verification
 
 ```bash
-# Check exit node pods
-kubectl get pods -n netbird
+# Check routing pods
+kubectl get pods -n netbird-operator
 
 # Test from a Netbird client
 nslookup jellyfin.yggdrasil.mia.cx
