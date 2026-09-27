@@ -49,10 +49,9 @@ members one crashing node takes the cluster down. Node SSH goes through the
   `NB_MANAGEMENT_URL` counts as a config override. The NetworkRouter
   `workloadOverride` sets it back to `false` (upstream removed it on main).
 - Pod DNS resolves `*.mia.cx` to the Traefik VIP, but the relay/STUN server
-  lives on the Repair VPS. The `netbird.server` key in
+  lives on the Repair VPS. A server block in the `mia.server` key of
   `argocd/k3s/coredns-custom.yaml` forwards `netbird-relay.mia.cx` and
   `netbird-repair.mia.cx` to real DNS so pods reach the relay.
-- CoreDNS evaluates `import /etc/coredns/custom/*.server` only at startup.
-  A new `.server` key takes effect after
-  `kubectl -n kube-system rollout restart deployment/coredns`; editing an
-  existing key reloads on its own.
+- Add CoreDNS server blocks to the existing `mia.server` key, not a new
+  `.server` key. The `reload` plugin picks up edits to the existing key
+  without a restart; a new key is only certain to load at CoreDNS startup.

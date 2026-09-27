@@ -17,10 +17,9 @@ data:
       }
       forward . 1.1.1.1 1.0.0.1
     }
-  # netbird-relay and netbird-repair point at the Repair VPS, not Traefik.
-  # Longest zone match beats the mia.cx wildcard, so pods reach the real
-  # relay instead of the VIP.
-  netbird.server: |
+    # netbird-relay and netbird-repair point at the Repair VPS, not Traefik.
+    # Longest zone match beats the mia.cx wildcard, so pods reach the real
+    # relay instead of the VIP.
     netbird-relay.mia.cx netbird-repair.mia.cx {
       forward . 1.1.1.1 1.0.0.1
     }
