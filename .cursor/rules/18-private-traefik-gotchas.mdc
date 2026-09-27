@@ -32,4 +32,8 @@ alwaysApply: false
   the mesh path. Traefik admits only routing pods per entrypoint port (they
   masquerade, so mesh traffic arrives from their IPs); backends admit only
   the Traefik pods.
+- NetBird 0.79.0 doesn't push DNS zone or record changes to connected peers
+  (server logs `context canceled`). After creating or changing a zone,
+  reconnect a test peer (`netbird down && netbird up`) before judging DNS.
+  Group and policy changes push normally.
 

@@ -56,9 +56,26 @@ Each private service gets its own enforceable network destination:
 
 ## Live NetBird objects
 
-Created through the Management API after rollout; not in this repo.
+Created through the Management API on 2026-09-27; not in this repo.
 
 - Policy `canary`: source group `svc-canary`, destination group `res-canary`,
   TCP 443.
-- DNS zone `canary.mia.cx`: distribution group `svc-canary`, apex A record →
-  `10.43.0.128`.
+- DNS zone `canary.mia.cx`: distribution group `svc-canary`, search domain
+  off, apex A record `canary.mia.cx` → `10.43.0.128`.
+
+NetBird 0.79.0 doesn't push DNS zone or record changes to connected peers.
+The server logs `failed to get network map data ... context canceled`, and
+peers keep their old DNS settings until they reconnect
+(`netbird down && netbird up`). Group and policy changes push normally, in
+under 10 seconds.
+
+## Verified on 2026-09-27
+
+| Check                                              | Result                                                                        |
+| -------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Peer in `svc-canary` opens `https://canary.mia.cx` | 200, Let's Encrypt certificate verifies                                       |
+| Same peer removed from `svc-canary`                | Route and DNS answer gone, connection fails within 10 seconds; back on re-add |
+| Pod in `default` to `10.43.0.128:443` or `whoami`  | Blocked by the NetworkPolicies                                                |
+| Public Traefik with `Host: canary.mia.cx`          | 404                                                                           |
+| IngressClass, TLSStore, TLSOption                  | Unchanged: only the public `traefik` class and `kube-system/default` store    |
+| `cmctl renew canary-tls -n canary`                 | New certificate served at once, no restart                                    |
