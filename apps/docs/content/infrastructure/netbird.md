@@ -39,7 +39,7 @@ The [enrollment decision](https://github.com/mia-cx/yggdrasil-spec/issues/13#iss
 2. Authorized users enroll their own personal devices without waiting for Mia. The logged-in user confirms enrollment where supported. Their existing grants determine connectivity; enrollment grants no additional service permissions or administrative rights.
 3. Shared TVs use restricted appliance identities enrolled through single-use setup keys that carry no auto-groups and expire after 24 hours. Their [service permissions](#shared-appliance-permissions) inherit only the allowed subset of their owner's current grants. Jellyfin identifies the viewer separately.
 
-Hecate's [Consent stage](https://docs.goauthentik.io/add-secure-apps/flows-stages/stages/consent/) supports **Always require consent**. Use a NetBird-specific authorization flow and consent stage for this confirmation. Ordinary application SSO keeps its existing flows. The NetBird flow can also prompt during dashboard authorization or interactive reauthentication.
+Hecate's [Consent stage](https://docs.goauthentik.io/add-secure-apps/flows-stages/stages/consent/) supports **Always require consent**. Use a NetBird-specific authorization flow and consent stage for this confirmation. Ordinary application SSO keeps its existing flows. The NetBird flow can also prompt during dashboard authorization or interactive reauthentication. The NetBird flow and consent stage now exist in the Authentik blueprint.
 
 This is consent to NetBird authorization during enrollment. It does not depend on NetBird's Cloud-only peer-approval feature. The standard Hecate prompt identifies the application, not the device's hardware identity.
 
@@ -51,7 +51,7 @@ The lifecycle ticket is [resolved](https://github.com/mia-cx/yggdrasil-spec/issu
 
 Mia chose [owner-linked TV permissions](https://github.com/mia-cx/yggdrasil-spec/issues/13#issuecomment-5816269998). Each TV has a main user as its owner. Its effective service permissions equal the intersection of the owner's current effective permissions and the TV's allowed service permissions.
 
-For example, a TV allowed `jellyfin.access` receives that grant only while its owner has it. The owner's infrastructure permissions stay outside that allowlist. Removing the owner's Jellyfin grant automatically removes it from their TVs too. A disabled or deleted owner provides no inherited service access. The cutoff affects everyone using those TVs; other authorized devices and households retain access.
+For example, a TV allowed `svc-jellyfin` receives that grant only while its owner has it. The owner's infrastructure permissions stay outside that allowlist. Removing the owner's Jellyfin grant automatically removes it from their TVs too. A disabled or deleted owner provides no inherited service access. The cutoff affects everyone using those TVs; other authorized devices and households retain access.
 
 Jellyfin viewer switching does not change the owner or the TV's network permissions. Appliance grants must stay within the owner and allowlist limits throughout their lifecycle; an enrollment-time copy is insufficient.
 
@@ -61,7 +61,7 @@ The inspected building blocks do not establish this relationship on their own:
 - [Setup-key auto-groups](https://docs.netbird.io/manage/peers/register-machines-using-setup-keys) apply to newly enrolled peers. Changing the key's groups does not update existing peers.
 - [Authentik 2026.8.1 group hierarchy](https://github.com/goauthentik/authentik/blob/version/2026.8.1/authentik/core/models.py) supplies ancestor group membership. It does not itself define a parent-user permission ceiling.
 
-TV owners and allowlists live in Hecate. Each TV is a Hecate service account; its allowlist is ordinary membership in permission groups such as `jellyfin.access`, and the account stores its owner and its NetBird peer ID. A TV enrolls with a [single-use setup key](https://github.com/mia-cx/yggdrasil-spec/issues/13#issuecomment-5848385171) that carries no auto-groups and expires after 24 hours. Mia enters the peer ID in the service account after enrollment, and the next hourly sync grants access; until then the TV sits on the mesh but reaches nothing. The [hourly sync job](#permission-revocation) sets each TV's NetBird groups to the intersection of its owner's current permissions and the TV allowlist. Before cutover, verify that new requests from every owned TV fail within 24 hours of owner grant removal. Test stale appliance groups, owner deactivation/deletion, and an owner gaining unrelated infrastructure permissions. No case may leave the TV with service access beyond its owner or allowlist. Verify another household's playback continues.
+TV owners and allowlists live in Hecate. Each TV is a Hecate service account; its allowlist is ordinary membership in permission groups such as `svc-jellyfin`, and the account stores its owner and its NetBird peer ID. A TV enrolls with a [single-use setup key](https://github.com/mia-cx/yggdrasil-spec/issues/13#issuecomment-5848385171) that carries no auto-groups and expires after 24 hours. Mia enters the peer ID in the service account after enrollment, and the next hourly sync grants access; until then the TV sits on the mesh but reaches nothing. The [hourly sync job](#permission-revocation) sets each TV's NetBird groups to the intersection of its owner's current permissions and the TV allowlist. Before cutover, verify that new requests from every owned TV fail within 24 hours of owner grant removal. Test stale appliance groups, owner deactivation/deletion, and an owner gaining unrelated infrastructure permissions. No case may leave the TV with service access beyond its owner or allowlist. Verify another household's playback continues.
 
 ## Personal-device renewal
 
@@ -85,6 +85,16 @@ The same VPS also runs a standalone `netbirdio/relay` for the primary mesh: `rel
 
 Host details live in `hosts/yggdrasil-repair-1/README.md` (stack, secrets, backups, device enrollment) and `hosts/yggdrasil-olympus-1/README.md` (external relay rotation). The VPS, its IPs, firewall, and DNS records are managed by `terraform/repair` (OpenTofu); rebuilds are explicit `tofu apply -replace=hcloud_server.repair`.
 
+## Hecate permission groups
+
+Every private service has a `svc-<service>` group in Hecate: `svc-prowlarr`, `svc-sonarr`, `svc-radarr`, `svc-lidarr`, `svc-readarr`, `svc-sabnzbd`, `svc-qbittorrent`, `svc-tdarr`, `svc-tunarr`, `svc-longhorn`, `svc-argocd`, `svc-proxmox`, `svc-pelican`, `svc-hermes`, `svc-seerr`, `svc-jellyfin`, `svc-lan`, `svc-ssh`, and `svc-canary`. The `netbird-enroll` group is the enrollment permission; the NetBird application requires it.
+
+Two role presets assign permissions in one step. A member inherits every parent group, so a role's parents are the permissions it grants. `role-admin` parents are every `svc-*` group plus `netbird-enroll`. `role-family` parents are `svc-jellyfin`, `svc-seerr`, and `netbird-enroll`.
+
+The NetBird profile scope emits a `groups` claim with only these permission names. NetBird never sees `role-*` presets or other Hecate groups, and no permission grants admin inside an application. NetBird creates each name as a JWT-issued group the first time a user holding it signs in; never create these groups through the NetBird API or dashboard. The hourly sync job edits membership only.
+
+The blueprint at `argocd/authentik/netbird-blueprint.yaml` defines every group and preset. The `Hecate login` section in `hosts/yggdrasil-olympus-1/README.md` covers recreating the connector and re-seeding the JWT-issued groups after a rebuild.
+
 ## Permission revocation
 
 Mia approved a [24-hour revocation bound](https://github.com/mia-cx/yggdrasil-spec/issues/13#issuecomment-5848158959) for NetBird access to private services, replacing the earlier immediate-revocation requirement. After a permission removal in Hecate, running streams and sessions may finish, but new requests must fail within 24 hours. Unrelated grants and other users' access stay intact.
@@ -93,7 +103,7 @@ Paid NetBird IdP Sync is out of scope; Community Edition syncs JWT groups only a
 
 TV owners and allowlists live in Hecate. This repository holds only the job's code and settings, never personal data such as names, emails, or device-to-person mappings.
 
-The [sync design](https://github.com/mia-cx/yggdrasil-spec/issues/13#issuecomment-5848276326) keeps JWT group sync on: new grants apply at the next sign-in, while the job covers removals between sign-ins and TVs, which never sign in. Both paths derive from Hecate and converge. NetBird v0.78.1 bounds both sides: sign-in sync adds users only to JWT-issued groups, silently skips same-name API and dashboard groups, removes only JWT-issued groups, and propagates changes to the user's own peers when group propagation is enabled. PAT-authenticated requests never trigger it. The job therefore never creates access groups; it edits membership of groups that sign-in sync created. A sign-in from an account holding each permission bootstraps every access group, and a pilot account holding every permission can create them all.
+The [sync design](https://github.com/mia-cx/yggdrasil-spec/issues/13#issuecomment-5848276326) keeps JWT group sync on: new grants apply at the next sign-in, while the job covers removals between sign-ins and TVs, which never sign in. Both paths derive from Hecate and converge. NetBird v0.78.1 bounds both sides: sign-in sync adds users only to JWT-issued groups, silently skips same-name API and dashboard groups, removes only JWT-issued groups, and propagates changes to the user's own peers when group propagation is enabled. PAT-authenticated requests never trigger it. The job therefore never creates access groups; it edits membership of groups that sign-in sync created. A sign-in from an account holding each permission bootstraps every access group, and an account in `role-admin` creates them all.
 
 TV peers have no owning user, so the job sets their group membership directly and sign-in sync never touches them. Hecate still decides who may enroll. The job reports failures by email through the existing SMTP relay (email-oauth2-proxy): one message when runs start failing, one on recovery.
 
@@ -117,7 +127,7 @@ Before cutover, prove these outcomes on isolated pilot resources:
 
 | Check                                                                | Required outcome                                                                                           |
 | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Remove effective `jellyfin.access`                                   | Every affected peer loses Jellyfin access within 24 hours, without waiting for sign-in or 30-day renewal.  |
+| Remove effective `svc-jellyfin`                                      | Every affected peer loses Jellyfin access within 24 hours, without waiting for sign-in or 30-day renewal.  |
 | Retry with old tokens, reconnect, or use another ingress destination | Jellyfin remains unreachable, including through public, direct LAN, and other permitted private listeners. |
 | Use an unrelated service or a different authorized peer              | Unrelated grants and other users' access remain usable.                                                    |
 

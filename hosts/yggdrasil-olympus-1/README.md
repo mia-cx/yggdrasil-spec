@@ -66,6 +66,58 @@ sudo docker compose up -d
 sudo docker compose ps
 ```
 
+## Hecate login
+
+Sign-in has two paths. People use the `Hecate` OIDC connector on the login
+page. The embedded local admin stays enabled as break-glass.
+
+The OIDC application and permission groups live in the repo at
+`argocd/authentik/netbird-blueprint.yaml`. The blueprint sets
+`grant_types: [authorization_code, refresh_token]` because
+blueprint-created providers start with none. NetBird's generic OIDC
+connector asks only for `openid profile email`, so the blueprint puts the
+`groups` claim in the `profile` scope. The client secret lives in the K8s
+Secret `netbird-oidc` (namespace `authentik`, key `client-secret`) and in
+`~/.config/yggdrasil/netbird-hecate-oidc.env` on this Mac.
+
+The connector and the account settings live in the NetBird database, not
+in `config.yaml.tmpl`, so a rebuild must recreate them:
+
+1. Create the connector. The client secret comes from the Mac file:
+
+   ```bash
+   source ~/.config/yggdrasil/netbird-hecate-oidc.env
+   curl -sf -X POST https://netbird.mia.cx/api/identity-providers \
+     -H "Authorization: Token $(cat ~/.config/yggdrasil/netbird-primary.pat)" \
+     -H "Content-Type: application/json" \
+     -d "{\"name\":\"Hecate\",\"type\":\"oidc\",\"issuer\":\"https://id.mia.cx/application/o/netbird/\",\"client_id\":\"netbird\",\"client_secret\":\"$NETBIRD_OIDC_CLIENT_SECRET\"}"
+   ```
+
+2. Apply the account settings. `PUT` replaces the whole settings object,
+   so read it, change the auth keys, and send it back:
+
+   ```bash
+   api=https://netbird.mia.cx/api
+   auth="Authorization: Token $(cat ~/.config/yggdrasil/netbird-primary.pat)"
+   account=$(curl -sf -H "$auth" $api/accounts | jq '.[0]')
+   echo "$account" | jq '{settings: (.settings + {
+       jwt_groups_enabled: true,
+       jwt_groups_claim_name: "groups",
+       jwt_allow_groups: ["netbird-enroll"],
+       groups_propagation_enabled: true,
+       peer_login_expiration_enabled: true,
+       peer_login_expiration: 2592000
+     } | .extra.user_approval_required = false)}' |
+     curl -sf -X PUT -H "$auth" -H "Content-Type: application/json" \
+       -d @- "$api/accounts/$(echo "$account" | jq -r .id)" > /dev/null
+   ```
+
+   `peer_login_expiration` is in seconds; 2592000 is 30 days.
+   `jwt_allow_groups` blocks sign-in for users without `netbird-enroll`.
+
+3. Sign in once through Hecate with an account in `role-admin` so NetBird
+   recreates the JWT-issued groups.
+
 ## Upgrading versions
 
 Image tags are pinned in `compose.yaml`. Bump the tag, then
