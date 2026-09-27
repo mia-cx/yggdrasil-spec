@@ -1,0 +1,30 @@
+---
+description: netbird-sync CronJob (Hecate -> NetBird permission sync) gotchas
+globs:
+  - argocd/netbird-sync/*
+  - argocd/authentik/netbird-sync-blueprint.yaml
+alwaysApply: false
+---
+
+# netbird-sync gotchas
+
+- A Hecate user's NetBird `id` is Dex's base64 protobuf: field 1 = Authentik
+  `sub`, field 2 = connector id. Decode with varint lengths; accept url-safe
+  and unpadded variants. A user whose id doesn't decode isn't a Hecate user.
+- Only `issued: "jwt"` NetBird groups are managed — they're created by
+  sign-in sync, never by this job. `api`-issued groups on a user are always
+  preserved; claim names with no group are reported, never created.
+- The `groups` claim is fetched through Authentik's property-mapping test
+  endpoint (`POST /propertymappings/all/{pk}/test/`), which evaluates the
+  mapping exactly as sign-in does. Don't reconstruct claims from group
+  membership — they can drift.
+- Alert state lives in a job-created ConfigMap (`netbird-sync-state`),
+  deliberately not in Git: ArgoCD selfHeal would revert it. The Job's Role
+  can only touch ConfigMaps in its own namespace.
+- The Authentik service account is a separate blueprint ConfigMap
+  (`authentik-blueprint-netbird-sync`) so a missing
+  `NETBIRD_SYNC_AUTHENTIK_TOKEN` env can't fail the NetBird login blueprint.
+- The NetBird PAT expires in 365 days (max the API allows); expiry shows up
+  as the failure email, then rotate per the README.
+- No package.json reaches the pod (ConfigMap mount), so keep the TS
+  CJS-safe: no top-level await; Node's module detection handles the imports.
