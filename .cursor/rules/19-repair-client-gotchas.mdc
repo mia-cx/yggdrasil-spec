@@ -1,0 +1,36 @@
+---
+description: NetBird Repair netstack client (netbird-repair.service) gotchas
+globs:
+  - hosts/repair-clients/*
+alwaysApply: false
+---
+
+# Repair client gotchas
+
+- Never put bare `netbird up` in ExecStartPost: on an unregistered peer it
+  starts interactive device-flow SSO, polls for 5 minutes, and the unit hits
+  the start timeout. The daemon reconnects by itself on `service run` once
+  `config.json` exists — enrollment via `up --setup-key-file` is a one-time
+  act in install.sh.
+- Stopping or killing `netbird-repair` while SSH'd in through its Repair IP
+  kills your own session (the netstack forwarder dies with the daemon). Run
+  stop/kill tests detached (`setsid` + log file), reconnect, read the log.
+- `Restart=always` recovers a SIGKILLed daemon and reconnects to Management
+  without a setup key; verified live.
+- The CLI warns "Config flag is deprecated on up command" when `NB_CONFIG` is
+  exported for `up` calls — cosmetic; keep the env so CLI and daemon agree on
+  paths.
+- The updater warns about `result.json` on a read-only fs under
+  `ProtectSystem=strict`; `WorkingDirectory=/var/lib/netbird-repair` fixes it.
+- State paths are all namespaced: config/state `/var/lib/netbird-repair`,
+  socket `/run/netbird-repair/netbird.sock`, log `/var/log/netbird-repair`,
+  UDP 51821 (51820 is the primary client's). Two clients coexist fine —
+  verified on the dual-mesh NetBird VM.
+- Hosts without root SSH (hydra-olympus-1): upload files and run install.sh
+  through `qm guest exec <vmid> --pass-stdin 1 -- bash -c '...'` on the
+  Proxmox host; the setup key rides stdin end to end.
+- Verify after install against the pre-install baseline, not absolute zero:
+  firewall rule counts, interfaces, and resolv.conf must match it (0 NetBird
+  rules and no `wt*` on single-client hosts; dual-mesh hosts legitimately
+  have the primary client's `wt0` and ~26 nft rules). New surface is only
+  the UDP 51821 listener owned by the netbird-repair process.
