@@ -1,0 +1,142 @@
+## NetBird login through Hecate: OIDC application, always-consent flow,
+## service permission groups and role presets. Mounted into the worker via
+## `blueprints.configMaps` in values.yaml. Users and memberships stay out of
+## the repo; assign them in Hecate.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-netbird
+  namespace: authentik
+data:
+  netbird.yaml: |
+    version: 1
+    metadata:
+      name: NetBird
+      labels:
+        blueprints.goauthentik.io/description: NetBird OIDC application and service permission groups
+    entries:
+      # Service permissions: one group per private service. NetBird receives
+      # these names as JWT groups; none of them grants admin in any app.
+      - {model: authentik_core.group, id: svc-prowlarr, identifiers: {name: svc-prowlarr}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-sonarr, identifiers: {name: svc-sonarr}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-radarr, identifiers: {name: svc-radarr}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-lidarr, identifiers: {name: svc-lidarr}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-readarr, identifiers: {name: svc-readarr}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-sabnzbd, identifiers: {name: svc-sabnzbd}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-qbittorrent, identifiers: {name: svc-qbittorrent}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-tdarr, identifiers: {name: svc-tdarr}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-tunarr, identifiers: {name: svc-tunarr}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-longhorn, identifiers: {name: svc-longhorn}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-argocd, identifiers: {name: svc-argocd}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-proxmox, identifiers: {name: svc-proxmox}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-pelican, identifiers: {name: svc-pelican}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-hermes, identifiers: {name: svc-hermes}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-seerr, identifiers: {name: svc-seerr}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-jellyfin, identifiers: {name: svc-jellyfin}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-lan, identifiers: {name: svc-lan}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-ssh, identifiers: {name: svc-ssh}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-canary, identifiers: {name: svc-canary}, attrs: {is_superuser: false}}
+      # Permission to enroll a personal device; the NetBird application is
+      # bound to it below.
+      - {model: authentik_core.group, id: netbird-enroll, identifiers: {name: netbird-enroll}, attrs: {is_superuser: false}}
+
+      # Role presets. A member inherits every parent group, so the parents
+      # are the permissions the role grants.
+      - model: authentik_core.group
+        identifiers: {name: role-admin}
+        attrs:
+          is_superuser: false
+          parents:
+            - !KeyOf svc-prowlarr
+            - !KeyOf svc-sonarr
+            - !KeyOf svc-radarr
+            - !KeyOf svc-lidarr
+            - !KeyOf svc-readarr
+            - !KeyOf svc-sabnzbd
+            - !KeyOf svc-qbittorrent
+            - !KeyOf svc-tdarr
+            - !KeyOf svc-tunarr
+            - !KeyOf svc-longhorn
+            - !KeyOf svc-argocd
+            - !KeyOf svc-proxmox
+            - !KeyOf svc-pelican
+            - !KeyOf svc-hermes
+            - !KeyOf svc-seerr
+            - !KeyOf svc-jellyfin
+            - !KeyOf svc-lan
+            - !KeyOf svc-ssh
+            - !KeyOf svc-canary
+            - !KeyOf netbird-enroll
+      - model: authentik_core.group
+        identifiers: {name: role-family}
+        attrs:
+          is_superuser: false
+          parents:
+            - !KeyOf svc-jellyfin
+            - !KeyOf svc-seerr
+            - !KeyOf netbird-enroll
+
+      # NetBird-only authorization flow: asks for consent on every
+      # enrollment and reauthentication. Other apps keep their flows.
+      - model: authentik_stages_consent.consentstage
+        id: consent
+        identifiers: {name: netbird-consent}
+        attrs: {mode: always_require}
+      - model: authentik_flows.flow
+        id: flow
+        identifiers: {slug: netbird-authorization}
+        attrs:
+          name: NetBird authorization
+          title: Connect to NetBird
+          designation: authorization
+          authentication: require_authenticated
+      - model: authentik_flows.flowstagebinding
+        identifiers: {target: !KeyOf flow, stage: !KeyOf consent, order: 10}
+
+      - model: authentik_providers_oauth2.scopemapping
+        id: profile
+        identifiers: {name: NetBird profile with permissions}
+        attrs:
+          scope_name: profile
+          description: Profile plus NetBird permission groups
+          expression: |
+            # Role presets expand through group parents; NetBird sees no other groups.
+            return {
+                "name": request.user.name,
+                "preferred_username": request.user.username,
+                "nickname": request.user.username,
+                "groups": sorted(
+                    group.name
+                    for group in request.user.all_groups()
+                    if group.name.startswith("svc-") or group.name == "netbird-enroll"
+                ),
+            }
+      - model: authentik_providers_oauth2.oauth2provider
+        id: provider
+        identifiers: {name: NetBird}
+        attrs:
+          authorization_flow: !KeyOf flow
+          invalidation_flow: !Find [authentik_flows.flow, [slug, callback-sign-out]]
+          client_type: confidential
+          client_id: netbird
+          # From the netbird-oidc Secret, created out of band.
+          client_secret: !Env NETBIRD_OIDC_CLIENT_SECRET
+          redirect_uris:
+            - {matching_mode: strict, url: https://netbird.mia.cx/oauth2/callback}
+          signing_key: !Find [authentik_crypto.certificatekeypair, [name, authentik Self-signed Certificate]]
+          include_claims_in_id_token: true
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
+            - !KeyOf profile
+      - model: authentik_core.application
+        id: app
+        identifiers: {slug: netbird}
+        attrs:
+          name: NetBird
+          provider: !KeyOf provider
+          meta_launch_url: https://netbird.mia.cx
+          policy_engine_mode: any
+      - model: authentik_policies.policybinding
+        identifiers: {target: !KeyOf app, order: 0}
+        attrs: {group: !KeyOf netbird-enroll}

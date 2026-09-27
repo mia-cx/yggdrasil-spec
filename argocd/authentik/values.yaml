@@ -33,6 +33,18 @@ global:
         secretKeyRef:
           name: authentik-secrets
           key: email-password
+    # NetBird OIDC client secret, read by the NetBird blueprint (!Env).
+    # Optional: a missing Secret fails the blueprint, not Authentik.
+    - name: NETBIRD_OIDC_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: netbird-oidc
+          key: client-secret
+          optional: true
+
+blueprints:
+  configMaps:
+    - authentik-blueprint-netbird  # netbird-blueprint.yaml
 
 server:
   replicas: 1
