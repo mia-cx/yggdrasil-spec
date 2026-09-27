@@ -18,7 +18,7 @@ One Secret, `netbird-sync` in namespace `netbird-sync`, not in Git:
 | `netbird-token`   | PAT of NetBird service user `netbird-sync` (role admin)      |
 | `authentik-token` | Same value as `authentik/netbird-sync-authentik` key `token` |
 | `smtp-password`   | `authentik/authentik-secrets` key `email-password`           |
-| `alert-to`        | `mia@mia.cx`                                                 |
+| `alert-to`        | The alert recipient address                                  |
 
 Recreate (values via files/stdin, never argv):
 
@@ -45,7 +45,7 @@ kubectl --context default -n netbird-sync create secret generic netbird-sync \
   --from-file=netbird-token=/tmp/nb-token \
   --from-file=authentik-token=/tmp/ak-token \
   --from-file=smtp-password=/tmp/smtp-pass \
-  --from-literal=alert-to=mia@mia.cx
+  --from-literal=alert-to='<alert recipient>'
 rm /tmp/ak-token /tmp/nb-token /tmp/smtp-pass
 ```
 
