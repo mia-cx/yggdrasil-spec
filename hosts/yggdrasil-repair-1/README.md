@@ -114,13 +114,34 @@ The state that matters is `/opt/netbird/.env` (secrets) and the
 Mac; the passphrase lives in `~/.config/yggdrasil/repair-backup-passphrase`
 (local copy) and in Mia's password manager (the real copy):
 
+The backup runs in a subshell so `pipefail` and `umask` do not leak into
+your shell; `netbird-server` is started again even when `tar` fails; any
+failing stage makes the command exit non-zero and leaves the previous
+archive untouched:
+
 ```bash
-ssh mia@178.105.231.90 'cd /opt/netbird && sudo docker compose stop netbird-server && \
-  sudo tar -C / -czf - opt/netbird/.env var/lib/docker/volumes/netbird_netbird_data/_data; \
-  sudo docker compose start netbird-server' \
-  | openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt \
-      -pass file:$HOME/.config/yggdrasil/repair-backup-passphrase \
-      -out ~/.config/yggdrasil/backups/repair-$(date +%Y%m%d).tar.gz.enc
+(
+  set -o pipefail
+  umask 077
+  out=~/.config/yggdrasil/backups/repair-$(date +%Y%m%d).tar.gz.enc
+  ssh mia@178.105.231.90 'cd /opt/netbird || exit 1
+    sudo docker compose stop netbird-server &&
+      sudo tar -C / -czf - opt/netbird/.env var/lib/docker/volumes/netbird_netbird_data/_data
+    rc=$?
+    sudo docker compose start netbird-server || rc=1
+    exit $rc' |
+    openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt \
+      -pass file:"$HOME/.config/yggdrasil/repair-backup-passphrase" -out "$out.tmp" &&
+    mv "$out.tmp" "$out" || { rm -f "$out.tmp"; exit 1; }
+)
+```
+
+Check a fresh archive lists cleanly without extracting it:
+
+```bash
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+  -pass file:"$HOME/.config/yggdrasil/repair-backup-passphrase" \
+  -in ~/.config/yggdrasil/backups/repair-<date>.tar.gz.enc | tar -tzf - >/dev/null && echo ok
 ```
 
 To verify a backup without touching the live stack, restore into a scratch
