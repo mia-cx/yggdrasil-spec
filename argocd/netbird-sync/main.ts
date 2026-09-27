@@ -13,6 +13,8 @@ import {
 } from "./lib.ts";
 import { sendMail } from "./smtp.ts";
 
+const REQUEST_TIMEOUT_MS = 30_000;
+
 const requireEnv = (name: string): string => {
   const value = process.env[name];
   if (!value) throw new Error(`missing env ${name}`);
@@ -44,6 +46,7 @@ const fetchJson = async (
 ): Promise<unknown> => {
   const res = await fetch(url, {
     method: init?.method ?? "GET",
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     headers: {
       Authorization: `${scheme} ${token}`,
       ...(init?.body === undefined
@@ -130,26 +133,35 @@ const k8sState = async (
   };
 
   if (op === "get") {
-    const res = await fetch(`${base}/${name}`, { headers });
+    const res = await fetch(`${base}/${name}`, {
+      headers,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
     if (res.status === 404) return false;
     if (!res.ok) throw new Error(`read state ConfigMap: HTTP ${res.status}`);
     const cm = (await res.json()) as { data?: { failing?: string } };
     return cm.data?.failing === "true";
   }
 
-  const body = JSON.stringify({
-    apiVersion: "v1",
-    kind: "ConfigMap",
-    metadata: { name },
-    data: { failing: String(failing) },
-  });
+  // Merge-patch, not PUT: PUT on an existing object needs resourceVersion.
   let res = await fetch(`${base}/${name}`, {
-    method: "PUT",
-    headers,
-    body,
+    method: "PATCH",
+    headers: { ...headers, "Content-Type": "application/merge-patch+json" },
+    body: JSON.stringify({ data: { failing: String(failing) } }),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   if (res.status === 404)
-    res = await fetch(base, { method: "POST", headers, body });
+    res = await fetch(base, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        apiVersion: "v1",
+        kind: "ConfigMap",
+        metadata: { name },
+        data: { failing: String(failing) },
+      }),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
   if (!res.ok) throw new Error(`write state ConfigMap: HTTP ${res.status}`);
   return failing!;
 };
@@ -251,6 +263,7 @@ const run = async (): Promise<void> => {
     const user = byId.get(upd.userId)!;
     const res = await fetch(`${env.netbirdApi}/users/${upd.userId}`, {
       method: "PUT",
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       headers: {
         Authorization: `Token ${env.netbirdToken}`,
         "Content-Type": "application/json",
