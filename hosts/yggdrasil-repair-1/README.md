@@ -184,10 +184,35 @@ Full rebuild after losing the server: `tofu plan`, then
 `sudo cloud-init status --wait` (bootstrap generates a fresh `.env` and
 starts the stack), then on the VPS `cd /opt/netbird && sudo docker compose
 down`, untar the archive over `/` (restores `.env` and the volume data),
-re-render `config.yaml` as above, and `sudo docker compose up -d`. Without a
-backup the rebuild generates a new `NETBIRD_RELAY_AUTH_SECRET`, which then
-has to be copied into `/opt/netbird/.env` on `yggdrasil-olympus-1` and the
-primary's `config.yaml` re-rendered and restarted.
+re-render `config.yaml` as above, and `sudo docker compose up -d`.
+
+### Relay secret after a restore
+
+Every restore, with or without a backup, can leave the primary's copy of
+`NETBIRD_RELAY_AUTH_SECRET` out of date: a rebuild without a backup
+generates a new one, and a backup restored later brings back whatever value
+was current when it was taken. Compare the two hosts by hash, never by
+printing the value:
+
+```bash
+ssh mia@178.105.231.90 sudo grep '^NETBIRD_RELAY_AUTH_SECRET=' /opt/netbird/.env | shasum -a 256
+ssh mia@10.0.1.4 sudo grep '^NETBIRD_RELAY_AUTH_SECRET=' /opt/netbird/.env | shasum -a 256
+```
+
+If they differ, make the primary match the VPS, because the relay on the VPS
+is what authenticates:
+
+```bash
+ssh mia@178.105.231.90 sudo grep '^NETBIRD_RELAY_AUTH_SECRET=' /opt/netbird/.env \
+  | ssh mia@10.0.1.4 'sudo sed -i "/^NETBIRD_RELAY_AUTH_SECRET=/d" /opt/netbird/.env && sudo tee -a /opt/netbird/.env >/dev/null'
+```
+
+Then on the VM re-render `config.yaml` and restart `netbird-server` as in
+the [External relay](../yggdrasil-olympus-1/README.md#external-relay)
+section of the primary's README.
+
+Rotating the relay secret means taking a fresh backup right away, or a later
+restore brings back the old value.
 
 ## Mia's devices
 
