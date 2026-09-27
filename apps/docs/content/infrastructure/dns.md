@@ -21,7 +21,7 @@ Keep normal Kubernetes CoreDNS at `10.43.0.10`. Retire the extra DNS VIP `10.0.1
 
 ### Human DNS filtering
 
-AdGuard Home runs in Docker on the primary NetBird management VM, outside K3s. A dedicated NetBird sidecar provides its planned mesh entrance without publishing host DNS ports. Human-device groups receive filtered DNS with unfiltered outage fallback. Services, infrastructure bootstrap, and Repair use independent unfiltered DNS. Private records remain in NetBird, not AdGuard.
+AdGuard Home runs in Docker on the primary NetBird management VM, outside K3s. A dedicated NetBird sidecar provides its planned mesh entrance without publishing host DNS ports. Human-device groups receive filtered DNS with a malware-blocking outage fallback (`1.1.1.2`). Services, infrastructure bootstrap, and Repair use independent unfiltered DNS. Private records remain in NetBird, not AdGuard.
 
 ### Node and application resolution
 
