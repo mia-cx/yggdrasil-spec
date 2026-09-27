@@ -41,10 +41,20 @@ global:
           name: netbird-oidc
           key: client-secret
           optional: true
+    # Token value for the netbird-sync service account, read by its blueprint
+    # (!Env). Optional: a missing Secret fails the blueprint, not Authentik.
+    # Create before sync; restart worker after rotating.
+    - name: NETBIRD_SYNC_AUTHENTIK_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: netbird-sync-authentik
+          key: token
+          optional: true
 
 blueprints:
   configMaps:
     - authentik-blueprint-netbird  # netbird-blueprint.yaml
+    - authentik-blueprint-netbird-sync  # netbird-sync-blueprint.yaml
 
 server:
   replicas: 1
