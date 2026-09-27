@@ -127,6 +127,8 @@ Public Immich, Nextcloud, and Vaultwarden are [out of scope](https://github.com/
 
 Every private service gets its own enforceable network destination, generalizing the Jellyfin contract below. Each mesh-only service gets a private Traefik entrypoint on its own port, its own ClusterIP Service, and its own published NetBird resource. A policy admits only that service's permission group. Traefik keeps terminating TLS and existing URLs stay unchanged; no other entrypoint answers for that hostname.
 
+The private instance is deployed as `traefik-internal` with the canary service, per the [canary isolation contract](https://github.com/mia-cx/yggdrasil-spec/blob/main/argocd/traefik-internal/README.md).
+
 The dedicated port is what makes services distinguishable: kube-proxy maps every ClusterIP to the pod's target port, so two Services reaching Traefik on the same port are indistinguishable. Removing a permission cuts network access to that one service within the hourly sync; application sessions and native tokens may stay intact behind the cutoff.
 
 ### Jellyfin network cutoff

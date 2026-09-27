@@ -1,0 +1,30 @@
+---
+description: Private traefik-internal instance and per-service destination gotchas
+globs:
+  - argocd/traefik-internal/*
+  - argocd/_apps/traefik-internal.yaml
+alwaysApply: false
+---
+
+# Private Traefik gotchas
+
+- Isolation is by class annotation: private IngressRoutes carry
+  `kubernetes.io/ingress.class: traefik-internal`. The public instance's
+  kubernetescrd provider class is unset, so it processes only routes with no
+  class or class `traefik` and ignores annotated ones. The private instance
+  sets `providers.kubernetesCRD.ingressClass: traefik-internal` and only sees
+  annotated routes.
+- The chart's pod label `app.kubernetes.io/instance` is `<release>-<namespace>`
+  (`traefik-internal-traefik-internal`), not just the release name. Service
+  selectors and affinity/spread selectors must use the full value.
+- The private app must render no IngressClass, TLSStore, TLSOption, Service, or
+  CRDs (`service.enabled: false`, `ingressClass.enabled: false`,
+  `helm.skipCrds: true`; the public app owns all of those).
+- Each private service needs a pinned ClusterIP from `10.43.250.0/24` and its
+  own Traefik entrypoint port: NetBird policies are L3/L4, so services sharing
+  a ClusterIP or port are indistinguishable to enforcement.
+- The operator's `NetworkResource` with `serviceRef` creates an IP resource at
+  the Service ClusterIP plus an A record in `svc.olympus.yggdrasil.mia.cx`.
+- New private namespaces must be added to
+  `providers.kubernetesCRD.namespaces` in `values.yaml`; the instance watches
+  nothing else.
