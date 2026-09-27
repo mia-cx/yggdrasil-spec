@@ -1,0 +1,49 @@
+[Unit]
+Description=NetBird Repair mesh client (userspace netstack)
+Documentation=https://github.com/mia-cx/yggdrasil-spec/tree/main/hosts/repair-clients
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=netbird-repair
+Group=netbird-repair
+Restart=always
+RestartSec=5
+
+StateDirectory=netbird-repair
+RuntimeDirectory=netbird-repair
+LogsDirectory=netbird-repair
+
+# Netstack mode keeps the mesh inside this process: no kernel interface, no
+# nftables rules, no host DNS changes. Local forwarding maps the peer's own
+# Repair address to host loopback, so allowed TCP 22 reaches sshd on
+# 127.0.0.1:22. Mirrors client/Dockerfile-rootless at netbird v0.79.0.
+Environment=NB_USE_NETSTACK_MODE=true
+Environment=NB_ENABLE_NETSTACK_LOCAL_FORWARDING=true
+Environment=NB_DISABLE_DNS=true
+Environment=NB_NETSTACK_SKIP_PROXY=true
+Environment=NB_CONFIG=/var/lib/netbird-repair/config.json
+Environment=NB_STATE_DIR=/var/lib/netbird-repair
+Environment=NB_DAEMON_ADDR=unix:///run/netbird-repair/netbird.sock
+Environment=NB_LOG_FILE=console,/var/log/netbird-repair/client.log
+Environment=NB_MANAGEMENT_URL=https://netbird-repair.mia.cx
+# 51820 belongs to the primary client's wt0 on dual-mesh hosts.
+Environment=NB_WIREGUARD_PORT=51821
+
+ExecStart=/usr/local/lib/netbird-repair/netbird service run
+WorkingDirectory=/var/lib/netbird-repair
+# No ExecStartPost `netbird up`: on an unregistered peer it falls back to
+# interactive device-flow SSO and blocks the start timeout. The daemon
+# reconnects by itself once config.json exists; install.sh enrolls first.
+
+NoNewPrivileges=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
