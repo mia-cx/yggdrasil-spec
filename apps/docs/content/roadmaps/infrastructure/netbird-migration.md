@@ -14,7 +14,7 @@ Fresh start, per the [starting-point decision](https://github.com/mia-cx/yggdras
 
 1. Foundation: primary NetBird VM on Proxmox (management, signal, relay) with Docker AdGuard Home and the Olympus LAN routing client. Reached through the current public Traefik plus direct guest port 8443 for diagnosis. An independent Hetzner Repair mesh runs alongside.
 2. Hecate: NetBird application with an always-consent authorization flow and per-service permission groups. A pilot test account holding every permission creates the JWT-issued NetBird groups on first sign-in.
-3. K3s: NetBird operator with four routing pods (two per node), OS-level node clients, and one canary service on its own private Traefik entrypoint. Confirm no leftover `wt0` interface or firewall rules from the removed host-network pods.
+3. K3s: NetBird operator with four routing pods (two per node) and one canary service on its own private Traefik entrypoint. No NetBird client runs on the K3s nodes: routine node SSH goes through the `olympus-lan` router, recovery through the Repair netstack client (#24). Confirm no leftover `wt0` interface or firewall rules from the removed host-network pods.
 4. Sync job: the hourly Hecate-to-NetBird job with failure and recovery email.
 5. Pilot and stability sign-off, below.
 6. Per-service cutovers, below.
