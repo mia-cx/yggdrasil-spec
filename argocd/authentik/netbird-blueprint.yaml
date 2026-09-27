@@ -118,6 +118,8 @@ data:
           authorization_flow: !KeyOf flow
           invalidation_flow: !Find [authentik_flows.flow, [slug, callback-sign-out]]
           client_type: confidential
+          # Blueprint-created providers start with no grant types.
+          grant_types: [authorization_code, refresh_token]
           client_id: netbird
           # From the netbird-oidc Secret, created out of band.
           client_secret: !Env NETBIRD_OIDC_CLIENT_SECRET
