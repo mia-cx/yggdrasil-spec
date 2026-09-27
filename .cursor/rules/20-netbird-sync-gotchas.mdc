@@ -19,7 +19,11 @@ alwaysApply: false
 - The `groups` claim is fetched through Authentik's property-mapping test
   endpoint (`POST /propertymappings/all/{pk}/test/`), which evaluates the
   mapping exactly as sign-in does. Don't reconstruct claims from group
-  membership — they can drift.
+  membership — they can drift. The endpoint (a POST) needs global
+  `authentik_core.view_propertymapping` and `authentik_core.add_propertymapping`;
+  without them Authentik falls back to an object check that 500s with
+  `WrongAppError`. Test blueprint edits live with `Importer.from_string` in
+  `ak shell`: `ak apply_blueprint` only accepts paths under `/blueprints`.
 - Alert state lives in a job-created ConfigMap (`netbird-sync-state`),
   deliberately not in Git: ArgoCD selfHeal would revert it. The Job's Role
   can only touch ConfigMaps in its own namespace.
