@@ -80,7 +80,10 @@ export const sendMail = (mail: Mail): Promise<void> =>
       await command("QUIT", [221]);
     };
 
-    socket.once("timeout", () => reject(new Error("SMTP timeout")));
+    socket.once("timeout", () => {
+      socket.destroy(); // timeout alone doesn't close the socket
+      reject(new Error("SMTP timeout"));
+    });
     socket.once("error", reject);
     socket.once("connect", () => {
       run()
