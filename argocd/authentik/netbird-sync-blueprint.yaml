@@ -25,6 +25,13 @@ data:
           permissions:
             - authentik_core.view_user
             - authentik_providers_oauth2.view_scopemapping
+            # The mapping test endpoint checks these two globally; without them
+            # Authentik falls back to an object check that 500s (WrongAppError)
+            # on subclassed mappings. add_propertymapping is inert here: no API
+            # creates base PropertyMapping rows, and each subclass has its own
+            # add permission.
+            - authentik_core.view_propertymapping
+            - authentik_core.add_propertymapping
       - model: authentik_core.token
         identifiers:
           identifier: netbird-sync
