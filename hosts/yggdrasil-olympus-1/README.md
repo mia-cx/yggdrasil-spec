@@ -171,10 +171,11 @@ group, so 1.1.1.1 only answers when AdGuard fails (unfiltered outage
 fallback); policies `dns-adguard` (UDP 53) and `dns-adguard-tcp` (TCP 53)
 allow the human group -> `dns-adguard`. The API silently drops a second
 protocol rule inside one policy, so each protocol gets its own policy. The
-nameserver group and both policy sources are
-`netbird-enroll` — every SSO personal device carries it. Service and
-infrastructure peers (routers, sidecars, K3s nodes) are never in that
-group, so they keep unfiltered host DNS.
+nameserver group and both policy sources are `netbird-enroll`. Every SSO
+personal device carries it, because group propagation copies the
+signing-in user's JWT groups onto the peer. So servers, routers, sidecars,
+K3s nodes and other service peers always enroll with setup keys, never
+with SSO: they never carry `netbird-enroll` and keep unfiltered host DNS.
 
 `adguard/conf/AdGuardHome.yaml` is rendered from `adguard.yaml.tmpl` (minimal
 file; v0.107.79 writes `schema_version: 34` and fills defaults). AdGuard
