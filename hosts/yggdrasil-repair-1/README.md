@@ -235,7 +235,14 @@ the tray menu / Settings then Profiles in the desktop app).
 Phones have no profiles: the iOS/Android apps only offer "Change Server"
 (hamburger menu), which erases the device's current NetBird config. To put
 a phone on the Repair mesh, set the server to
-`https://netbird-repair.mia.cx` there and paste the `mia-devices` key under
+`https://netbird-repair.mia.cx` there and paste a setup key under
 "Add this device with a setup key". Switching back means changing the
 server again and re-authenticating, so treat the phone as one mesh at a
 time.
+
+Phones use their own key, `mia-phone`: reusable, `repair-operators` only,
+expires 2027-09-27. It lives in
+`~/.config/yggdrasil/repair-phone-setup-key` on the Mac and in Mia's
+personal vault as "NetBird Repair phone setup key", so a phone can
+re-enroll during an outage without the Mac. Mia's iPhone was enrolled and
+reached the Proxmox UI on 2026-09-28. Rotate the key before it expires.
