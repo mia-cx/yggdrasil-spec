@@ -1,0 +1,25 @@
+# The canary backend accepts only the private Traefik, so no pod can skip the
+# mesh path and reach it directly. New private backends get the same policy:
+# ingress only from the traefik-internal pods.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: whoami
+  namespace: canary
+spec:
+  podSelector:
+    matchLabels:
+      app: whoami
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-internal
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: traefik-internal-traefik-internal
+      ports:
+        - protocol: TCP
+          port: 80

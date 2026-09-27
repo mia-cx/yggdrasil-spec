@@ -1,0 +1,21 @@
+## Canary — mesh-only test service behind the private Traefik.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: canary
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+    targetRevision: main
+    path: argocd/canary
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: canary
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
