@@ -161,8 +161,10 @@ admin UI is the only published port and binds the LAN address only:
 NetBird objects (by name): group `dns-adguard`; nameserver group `adguard`
 with upstreams `[<sidecar mesh IP>:53, 1.1.1.1:53]` — ordered within one
 group, so 1.1.1.1 only answers when AdGuard fails (unfiltered outage
-fallback); policy `dns-adguard` allows the human group -> `dns-adguard` on
-udp/tcp 53. Both the nameserver group and the policy source are
+fallback); policies `dns-adguard` (UDP 53) and `dns-adguard-tcp` (TCP 53)
+allow the human group -> `dns-adguard`. The API silently drops a second
+protocol rule inside one policy, so each protocol gets its own policy. The
+nameserver group and both policy sources are
 `netbird-enroll` — every SSO personal device carries it. Service and
 infrastructure peers (routers, sidecars, K3s nodes) are never in that
 group, so they keep unfiltered host DNS.
