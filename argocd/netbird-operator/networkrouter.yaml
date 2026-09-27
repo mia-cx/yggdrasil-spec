@@ -26,14 +26,11 @@ spec:
             env:
               - name: NB_DISABLE_UPDATE_SETTINGS
                 value: "false"
-        # CoreDNS resolves *.mia.cx to the Traefik VIP, but the relay/STUN
-        # server lives on the Repair VPS (178.105.231.90). Without this the
-        # pods dial the VIP and the relay check fails (ws 404 / quic timeout).
-        hostAliases:
-          - ip: "178.105.231.90"
-            hostnames: ["netbird-relay.mia.cx"]
         topologySpreadConstraints:
-          - maxSkew: 1
+          # Without pod-template-hash the spread counts old-ReplicaSet pods
+          # during a rolling update and can land 3/1.
+          - matchLabelKeys: [pod-template-hash]
+            maxSkew: 1
             topologyKey: kubernetes.io/hostname
             whenUnsatisfiable: DoNotSchedule
             labelSelector:
