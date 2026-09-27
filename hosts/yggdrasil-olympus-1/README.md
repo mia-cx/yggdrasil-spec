@@ -72,3 +72,16 @@ Image tags are pinned in `compose.yaml`. Bump the tag, then
 `sudo docker compose pull && sudo docker compose up -d`. Check the NetBird
 release notes for config changes; `config.yaml.tmpl` follows the combined
 server schema (`combined/config.yaml.example` in netbirdio/netbird).
+
+## External relay
+
+The primary mesh does not run its own relay or STUN. `config.yaml.tmpl`
+points peers at `rels://netbird-relay.mia.cx:443` and
+`stun:netbird-relay.mia.cx:3479`, which run on the Repair VPS
+(`hosts/yggdrasil-repair-1`); setting `relays` also turns off the embedded
+relay here.
+
+`NETBIRD_RELAY_AUTH_SECRET` in `/opt/netbird/.env` must equal the value in
+`/opt/netbird/.env` on `yggdrasil-repair-1`. To rotate it: generate a new
+value into both `.env` files, re-render `config.yaml` here, restart
+`netbird-server` on this VM, and `docker compose restart relay` on the VPS.

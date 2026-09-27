@@ -1,0 +1,74 @@
+name: netbird
+
+x-default: &default
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 100m
+      max-file: "2"
+
+services:
+  # Edge reverse proxy. Terminates TLS for netbird-repair.mia.cx (Repair mesh
+  # dashboard + backend) and netbird-relay.mia.cx (primary-mesh relay).
+  # HTTP-01 certificates from Let's Encrypt; nothing on this host depends on
+  # infrastructure at home.
+  traefik:
+    <<: *default
+    image: traefik:v3.7.13
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ./dynamic.yaml:/etc/traefik/dynamic.yaml:ro
+      - traefik_letsencrypt:/letsencrypt
+    networks: [netbird]
+
+  # Repair-mesh combined server: Management + Signal + Relay + STUN
+  # (+ embedded IdP at /oauth2). Independent of the primary mesh.
+  netbird-server:
+    <<: *default
+    image: netbirdio/netbird-server:0.79.0
+    ports:
+      - "3478:3478/udp"
+    volumes:
+      - netbird_data:/var/lib/netbird
+      - ./config.yaml:/etc/netbird/config.yaml:ro
+    command: ["--config", "/etc/netbird/config.yaml"]
+    networks: [netbird]
+
+  dashboard:
+    <<: *default
+    image: netbirdio/dashboard:v2.92.0
+    env_file: ./dashboard.env
+    networks: [netbird]
+
+  # Standalone relay + STUN for the PRIMARY mesh (netbird.mia.cx peers point
+  # at netbird-relay.mia.cx). Only reachable through Traefik over TLS; plain
+  # WebSocket on :80 inside the bridge network.
+  relay:
+    <<: *default
+    image: netbirdio/relay:0.79.0
+    environment:
+      - NB_LISTEN_ADDRESS=:80
+      - NB_EXPOSED_ADDRESS=rels://netbird-relay.mia.cx:443
+      - NB_AUTH_SECRET=${NETBIRD_RELAY_AUTH_SECRET}
+      - NB_ENABLE_STUN=true
+      - NB_STUN_PORTS=3479
+      - NB_TRUSTED_PROXIES=172.31.0.0/24
+    ports:
+      - "3479:3479/udp"
+    networks: [netbird]
+
+volumes:
+  netbird_data:
+  traefik_letsencrypt:
+
+networks:
+  netbird:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.31.0.0/24
+          gateway: 172.31.0.1

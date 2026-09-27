@@ -1,0 +1,55 @@
+# Traefik dynamic config (file provider) for the Repair VPS.
+# Path split follows the official self-hosted Traefik template for
+# netbird-server 0.79.0: gRPC services need h2c; relay/signal/management
+# WebSockets, the REST API, and the embedded IdP stay plain HTTP because
+# WebSockets cannot ride h2c. The dashboard is the catch-all. Port 80
+# redirects to HTTPS at the entrypoint, so only websecure routers exist here.
+http:
+  routers:
+    netbird-grpc:
+      rule: "Host(`netbird-repair.mia.cx`) && (PathPrefix(`/signalexchange.SignalExchange/`) || PathPrefix(`/management.ManagementService/`) || PathPrefix(`/management.ProxyService/`))"
+      entryPoints: [websecure]
+      service: netbird-server-h2c
+      tls:
+        certResolver: letsencrypt
+      priority: 100
+    netbird-backend:
+      rule: "Host(`netbird-repair.mia.cx`) && (PathPrefix(`/relay`) || PathPrefix(`/ws-proxy/`) || PathPrefix(`/api`) || PathPrefix(`/oauth2`))"
+      entryPoints: [websecure]
+      service: netbird-server
+      tls:
+        certResolver: letsencrypt
+      priority: 100
+    netbird-dashboard:
+      rule: "Host(`netbird-repair.mia.cx`)"
+      entryPoints: [websecure]
+      service: netbird-dashboard
+      tls:
+        certResolver: letsencrypt
+      priority: 1
+    # Primary-mesh relay (separate hostname; serves plain WebSocket behind
+    # TLS termination, QUIC is off without TLS).
+    netbird-relay:
+      rule: "Host(`netbird-relay.mia.cx`)"
+      entryPoints: [websecure]
+      service: netbird-relay
+      tls:
+        certResolver: letsencrypt
+      priority: 1
+  services:
+    netbird-server:
+      loadBalancer:
+        servers:
+          - url: "http://netbird-server:80"
+    netbird-server-h2c:
+      loadBalancer:
+        servers:
+          - url: "h2c://netbird-server:80"
+    netbird-dashboard:
+      loadBalancer:
+        servers:
+          - url: "http://dashboard:80"
+    netbird-relay:
+      loadBalancer:
+        servers:
+          - url: "http://relay:80"

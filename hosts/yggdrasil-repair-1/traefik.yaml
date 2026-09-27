@@ -1,0 +1,32 @@
+# Traefik static config for the Repair VPS edge proxy.
+entryPoints:
+  web:
+    address: ":80"
+    # Redirect everything to HTTPS. ACME HTTP-01 challenges are served by the
+    # internal acme handler before the entrypoint redirect applies.
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
+
+providers:
+  file:
+    filename: /etc/traefik/dynamic.yaml
+    watch: true
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: security@mia.cx
+      storage: /letsencrypt/acme.json
+      # HTTP-01 keeps issuance independent of home infrastructure and of any
+      # API token; requires inbound :80 only.
+      httpChallenge:
+        entryPoint: web
+
+log:
+  level: INFO

@@ -2,7 +2,7 @@
 # time (see README). ${VARS} are placeholders, not shell syntax in the output.
 server:
   listenAddress: ":80"
-  exposedAddress: "https://netbird.mia.cx:443"
+  exposedAddress: "https://netbird-repair.mia.cx:443"
   metricsPort: 9090
   healthcheckAddress: ":9000"
   logLevel: "info"
@@ -10,24 +10,17 @@ server:
   authSecret: "${NETBIRD_AUTH_SECRET}"
   dataDir: "/var/lib/netbird"
 
-  # Primary-mesh relay and STUN run on the Repair VPS (hosts/yggdrasil-repair-1).
-  # Setting relays turns off the embedded relay. The secret is shared only with
-  # that relay.
-  stuns:
-    - uri: "stun:netbird-relay.mia.cx:3479"
-  relays:
-    addresses:
-      - "rels://netbird-relay.mia.cx:443"
-    credentialsTTL: "12h"
-    secret: "${NETBIRD_RELAY_AUTH_SECRET}"
+  # No stuns/relays overrides: the Repair mesh uses this server's local STUN
+  # (UDP 3478) and local relay (/relay), so it shares nothing with the
+  # primary mesh.
 
   auth:
-    issuer: "https://netbird.mia.cx/oauth2"
+    issuer: "https://netbird-repair.mia.cx/oauth2"
     signKeyRefreshEnabled: true
     sessionCookieEncryptionKey: "${NB_SESSION_COOKIE_ENCRYPTION_KEY}"
     dashboardRedirectURIs:
-      - "https://netbird.mia.cx/nb-auth"
-      - "https://netbird.mia.cx/nb-silent-auth"
+      - "https://netbird-repair.mia.cx/nb-auth"
+      - "https://netbird-repair.mia.cx/nb-silent-auth"
     cliRedirectURIs:
       - "http://localhost:53000/"
     # Initial local admin for the embedded IdP. Password is a bcrypt hash.
@@ -37,7 +30,7 @@ server:
 
   reverseProxy:
     trustedHTTPProxies:
-      - "172.30.0.0/24"
+      - "172.31.0.0/24"
 
   store:
     engine: "sqlite"
