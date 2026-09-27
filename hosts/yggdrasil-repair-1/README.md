@@ -77,19 +77,37 @@ tofu apply -replace=hcloud_server.repair
 After a replacement the host key changes. Run
 `ssh-keygen -R 178.105.231.90` locally before SSHing back in.
 
-If state is lost, re-import the existing resources. SSH key and primary IP
-IDs are stable; the server ID changes on every rebuild, so look up the
-current one first (`curl -H "Authorization: Bearer $HCLOUD_TOKEN"
-https://api.hetzner.cloud/v1/servers?name=yggdrasil-repair-1`):
+If state is lost, re-import every resource. The SSH key, primary IP,
+firewall, and DNS record IDs are stable unless the object is recreated; the
+server ID changes on every rebuild. Look IDs up by name when unsure:
+
+```bash
+# Hetzner (substitute ssh_keys, primary_ips, firewalls, servers and the
+# names from terraform/repair/main.tf):
+curl -sH "Authorization: Bearer $HCLOUD_TOKEN" \
+  'https://api.hetzner.cloud/v1/servers?name=yggdrasil-repair-1'
+# Cloudflare (zone mia.cx; filter further by type A or AAAA):
+curl -sH "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+  'https://api.cloudflare.com/client/v4/zones/75fd0dd1afc13e40321b1fcc68a9dbdd/dns_records?name=netbird-repair.mia.cx'
+```
+
+Import order: firewall before server, since the server references it.
 
 ```bash
 tofu import hcloud_ssh_key.mia 130550689
 tofu import hcloud_primary_ip.ipv4 151842311
 tofu import hcloud_primary_ip.ipv6 151842312
+tofu import hcloud_firewall.repair 11689707
 tofu import hcloud_server.repair <current-server-id>
-# DNS records (only if they were already created): cloudflare_dns_record uses
-# <zone_id>/<record_id>; get IDs from the Cloudflare dashboard or API.
+tofu import cloudflare_dns_record.netbird_repair_a 75fd0dd1afc13e40321b1fcc68a9dbdd/508cfe414ae8c33d46f4e015f1559801
+tofu import cloudflare_dns_record.netbird_repair_aaaa 75fd0dd1afc13e40321b1fcc68a9dbdd/46bbaec8056e8f1a0c4726b06f94507a
+tofu import cloudflare_dns_record.netbird_relay_a 75fd0dd1afc13e40321b1fcc68a9dbdd/a285a225b7d0a4874e881ae14612f2f8
+tofu import cloudflare_dns_record.netbird_relay_aaaa 75fd0dd1afc13e40321b1fcc68a9dbdd/e78a6bad5010bed60690e5932e893f0e
 ```
+
+After a fresh import the first `tofu plan` marks the server for replacement:
+`ssh_keys` is a create-only attribute the provider cannot read back, so the
+imported state lacks it. Rebuild with `-replace` only when you intend to.
 
 The primary IPs carry `delete_protection` and `prevent_destroy`; the
 firewall opens TCP 22/80/443, UDP 3478 (Repair STUN), UDP 3479 (primary-mesh
