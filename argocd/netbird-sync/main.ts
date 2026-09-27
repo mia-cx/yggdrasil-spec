@@ -234,8 +234,14 @@ const run = async (): Promise<void> => {
     permissions.set(sub, await claimGroupsForUser(mapping.pk, akPk));
   }
 
+  // The mapping tests took seconds; another caller may have edited
+  // auto_groups meanwhile. Re-fetch and plan on the fresh snapshot, filtered
+  // to ids seen above so a user who first signed in mid-run isn't treated
+  // as deleted and stripped.
+  const freshUsers = (await nbGet("/users")) as NbUser[];
+  const seenIds = new Set(users.map((u) => u.id));
   const plan = planUserUpdates({
-    users,
+    users: freshUsers.filter((u) => seenIds.has(u.id)),
     groups,
     hecateIdpId: hecateIdp.id,
     permissions,
@@ -258,7 +264,7 @@ const run = async (): Promise<void> => {
     return;
   }
 
-  const byId = new Map(users.map((u) => [u.id, u]));
+  const byId = new Map(freshUsers.map((u) => [u.id, u]));
   for (const upd of plan.updates) {
     const user = byId.get(upd.userId)!;
     const res = await fetch(`${env.netbirdApi}/users/${upd.userId}`, {
