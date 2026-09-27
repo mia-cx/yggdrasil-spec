@@ -166,11 +166,12 @@ is not on the peer's mesh address (user `admin`, password in `.env`, also
 copied to `~/.config/yggdrasil/adguard-admin.env` on the admin Mac).
 
 NetBird objects (by name): group `dns-adguard`; nameserver group `adguard`
-with upstreams `[<sidecar mesh IP>:53, 1.1.1.1:53]` — ordered within one
-group, so 1.1.1.1 only answers when AdGuard fails (unfiltered outage
-fallback); policies `dns-adguard` (UDP 53) and `dns-adguard-tcp` (TCP 53)
-allow the human group -> `dns-adguard`. The API silently drops a second
-protocol rule inside one policy, so each protocol gets its own policy. The
+with upstreams `[<sidecar mesh IP>:53, 1.1.1.2:53]` — ordered within one
+group, so 1.1.1.2 only answers when AdGuard fails (outage fallback:
+Cloudflare blocks malware, not ads); policies `dns-adguard` (UDP 53) and
+`dns-adguard-tcp` (TCP 53) allow the human group -> `dns-adguard`. The API
+silently drops a second protocol rule inside one policy, so each protocol
+gets its own policy. The
 nameserver group and both policy sources are `netbird-enroll`. Every SSO
 personal device carries it, because group propagation copies the
 signing-in user's JWT groups onto the peer. So servers, routers, sidecars,

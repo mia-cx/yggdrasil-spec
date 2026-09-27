@@ -16,7 +16,7 @@ dns:
   port: 53
   # Only mesh peers reach this listener (inside the netbird-dns netns), so
   # disable rate limiting: the default 20 qps drop would push human devices
-  # onto the unfiltered fallback.
+  # onto the fallback resolver.
   ratelimit: 0
   upstream_dns:
     - https://dns.cloudflare.com/dns-query
