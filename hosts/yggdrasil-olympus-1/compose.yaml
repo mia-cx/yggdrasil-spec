@@ -60,8 +60,9 @@ services:
   # AdGuard Home sidecar for human mesh devices. The netbird-dns peer owns the
   # network namespace: AdGuard joins it, so mesh DNS traffic enters over
   # wt0 directly and never touches a host port. The NetBird resolver is parked
-  # on 127.0.0.153:5053 so it does not fight AdGuard for :53. Only the admin
-  # UI escapes the namespace, bound to the VM's LAN address.
+  # on 127.0.0.153:5053 so it does not fight AdGuard for :53. The admin UI
+  # binds only the dns-bridge address 172.30.1.2 — the host publish reaches
+  # it, the mesh interface does not.
   netbird-dns:
     <<: *default
     image: netbirdio/netbird:0.79.0
@@ -75,7 +76,9 @@ services:
       - netbird_dns:/var/lib/netbird
     ports:
       - "10.0.1.4:3000:3000"
-    networks: [dns]
+    networks:
+      dns:
+        ipv4_address: 172.30.1.2
 
   adguard:
     <<: *default

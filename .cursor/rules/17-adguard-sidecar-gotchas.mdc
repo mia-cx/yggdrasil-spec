@@ -28,6 +28,11 @@ alwaysApply: false
 - Keep `ratelimit: 0` in the AdGuard config: only mesh peers can reach it,
   and the default 20 qps drop is a failure that pushes devices onto the
   unfiltered fallback.
+- AdGuard's admin UI must bind the dns-bridge address (`172.30.1.2:3000`),
+  not `0.0.0.0`: inside the shared netns, a wildcard bind is reachable on the
+  peer's mesh IP to any peer with policy access to `dns-adguard`. The
+  `netbird-dns` service pins `ipv4_address: 172.30.1.2` so the host publish
+  still reaches it.
 - The `adguard` service guards its entrypoint on a rendered
   `AdGuardHome.yaml` so a forgotten render fails closed instead of serving
   the unauthenticated setup wizard on :3000. Overriding `entrypoint` clears

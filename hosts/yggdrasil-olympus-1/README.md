@@ -160,9 +160,10 @@ sudo docker compose exec netbird-router netbird status -d
 namespace (`network_mode: service:`), so AdGuard's `:53` sits directly on the
 peer's mesh address — no host port for DNS. The NetBird resolver is parked
 on `127.0.0.153:5053` (`NB_DNS_RESOLVER_ADDRESS`) to stay off `:53`. The
-admin UI is the only published port and binds the LAN address only:
-`http://10.0.1.4:3000` (user `admin`, password in `.env`, also copied to
-`~/.config/yggdrasil/adguard-admin.env` on the admin Mac).
+admin UI is the only published port and binds the dns-bridge address
+`172.30.1.2:3000`, which the host publishes as `http://10.0.1.4:3000` — it
+is not on the peer's mesh address (user `admin`, password in `.env`, also
+copied to `~/.config/yggdrasil/adguard-admin.env` on the admin Mac).
 
 NetBird objects (by name): group `dns-adguard`; nameserver group `adguard`
 with upstreams `[<sidecar mesh IP>:53, 1.1.1.1:53]` — ordered within one

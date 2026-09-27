@@ -7,7 +7,9 @@ users:
   - name: admin
     password: $ADGUARD_ADMIN_PASSWORD_HASH
 http:
-  address: 0.0.0.0:3000
+  # dns-bridge address only: reachable via the host publish (10.0.1.4:3000)
+  # but never on the peer's mesh interface.
+  address: 172.30.1.2:3000
 dns:
   bind_hosts:
     - 0.0.0.0
