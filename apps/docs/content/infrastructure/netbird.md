@@ -12,17 +12,17 @@ Explicit private records and resource routes replace the wildcard forwarding bel
 
 The same VM hosts Dockerized AdGuard Home for human-device DNS filtering, with unfiltered outage fallback. Service, bootstrap, and Repair DNS remain independent and unfiltered. Deployed; see [AdGuard DNS](#adguard-dns).
 
-The primary NetBird VM (`yggdrasil-olympus-1`, 10.0.1.4) exists; foundation is in progress and it does not yet serve the mesh.
+The primary NetBird VM (`yggdrasil-olympus-1`, 10.0.1.4) serves the mesh at `https://netbird.mia.cx`.
 
 ## Olympus LAN route
 
 Deployed: a `netbird-router` client container on `yggdrasil-olympus-1` routes the mesh into the 10.0.0.0/16 LAN through the NetBird Network resource `olympus-lan`, with masquerade so LAN devices see VM-local traffic.
 
-Access is granted only by the `olympus-lan` policy, whose source group is the JWT-issued `svc-lan`; the temporary `test-lan` group stands in until [#25](https://github.com/mia-cx/yggdrasil-spec/issues/25) delivers `svc-lan`. The `Default` policy does not grant it: network resources are reachable only through policies that target them. Operations are in the [host README](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/yggdrasil-olympus-1/README.md#lan-routing-client).
+Access is granted only by the `olympus-lan` policy, whose source group is the JWT-issued `svc-lan`. The `Default` policy does not grant it: network resources are reachable only through policies that target them. Operations are in the [host README](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/yggdrasil-olympus-1/README.md#lan-routing-client).
 
 ## AdGuard DNS
 
-Deployed: an AdGuard Home container shares the `olympus-dns` sidecar peer's network namespace, so its `:53` answers on the peer's mesh address with no host DNS port. The NetBird nameserver group `adguard` (primary, all domains) is distributed only to `netbird-enroll` (`test-humans` until [#25](https://github.com/mia-cx/yggdrasil-spec/issues/25)); service peers never get the filter and keep unfiltered DNS.
+Deployed: an AdGuard Home container shares the `olympus-dns` sidecar peer's network namespace, so its `:53` answers on the peer's mesh address with no host DNS port. The NetBird nameserver group `adguard` (primary, all domains) is distributed only to the JWT-issued `netbird-enroll`; service peers never get the filter and keep unfiltered DNS.
 
 The outage fallback is the second nameserver _inside the same group_ (`1.1.1.1`): NetBird 0.79 tries a group's nameservers in order and fails over only on errors, while two nameserver groups covering the same domain race in parallel — a second group would bypass filtering. Private zones stay NetBird DNS records. Operations are in the [host README](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/yggdrasil-olympus-1/README.md#adguard-dns-for-human-devices).
 

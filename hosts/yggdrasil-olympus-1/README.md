@@ -131,10 +131,9 @@ NetBird objects (all in the primary account, by name):
 - Group `routers-olympus` — holds the routing peer.
 - Network `olympus-lan` — resource `10.0.0.0/16`, routing group
   `routers-olympus`, masquerade on, metric 9999.
-- Policy `olympus-lan` — grants a source group access to that resource. The
-  intended source is the JWT group `svc-lan`; until Hecate issues it, the
-  temporary `test-lan` group stands in. The `Default` policy is untouched;
-  network resources are only reachable through policies that target them.
+- Policy `olympus-lan` — grants the JWT-issued `svc-lan` group access to
+  that resource. The `Default` policy is untouched; network resources are
+  only reachable through policies that target them.
 
 No ufw rule is needed: NetBird inserts its own wt0 accept rules ahead of
 ufw/Docker and enforces access through NetBird policies.
@@ -163,11 +162,10 @@ NetBird objects (by name): group `dns-adguard`; nameserver group `adguard`
 with upstreams `[<sidecar mesh IP>:53, 1.1.1.1:53]` — ordered within one
 group, so 1.1.1.1 only answers when AdGuard fails (unfiltered outage
 fallback); policy `dns-adguard` allows the human group -> `dns-adguard` on
-udp/tcp 53. Both the nameserver group and the policy source are meant for
-`netbird-enroll` — every SSO personal device carries it — with `test-humans`
-standing in until Hecate issues it. Service and infrastructure peers
-(routers, sidecars, K3s nodes) are never in that group, so they keep
-unfiltered host DNS.
+udp/tcp 53. Both the nameserver group and the policy source are
+`netbird-enroll` — every SSO personal device carries it. Service and
+infrastructure peers (routers, sidecars, K3s nodes) are never in that
+group, so they keep unfiltered host DNS.
 
 `adguard/conf/AdGuardHome.yaml` is rendered from `adguard.yaml.tmpl` (minimal
 file; v0.107.79 writes `schema_version: 34` and fills defaults). AdGuard
