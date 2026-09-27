@@ -1,6 +1,9 @@
 # Pinned ClusterIP for the canary destination. The NetBird DNS zone resolves
-# canary.mia.cx to this address, so it must never change. 10.43.250.0/24 is
+# canary.mia.cx to this address, so it must never change. 10.43.0.128/25 is
 # reserved for private per-service ClusterIPs (see README allocation table).
+# It sits in the KEP-3070 static band (first /24 of the 10.43.0.0/16 service
+# CIDR), which the dynamic allocator never assigns from, so these pinned IPs
+# can never be handed to another Service first.
 apiVersion: v1
 kind: Service
 metadata:
@@ -8,7 +11,7 @@ metadata:
   namespace: traefik-internal
 spec:
   type: ClusterIP
-  clusterIP: 10.43.250.1
+  clusterIP: 10.43.0.128
   ports:
     - name: https
       port: 443

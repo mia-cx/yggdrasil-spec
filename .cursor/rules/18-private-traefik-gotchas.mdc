@@ -12,19 +12,21 @@ alwaysApply: false
   `kubernetes.io/ingress.class: traefik-internal`. The public instance's
   kubernetescrd provider class is unset, so it processes only routes with no
   class or class `traefik` and ignores annotated ones. The private instance
-  sets `providers.kubernetesCRD.ingressClass: traefik-internal` and only sees
-  annotated routes.
+  sets `providers.kubernetesCRD.ingressClass: traefik-internal`.
 - The chart's pod label `app.kubernetes.io/instance` is `<release>-<namespace>`
   (`traefik-internal-traefik-internal`), not just the release name. Service
   selectors and affinity/spread selectors must use the full value.
-- The private app must render no IngressClass, TLSStore, TLSOption, Service, or
+- The private app renders no IngressClass, TLSStore, TLSOption, Service, or
   CRDs (`service.enabled: false`, `ingressClass.enabled: false`,
-  `helm.skipCrds: true`; the public app owns all of those).
-- Each private service needs a pinned ClusterIP from `10.43.250.0/24` and its
+  `helm.skipCrds: true`; the public app owns those).
+- Each private service needs a pinned ClusterIP from `10.43.0.128/25` and its
   own Traefik entrypoint port: NetBird policies are L3/L4, so services sharing
-  a ClusterIP or port are indistinguishable to enforcement.
+  a ClusterIP or port are indistinguishable to enforcement. The /25 sits in
+  the KEP-3070 static band of the `10.43.0.0/16` service CIDR, which the
+  dynamic allocator never assigns from.
 - The operator's `NetworkResource` with `serviceRef` creates an IP resource at
   the Service ClusterIP plus an A record in `svc.olympus.yggdrasil.mia.cx`.
 - New private namespaces must be added to
   `providers.kubernetesCRD.namespaces` in `values.yaml`; the instance watches
   nothing else.
+
