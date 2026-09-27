@@ -1,15 +1,15 @@
 authentik:
-  secret_key: ""  # Will use existingSecret
+  secret_key: "" # Will use existingSecret
   error_reporting:
     enabled: false
   web:
     base_url: https://id.mia.cx
   postgresql:
-    password: ""  # Will use existingSecret
+    password: "" # Will use existingSecret
   email:
     from: "Hecate | authentik <noreply@id.mia.cx>"
     host: email-oauth2-proxy.email-oauth2-proxy
-    password: ""  # Set via AUTHENTIK_EMAIL__PASSWORD env below
+    password: "" # Set via AUTHENTIK_EMAIL__PASSWORD env below
     port: 587
     timeout: 30
     use_ssl: false
@@ -41,10 +41,19 @@ global:
           name: netbird-oidc
           key: client-secret
           optional: true
+    # Token value for the netbird-sync service account, read by its blueprint
+    # (!Env). Optional: a missing Secret fails the blueprint, not Authentik.
+    - name: NETBIRD_SYNC_AUTHENTIK_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: netbird-sync-authentik
+          key: token
+          optional: true
 
 blueprints:
   configMaps:
-    - authentik-blueprint-netbird  # netbird-blueprint.yaml
+    - authentik-blueprint-netbird # netbird-blueprint.yaml
+    - authentik-blueprint-netbird-sync # netbird-sync-blueprint.yaml
 
 server:
   replicas: 1
@@ -60,7 +69,7 @@ server:
                 values:
                   - high
   ingress:
-    enabled: false  # We'll use IngressRoute instead
+    enabled: false # We'll use IngressRoute instead
 
 worker:
   replicas: 1

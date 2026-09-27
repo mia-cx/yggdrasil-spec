@@ -1,0 +1,36 @@
+## Service account for the netbird-sync CronJob: needs only read access to
+## users and to the NetBird scope mapping's test endpoint. Kept in its own
+## blueprint so a missing NETBIRD_SYNC_AUTHENTIK_TOKEN env can't break the
+## NetBird login blueprint.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-netbird-sync
+  namespace: authentik
+data:
+  netbird-sync.yaml: |
+    version: 1
+    metadata:
+      name: NetBird permission sync
+      labels:
+        blueprints.goauthentik.io/description: service account for the hourly NetBird permission sync job
+    entries:
+      - model: authentik_core.user
+        id: netbird-sync-user
+        identifiers:
+          username: netbird-sync
+        attrs:
+          name: NetBird permission sync
+          type: service_account
+          permissions:
+            - authentik_core.view_user
+            - authentik_providers_oauth2.view_scopemapping
+      - model: authentik_core.token
+        identifiers:
+          identifier: netbird-sync
+        attrs:
+          user: !KeyOf netbird-sync-user
+          intent: api
+          expiring: false
+          key: !Env NETBIRD_SYNC_AUTHENTIK_TOKEN
+          description: Token for the netbird-sync CronJob (argocd/netbird-sync)
