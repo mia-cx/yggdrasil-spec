@@ -24,7 +24,8 @@ Each private service gets its own enforceable network destination:
   pod targetPort, so two services sharing one Traefik port are
   indistinguishable to NetBird L3/L4 policy).
 - A pinned ClusterIP from the reserved `10.43.0.128/25` block, inside the
-  KEP-3070 static band the dynamic allocator never uses.
+  KEP-3070 static band the dynamic allocator uses only once the upper band
+  is full.
 - A netbird.io `Group` + `NetworkResource` pointing at that Service via the
   `k8s-routers` NetworkRouter.
 - A NetBird policy granting a `svc-*` permission group TCP 443 to the

@@ -2,8 +2,8 @@
 # canary.mia.cx to this address, so it must never change. 10.43.0.128/25 is
 # reserved for private per-service ClusterIPs (see README allocation table).
 # It sits in the KEP-3070 static band (first /24 of the 10.43.0.0/16 service
-# CIDR), which the dynamic allocator never assigns from, so these pinned IPs
-# can never be handed to another Service first.
+# CIDR), which the dynamic allocator uses only once the upper band is full,
+# so another Service is very unlikely to take these pinned IPs first.
 apiVersion: v1
 kind: Service
 metadata:

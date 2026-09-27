@@ -23,7 +23,7 @@ alwaysApply: false
   own Traefik entrypoint port: NetBird policies are L3/L4, so services sharing
   a ClusterIP or port are indistinguishable to enforcement. The /25 sits in
   the KEP-3070 static band of the `10.43.0.0/16` service CIDR, which the
-  dynamic allocator never assigns from.
+  dynamic allocator uses only once the upper band is full.
 - The operator's `NetworkResource` with `serviceRef` creates an IP resource at
   the Service ClusterIP plus an A record in `svc.olympus.yggdrasil.mia.cx`.
 - New private namespaces must be added to `providers.kubernetesCRD.namespaces`
