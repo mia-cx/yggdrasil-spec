@@ -138,8 +138,8 @@ NetBird objects (all in the primary account, by name):
 - Network `olympus-lan` — resource `10.0.0.0/16`, routing group
   `routers-olympus`, masquerade on, metric 9999.
 - Policy `olympus-lan` — grants the JWT-issued `svc-lan` group access to
-  that resource. The `Default` policy is untouched; network resources are
-  only reachable through policies that target them.
+  that resource. The `Default` policy was retired in #26; network resources
+  are only reachable through policies that target them.
 
 No ufw rule is needed: NetBird inserts its own wt0 accept rules ahead of
 ufw/Docker and enforces access through NetBird policies.

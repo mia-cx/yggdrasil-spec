@@ -1,0 +1,39 @@
+## Cluster routing pool: four equal-priority routing pods, two per node.
+## The operator names the NetBird Network after this object (k8s-routers) and
+## puts the pods' ephemeral peers in its own group, networkrouter-<network-id>-<hash>.
+apiVersion: netbird.io/v1alpha1
+kind: NetworkRouter
+metadata:
+  name: k8s-routers
+  namespace: netbird-operator
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  # Zone for operator-generated Service records (<svc>.<namespace>.<zone name>).
+  # The operator matches the zone by Name, so the zone's Name equals its domain.
+  dnsZoneRef:
+    name: svc.olympus.yggdrasil.mia.cx
+  workloadOverride:
+    replicas: 4
+    podTemplate:
+      spec:
+        containers:
+          # Operator v0.8.0 sets NB_DISABLE_UPDATE_SETTINGS=true, which makes the
+          # >=0.73 client daemon reject Login because env-provided
+          # NB_MANAGEMENT_URL counts as a config override. Fixed upstream on
+          # main, unreleased; force the gate off for these ephemeral pods.
+          - name: netbird
+            env:
+              - name: NB_DISABLE_UPDATE_SETTINGS
+                value: "false"
+        topologySpreadConstraints:
+          # Without pod-template-hash the spread counts old-ReplicaSet pods
+          # during a rolling update and can land 3/1.
+          - matchLabelKeys: [pod-template-hash]
+            maxSkew: 1
+            topologyKey: kubernetes.io/hostname
+            whenUnsatisfiable: DoNotSchedule
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: networkrouter
+                app.kubernetes.io/instance: k8s-routers

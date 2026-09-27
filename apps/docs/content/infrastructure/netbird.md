@@ -18,7 +18,7 @@ The primary NetBird VM (`yggdrasil-olympus-1`, 10.0.1.4) serves the mesh at `htt
 
 Deployed: a `netbird-router` client container on `yggdrasil-olympus-1` routes the mesh into the 10.0.0.0/16 LAN through the NetBird Network resource `olympus-lan`, with masquerade so LAN devices see VM-local traffic.
 
-Access is granted only by the `olympus-lan` policy, whose source group is the JWT-issued `svc-lan`. The `Default` policy does not grant it: network resources are reachable only through policies that target them. Operations are in the [host README](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/yggdrasil-olympus-1/README.md#lan-routing-client).
+Access is granted only by the `olympus-lan` policy, whose source group is the JWT-issued `svc-lan`. The primary mesh has no `Default` policy: network resources are reachable only through policies that target them. Operations are in the [host README](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/yggdrasil-olympus-1/README.md#lan-routing-client).
 
 ## AdGuard DNS
 
@@ -208,19 +208,9 @@ oidc:
   clientSecret: <from-authentik>
 ```
 
-### Exit Nodes (K3s DaemonSet)
+### K3s routing pods
 
-Exit nodes run in K3s for redundancy across nodes. Create a setup key in the Netbird admin UI (Setup Keys → auto-groups for exit node group).
-
-```bash
-kubectl create secret generic netbird-setup-key \
-  -n netbird \
-  --from-literal=key="YOUR_SETUP_KEY"
-
-kubectl apply -f argocd/netbird/exit-node-daemonset.yaml
-```
-
-Exit nodes connect to management server at `https://netbird.mia.cx` (10.0.1.4).
+The `netbird-operator` ArgoCD app deploys chart 0.8.0 and the `k8s-routers` NetworkRouter: four routing pods, spread two per node by a `DoNotSchedule` topology constraint. K3s hosts run no NetBird client: the client's nftables rules crash k3s's bundled kube-router netpol controller ([kube-router#1788](https://github.com/cloudnativelabs/kube-router/issues/1788), [k3s#11493](https://github.com/k3s-io/k3s/issues/11493)), and with two etcd members one crashing node takes the cluster down. SSH to nodes instead goes through the `olympus-lan` router: resources `hydra-olympus-1-ssh`/`hydra-olympus-2-ssh` sit in group `k3s-nodes-ssh`, and policy `ssh-to-k3s-nodes` grants `svc-ssh` TCP 22 only. `svc-lan` is full Olympus LAN access for administrators (only `role-admin` carries it), so it includes node SSH; `svc-ssh` grants node SSH without the rest of the LAN. The independent recovery path is the unprivileged Repair netstack client from the dual-mesh design, which writes no kernel firewall rules ([#24](https://github.com/mia-cx/yggdrasil-spec/issues/24)). See [argocd/netbird-operator/README.md](https://github.com/mia-cx/yggdrasil-spec/blob/main/argocd/netbird-operator/README.md).
 
 ## Configuration
 
@@ -316,8 +306,8 @@ See also: [DNS](./dns.md)
 ## Verification
 
 ```bash
-# Check exit node pods
-kubectl get pods -n netbird
+# Check routing pods
+kubectl get pods -n netbird-operator
 
 # Test from a Netbird client
 nslookup jellyfin.yggdrasil.mia.cx
