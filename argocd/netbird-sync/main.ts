@@ -242,13 +242,25 @@ const run = async (): Promise<void> => {
     if (!p) claimCache.set(pk, (p = claimGroupsForUser(mapping.pk, pk)));
     return p;
   };
+  const lookupErrors: string[] = [];
+  const skippedUserIds = new Set<string>();
   for (const u of users) {
     if (u.idp_id !== hecateIdp.id) continue;
     // Undecodable Hecate-idp ids fail the run (see lib.ts).
     const sub = decodeDexUserId(u.id).sub;
     const akPk = activeByUid.get(sub);
     if (akPk === undefined) continue; // deleted or inactive in Hecate
-    permissions.set(sub, await claimsFor(akPk));
+    // A failed lookup skips this user (neither granted nor stripped: an
+    // Authentik glitch must not lock a person out) and fails the run at the
+    // end, after everyone else's revocations are applied.
+    try {
+      permissions.set(sub, await claimsFor(akPk));
+    } catch (err) {
+      skippedUserIds.add(u.id);
+      lookupErrors.push(
+        `user ${u.id.slice(0, 8)}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
   }
 
   // The mapping tests took seconds; another caller may have edited
@@ -258,7 +270,9 @@ const run = async (): Promise<void> => {
   const freshUsers = (await nbGet("/users")) as NbUser[];
   const seenIds = new Set(users.map((u) => u.id));
   const plan = planUserUpdates({
-    users: freshUsers.filter((u) => seenIds.has(u.id)),
+    users: freshUsers.filter(
+      (u) => seenIds.has(u.id) && !skippedUserIds.has(u.id),
+    ),
     groups,
     hecateIdpId: hecateIdp.id,
     permissions,
@@ -435,7 +449,7 @@ const run = async (): Promise<void> => {
 
   // Everything applicable is already applied; a TV misconfig must fail the
   // run (and the alert) without ever blocking user revocations.
-  const problems = [...linkProblems, ...peerPlan.problems];
+  const problems = [...lookupErrors, ...linkProblems, ...peerPlan.problems];
   if (problems.length > 0) throw new Error(problems.join("; "));
 };
 
