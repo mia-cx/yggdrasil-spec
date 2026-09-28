@@ -397,13 +397,18 @@ const run = async (): Promise<void> => {
       if (!res.ok) throw new Error(`PUT group ${groupId}: HTTP ${res.status}`);
     };
     // Removals before additions: a run that dies midway leaves peers with
-    // less access, never more.
+    // less access, never more. Every removal is attempted even if one group
+    // fails, so one broken group can't shield other TVs' revocations.
+    const removalErrors: string[] = [];
     for (const edit of peerPlan.groupEdits) {
       if (edit.remove.length === 0) continue;
       await applyGroupEdit(edit.groupId, (ids) => {
         for (const id of edit.remove) ids.delete(id);
-      });
+      }).catch((err: unknown) =>
+        removalErrors.push(err instanceof Error ? err.message : String(err)),
+      );
     }
+    if (removalErrors.length > 0) throw new Error(removalErrors.join("; "));
     for (const edit of peerPlan.groupEdits) {
       if (edit.add.length === 0) continue;
       await applyGroupEdit(edit.groupId, (ids) => {
