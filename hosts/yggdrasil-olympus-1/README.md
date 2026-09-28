@@ -140,6 +140,10 @@ NetBird objects (all in the primary account, by name):
 - Policy `olympus-lan` — grants the JWT-issued `svc-lan` group access to
   that resource. The `Default` policy was retired in #26; network resources
   are only reachable through policies that target them.
+- Policy `lan-to-netbird-vm` — `svc-lan` → `routers-olympus`, all protocols,
+  unidirectional. Reaching the VM's own LAN address over the mesh is local
+  input on this host (host networking), not forwarded traffic, so it needs
+  a peer policy, not the `olympus-lan` resource policy.
 
 No ufw rule is needed: NetBird inserts its own wt0 accept rules ahead of
 ufw/Docker and enforces access through NetBird policies.

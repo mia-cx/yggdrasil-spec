@@ -22,3 +22,9 @@ alwaysApply: false
 - `NB_ROUTER_SETUP_KEY` is a one-off key spent at first enrollment. If the
   volume `netbird_router` is ever deleted, mint a fresh setup key before
   recreating the container.
+- Mesh traffic to the VM's own LAN address (10.0.1.4) hits the host's local
+  input path, not `netbird-rt-fwd`: host networking means the packet is
+  delivered locally and `netbird-acl-input-filter` drops wt0 input by
+  default. A peer policy is required — `lan-to-netbird-vm` (`svc-lan` →
+  `routers-olympus`, all, unidirectional) makes `ssh mia@10.0.1.4` work;
+  without it the router can reach every LAN host except its own.
