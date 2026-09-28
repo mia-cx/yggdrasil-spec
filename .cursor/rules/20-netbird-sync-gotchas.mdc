@@ -42,5 +42,7 @@ alwaysApply: false
   anything else on them is stripped. A link to a user-owned peer is reported
   as a problem and left untouched.
 - TV links live on the Authentik service account: `netbird_tv_owner`
-  (username) + `netbird_peer_id`. Misconfig is collected as a problem and
-  thrown after all updates apply — it fails the run, never blocks revocations.
+  (username) + `netbird_peer_id`. The owner must be an `internal`/`external`
+  user — a service account as owner (incl. the TV itself) gives nothing and
+  fails the run. Misconfig is collected as a problem and thrown after all
+  updates apply — it fails the run, never blocks revocations.

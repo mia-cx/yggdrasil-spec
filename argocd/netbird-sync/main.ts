@@ -72,6 +72,8 @@ interface AkUser {
   uid: string;
   username: string;
   is_active: boolean;
+  /** internal | external | service_account | internal_service_account */
+  type: string;
   attributes: Record<string, unknown>;
 }
 
@@ -308,6 +310,10 @@ const run = async (): Promise<void> => {
   const TV_PEER_ATTR = "netbird_peer_id";
 
   const tvLinks: TvLink[] = [];
+  // Owner must be a real person (internal/external). A service account —
+  // including the TV itself — as owner yields no ownerGroups and fails the
+  // run; a missing owner is a warning (deleted owner is legit revocation).
+  const linkProblems: string[] = [];
   for (const ak of akUsers) {
     const ownerName = ak.attributes?.[TV_OWNER_ATTR];
     if (typeof ownerName !== "string" || ownerName === "") continue;
@@ -318,10 +324,16 @@ const run = async (): Promise<void> => {
     }
     const allowlist = ak.is_active ? await claimsFor(ak.pk) : [];
     const owner = akUsers.find((u) => u.username === ownerName);
-    if (!owner)
+    let ownerGroups: readonly string[] = [];
+    if (!owner) {
       console.warn(`tv ${ak.username}: owner "${ownerName}" not found`);
-    const ownerGroups =
-      owner?.is_active === true ? await claimsFor(owner.pk) : [];
+    } else if (owner.type !== "internal" && owner.type !== "external") {
+      linkProblems.push(
+        `tv ${ak.username}: owner "${ownerName}" is not a person (${owner.type})`,
+      );
+    } else if (owner.is_active) {
+      ownerGroups = await claimsFor(owner.pk);
+    }
     tvLinks.push({ tv: ak.username, peerId, ownerGroups, allowlist });
   }
 
@@ -381,8 +393,8 @@ const run = async (): Promise<void> => {
 
   // Everything applicable is already applied; a TV misconfig must fail the
   // run (and the alert) without ever blocking user revocations.
-  if (peerPlan.problems.length > 0)
-    throw new Error(peerPlan.problems.join("; "));
+  const problems = [...linkProblems, ...peerPlan.problems];
+  if (problems.length > 0) throw new Error(problems.join("; "));
 };
 
 const main = async (): Promise<void> => {
