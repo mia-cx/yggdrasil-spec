@@ -1,6 +1,7 @@
 // Pure logic for the hourly Hecate -> NetBird permission sync.
 // No IO here; main.ts feeds this NetBird state and the permission map built
-// from Authentik scope-mapping tests.
+// from Authentik scope-mapping tests. Two planners: users (jwt auto_groups)
+// and peers (TV links grant jwt groups to setup-key peers).
 
 export interface NbUser {
   id: string;
@@ -157,6 +158,180 @@ export const planUserUpdates = ({
   }
 
   return { updates, missingGroups: [...missing].sort() };
+};
+
+// --- TV / peer planning ------------------------------------------------------
+
+export interface NbPeer {
+  id: string;
+  name: string;
+  user_id?: string;
+  groups: { id: string; name: string }[];
+}
+
+export interface TvLink {
+  /** TV service-account username, for logs. */
+  tv: string;
+  peerId: string;
+  /** Owner's claim groups; [] if the owner is inactive/deleted/not found. */
+  ownerGroups: readonly string[];
+  /** TV's own claim groups; [] if the TV account is inactive. */
+  allowlist: readonly string[];
+}
+
+export interface PeerChange {
+  peerId: string;
+  peerName: string;
+  tv?: string;
+  added: string[];
+  removed: string[];
+}
+
+export interface GroupEdit {
+  groupId: string;
+  add: string[];
+  remove: string[];
+}
+
+export interface PeerPlan {
+  changes: PeerChange[];
+  groupEdits: GroupEdit[];
+  missingGroups: string[];
+  problems: string[];
+}
+
+/** TV grants never exceed this prefix — `netbird-enroll` must stay human-only. */
+export const TV_GROUP_PREFIX = "svc-";
+
+/**
+ * Plan jwt-group membership for non-user peers. A setup-key peer holds jwt
+ * groups only through a TV link (owner groups intersected with the TV's
+ * allowlist, `svc-*` names only); unlinked or stale peers are stripped of
+ * jwt groups. User-owned peers are never touched, and a link to a peer that
+ * already carries a non-jwt group besides `All` is infrastructure, not a TV.
+ * Nothing throws: config problems are collected and main.ts throws after
+ * applying everything else.
+ */
+export const planPeerUpdates = ({
+  peers,
+  groups,
+  tvLinks,
+}: {
+  peers: NbPeer[];
+  groups: NbGroup[];
+  tvLinks: TvLink[];
+}): PeerPlan => {
+  const managedNameById = new Map<string, string>();
+  const managedIdByName = new Map<string, string>();
+  for (const g of groups) {
+    if (g.issued !== "jwt") continue;
+    managedNameById.set(g.id, g.name);
+    managedIdByName.set(g.name, g.id);
+  }
+
+  const problems: string[] = [];
+  const missing = new Set<string>();
+
+  const peerById = new Map(peers.map((p) => [p.id, p]));
+  const linkByPeerId = new Map<string, TvLink>();
+  const duplicatePeerIds = new Set<string>();
+  for (const link of tvLinks) {
+    if (linkByPeerId.has(link.peerId)) {
+      duplicatePeerIds.add(link.peerId);
+      problems.push(
+        `peer id ${link.peerId.slice(0, 8)} claimed by two TVs (${linkByPeerId.get(link.peerId)!.tv}, ${link.tv}); fail closed`,
+      );
+      continue;
+    }
+    linkByPeerId.set(link.peerId, link);
+    if (!peerById.has(link.peerId))
+      problems.push(
+        `tv ${link.tv}: peer id ${link.peerId.slice(0, 8)} not found in NetBird`,
+      );
+  }
+
+  const changes: PeerChange[] = [];
+  const addsByGroup = new Map<string, Set<string>>();
+  const removesByGroup = new Map<string, Set<string>>();
+
+  for (const peer of peers) {
+    const link = linkByPeerId.get(peer.id);
+    if (peer.user_id) {
+      if (link)
+        problems.push(
+          `tv ${link.tv}: peer ${peer.name} belongs to a user; not linked`,
+        );
+      continue; // user-owned peers are never touched
+    }
+
+    // A linked peer carrying a non-jwt group other than `All` is
+    // infrastructure (router, DNS sidecar), not a TV: reject the link and
+    // treat the peer as unlinked so any stray jwt groups are stripped.
+    const infraNames = peer.groups
+      .map((g) => g.name)
+      .filter((n) => !managedIdByName.has(n) && n !== "All");
+    let effectiveLink = link;
+    if (link && infraNames.length > 0) {
+      problems.push(
+        `tv ${link.tv}: peer ${peer.name} is infrastructure (${infraNames.join(", ")}); not linked`,
+      );
+      effectiveLink = undefined;
+    }
+
+    const desiredNames = new Set<string>();
+    if (effectiveLink && !duplicatePeerIds.has(peer.id)) {
+      const allow = new Set(effectiveLink.allowlist);
+      for (const name of effectiveLink.ownerGroups) {
+        if (!name.startsWith(TV_GROUP_PREFIX)) continue;
+        if (!allow.has(name)) continue;
+        if (!managedIdByName.has(name)) {
+          missing.add(name);
+          continue;
+        }
+        desiredNames.add(name);
+      }
+    }
+
+    const currentJwtNames = peer.groups
+      .map((g) => g.name)
+      .filter((n) => managedIdByName.has(n));
+    const currentSet = new Set(currentJwtNames);
+    const added = [...desiredNames].filter((n) => !currentSet.has(n));
+    const removed = [...currentSet].filter((n) => !desiredNames.has(n));
+    if (added.length === 0 && removed.length === 0) continue;
+
+    changes.push({
+      peerId: peer.id,
+      peerName: peer.name,
+      tv: effectiveLink?.tv,
+      added: added.sort(),
+      removed: removed.sort(),
+    });
+    const bump = (map: Map<string, Set<string>>, groupId: string) => {
+      let s = map.get(groupId);
+      if (!s) map.set(groupId, (s = new Set()));
+      s.add(peer.id);
+    };
+    for (const n of added) bump(addsByGroup, managedIdByName.get(n)!);
+    for (const n of removed) bump(removesByGroup, managedIdByName.get(n)!);
+  }
+
+  const groupEdits: GroupEdit[] = [
+    ...new Set([...addsByGroup.keys(), ...removesByGroup.keys()]),
+  ]
+    .sort()
+    .map((groupId) => ({
+      groupId,
+      add: [...(addsByGroup.get(groupId) ?? [])].sort(),
+      remove: [...(removesByGroup.get(groupId) ?? [])].sort(),
+    }));
+
+  return {
+    changes,
+    groupEdits,
+    missingGroups: [...missing].sort(),
+    problems,
+  };
 };
 
 export const alertTransition = (

@@ -1,15 +1,20 @@
 // Hourly Hecate -> NetBird permission sync. Reads each active Hecate user's
 // JWT groups claim via the Authentik scope-mapping test (same code path as
 // sign-in), diffs their jwt-issued NetBird auto_groups, and applies updates.
+// Then the same for TV peers: a TV's Hecate service account links an owner
+// and a NetBird peer id, and the peer gets owner-groups ∩ TV-allowlist.
 // Emails once on failure start and once on recovery; run state lives in a
 // ConfigMap that is intentionally not in Git.
 import { readFileSync } from "node:fs";
 import {
   alertTransition,
   decodeDexUserId,
+  planPeerUpdates,
   planUserUpdates,
   type NbGroup,
+  type NbPeer,
   type NbUser,
+  type TvLink,
 } from "./lib.ts";
 import { sendMail } from "./smtp.ts";
 
@@ -65,7 +70,11 @@ const fetchJson = async (
 interface AkUser {
   pk: number;
   uid: string;
+  username: string;
   is_active: boolean;
+  /** internal | external | service_account | internal_service_account */
+  type: string;
+  attributes: Record<string, unknown>;
 }
 
 const fetchAllAuthentikUsers = async (): Promise<AkUser[]> => {
@@ -225,13 +234,39 @@ const run = async (): Promise<void> => {
     throw new Error(`scope mapping "${env.authentikMappingName}" not found`);
 
   const permissions = new Map<string, readonly string[]>();
+  // Claim lookups are memoized by pk: a TV owner who's also a NetBird user
+  // is evaluated once, and owners who never signed in still get evaluated.
+  const claimCache = new Map<number, Promise<string[]>>();
+  const claimsFor = (pk: number): Promise<string[]> => {
+    let p = claimCache.get(pk);
+    if (!p) claimCache.set(pk, (p = claimGroupsForUser(mapping.pk, pk)));
+    return p;
+  };
+  const lookupErrors: string[] = [];
+  const skippedUserIds = new Set<string>();
   for (const u of users) {
     if (u.idp_id !== hecateIdp.id) continue;
-    // Undecodable Hecate-idp ids fail the run (see lib.ts).
-    const sub = decodeDexUserId(u.id).sub;
-    const akPk = activeByUid.get(sub);
-    if (akPk === undefined) continue; // deleted or inactive in Hecate
-    permissions.set(sub, await claimGroupsForUser(mapping.pk, akPk));
+    // A failed decode or claim lookup skips this user (neither granted nor
+    // stripped: an upstream glitch must not lock a person out) and fails the
+    // run at the end, after everyone else's revocations are applied.
+    try {
+      let sub: string;
+      try {
+        sub = decodeDexUserId(u.id).sub;
+      } catch (err) {
+        throw new Error(
+          `undecodable Hecate id: ${err instanceof Error ? err.message : err}`,
+        );
+      }
+      const akPk = activeByUid.get(sub);
+      if (akPk === undefined) continue; // deleted or inactive in Hecate
+      permissions.set(sub, await claimsFor(akPk));
+    } catch (err) {
+      skippedUserIds.add(u.id);
+      lookupErrors.push(
+        `user ${u.id.slice(0, 8)}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
   }
 
   // The mapping tests took seconds; another caller may have edited
@@ -241,7 +276,9 @@ const run = async (): Promise<void> => {
   const freshUsers = (await nbGet("/users")) as NbUser[];
   const seenIds = new Set(users.map((u) => u.id));
   const plan = planUserUpdates({
-    users: freshUsers.filter((u) => seenIds.has(u.id)),
+    users: freshUsers.filter(
+      (u) => seenIds.has(u.id) && !skippedUserIds.has(u.id),
+    ),
     groups,
     hecateIdpId: hecateIdp.id,
     permissions,
@@ -250,7 +287,6 @@ const run = async (): Promise<void> => {
   for (const missing of plan.missingGroups)
     console.warn(`claim group "${missing}" has no NetBird group; skipped`);
 
-  if (plan.updates.length === 0) console.log("no changes");
   for (const upd of plan.updates) {
     const tag = upd.userId.slice(0, 8);
     console.log(
@@ -259,30 +295,168 @@ const run = async (): Promise<void> => {
     );
   }
 
-  if (env.dryRun) {
-    console.log(`DRY_RUN: ${plan.updates.length} update(s) not applied`);
-    return;
+  // One failed write must not hold back other revocations: write errors are
+  // collected, and the run fails once every removal has been attempted.
+  const writeErrors: string[] = [];
+  const attempt = (write: () => Promise<void>) =>
+    write().catch((err: unknown) => {
+      writeErrors.push(err instanceof Error ? err.message : String(err));
+    });
+
+  if (env.dryRun)
+    console.log(`DRY_RUN: ${plan.updates.length} user update(s) not applied`);
+  else {
+    const byId = new Map(freshUsers.map((u) => [u.id, u]));
+    for (const upd of plan.updates) {
+      const user = byId.get(upd.userId)!;
+      await attempt(async () => {
+        const res = await fetch(`${env.netbirdApi}/users/${upd.userId}`, {
+          method: "PUT",
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+          headers: {
+            Authorization: `Token ${env.netbirdToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            role: user.role,
+            auto_groups: upd.autoGroups,
+            is_blocked: user.is_blocked ?? false,
+          }),
+        });
+        if (!res.ok)
+          throw new Error(
+            `PUT user ${upd.userId.slice(0, 8)}: HTTP ${res.status}`,
+          );
+      });
+    }
   }
 
-  const byId = new Map(freshUsers.map((u) => [u.id, u]));
-  for (const upd of plan.updates) {
-    const user = byId.get(upd.userId)!;
-    const res = await fetch(`${env.netbirdApi}/users/${upd.userId}`, {
-      method: "PUT",
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      headers: {
-        Authorization: `Token ${env.netbirdToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        role: user.role,
-        auto_groups: upd.autoGroups,
-        is_blocked: user.is_blocked ?? false,
-      }),
-    });
-    if (!res.ok)
-      throw new Error(`PUT user ${upd.userId.slice(0, 8)}: HTTP ${res.status}`);
+  // --- TV / peer groups -----------------------------------------------------
+  // A TV is an Authentik service account carrying two attributes: its owner's
+  // username and its NetBird peer id. The peer earns owner-groups ∩ the TV's
+  // own claim groups (its allowlist); jwt groups on peers come only from
+  // links, so anything else on a non-user peer gets stripped.
+  const TV_OWNER_ATTR = "netbird_tv_owner";
+  const TV_PEER_ATTR = "netbird_peer_id";
+
+  const tvLinks: TvLink[] = [];
+  // Owner must be a real person (internal/external). A service account —
+  // including the TV itself — as owner yields no ownerGroups and fails the
+  // run; a missing owner is a warning (deleted owner is legit revocation).
+  const linkProblems: string[] = [];
+  for (const ak of akUsers) {
+    const ownerName = ak.attributes?.[TV_OWNER_ATTR];
+    if (typeof ownerName !== "string" || ownerName === "") continue;
+    if (ak.type !== "service_account") {
+      linkProblems.push(
+        `tv ${ak.username}: not a service account (${ak.type})`,
+      );
+      continue;
+    }
+    const peerId = ak.attributes?.[TV_PEER_ATTR];
+    if (typeof peerId !== "string" || peerId === "") {
+      console.log(`tv ${ak.username}: not linked yet`);
+      continue;
+    }
+    // A failed claim lookup fails closed for this TV only.
+    const claimsOrNone = (pk: number): Promise<readonly string[]> =>
+      claimsFor(pk).catch((err: unknown) => {
+        linkProblems.push(
+          `tv ${ak.username}: ${err instanceof Error ? err.message : String(err)}`,
+        );
+        return [];
+      });
+    const allowlist = ak.is_active ? await claimsOrNone(ak.pk) : [];
+    const owner = akUsers.find((u) => u.username === ownerName);
+    let ownerGroups: readonly string[] = [];
+    if (!owner) {
+      console.warn(`tv ${ak.username}: owner "${ownerName}" not found`);
+    } else if (owner.type !== "internal" && owner.type !== "external") {
+      linkProblems.push(
+        `tv ${ak.username}: owner "${ownerName}" is not a person (${owner.type})`,
+      );
+    } else if (owner.is_active) {
+      ownerGroups = await claimsOrNone(owner.pk);
+    }
+    tvLinks.push({ tv: ak.username, peerId, ownerGroups, allowlist });
   }
+
+  const peers = (await nbGet("/peers")) as NbPeer[];
+  const peerPlan = planPeerUpdates({ peers, groups, tvLinks });
+
+  for (const missing of peerPlan.missingGroups)
+    console.warn(`claim group "${missing}" has no NetBird group; skipped`);
+
+  for (const change of peerPlan.changes) {
+    const label = change.tv
+      ? `tv ${change.tv} (peer ${change.peerName})`
+      : `peer ${change.peerName} (unlinked)`;
+    console.log(
+      `${label}: ${change.added.map((n) => `+${n}`).join(" ") || "(no adds)"} ` +
+        `${change.removed.map((n) => `-${n}`).join(" ") || "(no removals)"}`,
+    );
+  }
+  if (plan.updates.length === 0 && peerPlan.changes.length === 0)
+    console.log("no changes");
+
+  if (env.dryRun)
+    console.log(
+      `DRY_RUN: ${peerPlan.groupEdits.length} peer group edit(s) not applied`,
+    );
+  else {
+    // PUT /groups replaces peers AND resources wholesale; re-read right
+    // before the write so concurrent changes (and resources) survive.
+    const applyGroupEdit = async (
+      groupId: string,
+      mutate: (ids: Set<string>) => void,
+    ): Promise<void> => {
+      const fresh = (await nbGet(`/groups/${groupId}`)) as {
+        name: string;
+        peers?: ({ id: string } | string)[];
+        resources?: { id: string; type: string }[];
+      };
+      const nextPeerIds = new Set(
+        (fresh.peers ?? []).map((p) => (typeof p === "string" ? p : p.id)),
+      );
+      mutate(nextPeerIds);
+      const res = await fetch(`${env.netbirdApi}/groups/${groupId}`, {
+        method: "PUT",
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        headers: {
+          Authorization: `Token ${env.netbirdToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: fresh.name,
+          peers: [...nextPeerIds].sort(),
+          resources: fresh.resources ?? [],
+        }),
+      });
+      if (!res.ok) throw new Error(`PUT group ${groupId}: HTTP ${res.status}`);
+    };
+    // Removals before additions: a run that dies midway leaves peers with
+    // less access, never more.
+    for (const edit of peerPlan.groupEdits) {
+      if (edit.remove.length === 0) continue;
+      await attempt(() =>
+        applyGroupEdit(edit.groupId, (ids) => {
+          for (const id of edit.remove) ids.delete(id);
+        }),
+      );
+    }
+    if (writeErrors.length > 0) throw new Error(writeErrors.join("; "));
+    for (const edit of peerPlan.groupEdits) {
+      if (edit.add.length === 0) continue;
+      await applyGroupEdit(edit.groupId, (ids) => {
+        for (const id of edit.add) ids.add(id);
+      });
+    }
+  }
+
+  // Everything applicable is already applied; a TV misconfig must fail the
+  // run (and the alert) without ever blocking user revocations.
+  const problems = [...lookupErrors, ...linkProblems, ...peerPlan.problems];
+  if (problems.length > 0) throw new Error(problems.join("; "));
 };
 
 const main = async (): Promise<void> => {

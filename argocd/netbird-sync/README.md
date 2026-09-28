@@ -70,6 +70,47 @@ kubectl --context default -n netbird-sync \
 kubectl --context default -n netbird-sync logs -l job-name=<name>
 ```
 
+## Add a TV
+
+A TV is a Hecate service account linked to a NetBird peer; the job grants
+the peer `owner-groups ∩ tv-allowlist` at each run, `svc-*` groups only.
+The peer id must be the TV's own enrolled peer — a peer already carrying
+infrastructure groups is rejected. A TV needs no `netbird-enroll`
+permission: per-service DNS zones are distributed to the `svc-*` group
+itself, not the enrolling user.
+
+1. In Hecate, create a service account `tv-<room>`; make it a member of the
+   allowlist groups (e.g. `svc-jellyfin`); set attribute
+   `netbird_tv_owner` to the owner's Authentik username.
+2. Mint a one-off setup key (reaches nothing until linked):
+
+   ```bash
+   curl -sf -H "Authorization: Token $ADMIN_PAT" \
+     -H 'Content-Type: application/json' \
+     https://netbird.mia.cx/api/setup-keys \
+     -d '{"name":"tv-<room>","type":"one-off","expires_in":86400,"auto_groups":[],"usage_limit":1}' \
+     | jq -r .key
+   ```
+
+3. Enroll the TV's NetBird app with management URL `https://netbird.mia.cx`
+   and that key.
+4. Copy the peer id from NetBird and set attribute `netbird_peer_id` on the
+   service account.
+5. Access starts at the next run, or trigger one:
+
+   ```bash
+   kubectl --context default -n netbird-sync \
+     create job --from=cronjob/netbird-sync sync-manual-$(date +%s)
+   ```
+
+Removal: deactivate or delete the TV service account, or revoke the owner's
+permission — the next run strips the peer's jwt groups. Deleting the
+service-account attributes unlinks the peer the same way.
+
+A reinstalled TV enrolls as a new peer with a new id: update
+`netbird_peer_id` on the service account. Until then every run fails on the
+stale link (and emails once, on the failure edge).
+
 ## PAT rotation
 
 The NetBird PAT expires 365 days after creation. The failure email is the
