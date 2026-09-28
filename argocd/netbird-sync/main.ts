@@ -275,29 +275,39 @@ const run = async (): Promise<void> => {
     );
   }
 
+  // One failed write must not hold back other revocations: write errors are
+  // collected, and the run fails once every removal has been attempted.
+  const writeErrors: string[] = [];
+  const attempt = (write: () => Promise<void>) =>
+    write().catch((err: unknown) => {
+      writeErrors.push(err instanceof Error ? err.message : String(err));
+    });
+
   if (env.dryRun)
     console.log(`DRY_RUN: ${plan.updates.length} user update(s) not applied`);
   else {
     const byId = new Map(freshUsers.map((u) => [u.id, u]));
     for (const upd of plan.updates) {
       const user = byId.get(upd.userId)!;
-      const res = await fetch(`${env.netbirdApi}/users/${upd.userId}`, {
-        method: "PUT",
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-        headers: {
-          Authorization: `Token ${env.netbirdToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          role: user.role,
-          auto_groups: upd.autoGroups,
-          is_blocked: user.is_blocked ?? false,
-        }),
+      await attempt(async () => {
+        const res = await fetch(`${env.netbirdApi}/users/${upd.userId}`, {
+          method: "PUT",
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+          headers: {
+            Authorization: `Token ${env.netbirdToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            role: user.role,
+            auto_groups: upd.autoGroups,
+            is_blocked: user.is_blocked ?? false,
+          }),
+        });
+        if (!res.ok)
+          throw new Error(
+            `PUT user ${upd.userId.slice(0, 8)}: HTTP ${res.status}`,
+          );
       });
-      if (!res.ok)
-        throw new Error(
-          `PUT user ${upd.userId.slice(0, 8)}: HTTP ${res.status}`,
-        );
     }
   }
 
@@ -397,18 +407,16 @@ const run = async (): Promise<void> => {
       if (!res.ok) throw new Error(`PUT group ${groupId}: HTTP ${res.status}`);
     };
     // Removals before additions: a run that dies midway leaves peers with
-    // less access, never more. Every removal is attempted even if one group
-    // fails, so one broken group can't shield other TVs' revocations.
-    const removalErrors: string[] = [];
+    // less access, never more.
     for (const edit of peerPlan.groupEdits) {
       if (edit.remove.length === 0) continue;
-      await applyGroupEdit(edit.groupId, (ids) => {
-        for (const id of edit.remove) ids.delete(id);
-      }).catch((err: unknown) =>
-        removalErrors.push(err instanceof Error ? err.message : String(err)),
+      await attempt(() =>
+        applyGroupEdit(edit.groupId, (ids) => {
+          for (const id of edit.remove) ids.delete(id);
+        }),
       );
     }
-    if (removalErrors.length > 0) throw new Error(removalErrors.join("; "));
+    if (writeErrors.length > 0) throw new Error(writeErrors.join("; "));
     for (const edit of peerPlan.groupEdits) {
       if (edit.add.length === 0) continue;
       await applyGroupEdit(edit.groupId, (ids) => {
