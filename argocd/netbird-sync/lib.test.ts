@@ -3,9 +3,12 @@ import { describe, it } from "node:test";
 import {
   alertTransition,
   decodeDexUserId,
+  planPeerUpdates,
   planUserUpdates,
   type NbGroup,
+  type NbPeer,
   type NbUser,
+  type TvLink,
 } from "./lib.ts";
 
 // Encode a Dex-shaped user id: protobuf field 1 = sub, field 2 = connector
@@ -24,6 +27,11 @@ const groups: NbGroup[] = [
   { id: "g-jellyfin", name: "svc-jellyfin", issued: "jwt" },
   { id: "g-enroll", name: "netbird-enroll", issued: "jwt" },
   { id: "g-api", name: "api-made", issued: "api" },
+  { id: "g-seerr", name: "svc-seerr", issued: "jwt" },
+  { id: "g-canary", name: "svc-canary", issued: "jwt" },
+  { id: "g-proxmox", name: "svc-proxmox", issued: "jwt" },
+  { id: "g-ssh", name: "svc-ssh", issued: "jwt" },
+  { id: "g-dns", name: "dns-adguard", issued: "api" },
 ];
 
 const hecateUser = (sub: string, autoGroups: string[]): NbUser => ({
@@ -154,4 +162,124 @@ describe("alertTransition", () => {
       assert.equal(alertTransition(was, now), expected);
     });
   }
+});
+
+// --- TV / peer planning -------------------------------------------------------
+
+const peer = (
+  id: string,
+  name: string,
+  groupIds: string[],
+  userId?: string,
+): NbPeer => ({
+  id,
+  name,
+  user_id: userId,
+  groups: groupIds.map((gid) => ({
+    id: gid,
+    name: groups.find((g) => g.id === gid)!.name,
+  })),
+});
+
+const tvLink = (
+  tv: string,
+  peerId: string,
+  ownerGroups: readonly string[],
+  allowlist: readonly string[],
+): TvLink => ({ tv, peerId, ownerGroups, allowlist });
+
+const planPeers = (peers: NbPeer[], tvLinks: TvLink[]) =>
+  planPeerUpdates({ peers, groups, tvLinks });
+
+describe("planPeerUpdates", () => {
+  it("grants a TV only the owner-groups intersected with its allowlist", () => {
+    const p = peer("p1", "tv-living", []);
+    const { changes, groupEdits, problems } = planPeers(
+      [p],
+      [
+        tvLink(
+          "tv-living",
+          "p1",
+          ["svc-jellyfin", "svc-seerr", "svc-ssh", "svc-proxmox"],
+          ["svc-jellyfin", "svc-canary"],
+        ),
+      ],
+    );
+    assert.equal(problems.length, 0);
+    assert.equal(changes.length, 1);
+    assert.deepEqual(changes[0]!.added, ["svc-jellyfin"]);
+    assert.deepEqual(groupEdits, [
+      { groupId: "g-jellyfin", add: ["p1"], remove: [] },
+    ]);
+  });
+
+  it("strips a TV when the owner loses the permission", () => {
+    const p = peer("p1", "tv-living", ["g-jellyfin"]);
+    const { changes, groupEdits } = planPeers(
+      [p],
+      [tvLink("tv-living", "p1", [], ["svc-jellyfin"])],
+    );
+    assert.deepEqual(changes[0]!.removed, ["svc-jellyfin"]);
+    assert.deepEqual(groupEdits, [
+      { groupId: "g-jellyfin", add: [], remove: ["p1"] },
+    ]);
+  });
+
+  it("strips jwt groups from unlinked peers but keeps api groups", () => {
+    const stale = peer("p1", "stale-setup-key-peer", ["g-jellyfin", "g-dns"]);
+    const router = peer("p2", "olympus-router-1", ["g-dns"]);
+    const { changes, groupEdits } = planPeers([stale, router], []);
+    assert.equal(changes.length, 1);
+    assert.deepEqual(changes[0]!.removed, ["svc-jellyfin"]);
+    assert.equal(changes[0]!.tv, undefined);
+    assert.deepEqual(groupEdits, [
+      { groupId: "g-jellyfin", add: [], remove: ["p1"] },
+    ]);
+  });
+
+  it("refuses to touch a user-owned peer and reports the problem", () => {
+    const p = peer("p1", "mia-laptop", ["g-sonarr"], "some-user-id");
+    const { changes, problems } = planPeers(
+      [p],
+      [tvLink("tv-x", "p1", ["svc-jellyfin"], ["svc-jellyfin"])],
+    );
+    assert.equal(changes.length, 0);
+    assert.equal(problems.length, 1);
+    assert.match(problems[0]!, /belongs to a user/);
+  });
+
+  it("fails closed when two links claim one peer", () => {
+    const p = peer("p1", "tv-shared", ["g-jellyfin"]);
+    const { changes, problems } = planPeers(
+      [p],
+      [
+        tvLink("tv-a", "p1", ["svc-jellyfin"], ["svc-jellyfin"]),
+        tvLink("tv-b", "p1", ["svc-jellyfin"], ["svc-jellyfin"]),
+      ],
+    );
+    assert.equal(problems.length, 1);
+    assert.equal(changes.length, 1);
+    assert.deepEqual(changes[0]!.removed, ["svc-jellyfin"]);
+    assert.deepEqual(changes[0]!.added, []);
+  });
+
+  it("aggregates edits per group and reports unknown peers", () => {
+    const p1 = peer("p1", "tv-a-peer", []);
+    const p2 = peer("p2", "tv-b-peer", []);
+    const correct = peer("p3", "tv-c-peer", ["g-jellyfin"]);
+    const { changes, groupEdits, unknownPeers } = planPeers(
+      [p1, p2, correct],
+      [
+        tvLink("tv-a", "p1", ["svc-jellyfin"], ["svc-jellyfin"]),
+        tvLink("tv-b", "p2", ["svc-jellyfin"], ["svc-jellyfin"]),
+        tvLink("tv-c", "p3", ["svc-jellyfin"], ["svc-jellyfin"]),
+        tvLink("tv-ghost", "p-missing", ["svc-jellyfin"], ["svc-jellyfin"]),
+      ],
+    );
+    assert.equal(changes.length, 2); // tv-c already correct: no change
+    assert.deepEqual(groupEdits, [
+      { groupId: "g-jellyfin", add: ["p1", "p2"], remove: [] },
+    ]);
+    assert.deepEqual(unknownPeers, ["tv-ghost"]);
+  });
 });
