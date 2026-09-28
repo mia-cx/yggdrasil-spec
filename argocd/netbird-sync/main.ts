@@ -338,7 +338,15 @@ const run = async (): Promise<void> => {
       console.log(`tv ${ak.username}: not linked yet`);
       continue;
     }
-    const allowlist = ak.is_active ? await claimsFor(ak.pk) : [];
+    // A failed claim lookup fails closed for this TV only.
+    const claimsOrNone = (pk: number): Promise<readonly string[]> =>
+      claimsFor(pk).catch((err: unknown) => {
+        linkProblems.push(
+          `tv ${ak.username}: ${err instanceof Error ? err.message : String(err)}`,
+        );
+        return [];
+      });
+    const allowlist = ak.is_active ? await claimsOrNone(ak.pk) : [];
     const owner = akUsers.find((u) => u.username === ownerName);
     let ownerGroups: readonly string[] = [];
     if (!owner) {
@@ -348,7 +356,7 @@ const run = async (): Promise<void> => {
         `tv ${ak.username}: owner "${ownerName}" is not a person (${owner.type})`,
       );
     } else if (owner.is_active) {
-      ownerGroups = await claimsFor(owner.pk);
+      ownerGroups = await claimsOrNone(owner.pk);
     }
     tvLinks.push({ tv: ak.username, peerId, ownerGroups, allowlist });
   }
