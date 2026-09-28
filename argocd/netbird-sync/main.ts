@@ -246,14 +246,20 @@ const run = async (): Promise<void> => {
   const skippedUserIds = new Set<string>();
   for (const u of users) {
     if (u.idp_id !== hecateIdp.id) continue;
-    // Undecodable Hecate-idp ids fail the run (see lib.ts).
-    const sub = decodeDexUserId(u.id).sub;
-    const akPk = activeByUid.get(sub);
-    if (akPk === undefined) continue; // deleted or inactive in Hecate
-    // A failed lookup skips this user (neither granted nor stripped: an
-    // Authentik glitch must not lock a person out) and fails the run at the
-    // end, after everyone else's revocations are applied.
+    // A failed decode or claim lookup skips this user (neither granted nor
+    // stripped: an upstream glitch must not lock a person out) and fails the
+    // run at the end, after everyone else's revocations are applied.
     try {
+      let sub: string;
+      try {
+        sub = decodeDexUserId(u.id).sub;
+      } catch (err) {
+        throw new Error(
+          `undecodable Hecate id: ${err instanceof Error ? err.message : err}`,
+        );
+      }
+      const akPk = activeByUid.get(sub);
+      if (akPk === undefined) continue; // deleted or inactive in Hecate
       permissions.set(sub, await claimsFor(akPk));
     } catch (err) {
       skippedUserIds.add(u.id);

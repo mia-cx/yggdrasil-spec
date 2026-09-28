@@ -10,9 +10,8 @@ alwaysApply: false
 
 - A Hecate user's NetBird `id` is Dex's base64 protobuf: field 1 = Authentik
   `sub`, field 2 = connector id. Decode with varint lengths; accept url-safe
-  and unpadded variants. A Hecate-idp user whose id doesn't decode fails the
-  run — a silent skip would hide an upstream id-format change and stop
-  revocations.
+  and unpadded variants. An undecodable id skips that user and fails the run
+  at the end — other users' and TVs' revocations still apply.
 - Only `issued: "jwt"` NetBird groups are managed — they're created by
   sign-in sync, never by this job. `api`-issued groups on a user are always
   preserved; claim names with no group are reported, never created.
@@ -36,15 +35,15 @@ alwaysApply: false
   at pod start and the blueprint `!Env` fails until then.
 - No package.json reaches the pod (ConfigMap mount), so keep the TS
   CJS-safe: no top-level await; Node's module detection handles the imports.
-- `PUT /api/groups/{id}` replaces peers AND resources wholesale — GET the
-  group immediately before each PUT and send back the fresh name/resources.
-  0.79 has no conditional or per-member write, so a concurrent change in the
-  GET→PUT window is lost; the window is milliseconds and only runs on change.
+- `PUT /api/groups/{id}` replaces peers AND resources wholesale — GET right
+  before each PUT; no conditional/per-member write exists, so a concurrent
+  change in the ms window is lost (writes run only on change).
 - Setup-key peers (empty `user_id`) hold jwt groups only via a TV link;
   anything else on them is stripped. A link to a user-owned peer is reported
   as a problem and left untouched.
 - TV links live on the Authentik service account: `netbird_tv_owner`
-  (username) + `netbird_peer_id`. Only a `service_account` is a TV, and the
-  owner must be an `internal`/`external` user — else the TV gets nothing and
-  the run fails. Peer removals are applied before additions. Misconfig is
-  thrown after all updates apply — it fails the run, never blocks revocations.
+  (username) + `netbird_peer_id`. Only a `service_account` is a TV; the
+  owner must be `internal`/`external`; grants are `svc-*` only; a linked
+  peer holding a non-jwt group besides `All` is rejected as infrastructure.
+  Removals before additions; misconfig throws after all updates apply —
+  fails the run, never blocks revocations.

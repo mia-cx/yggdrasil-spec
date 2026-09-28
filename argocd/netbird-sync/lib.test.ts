@@ -32,6 +32,8 @@ const groups: NbGroup[] = [
   { id: "g-proxmox", name: "svc-proxmox", issued: "jwt" },
   { id: "g-ssh", name: "svc-ssh", issued: "jwt" },
   { id: "g-dns", name: "dns-adguard", issued: "api" },
+  { id: "g-enroll", name: "netbird-enroll", issued: "jwt" },
+  { id: "g-all", name: "All" },
 ];
 
 const hecateUser = (sub: string, autoGroups: string[]): NbUser => ({
@@ -282,5 +284,36 @@ describe("planPeerUpdates", () => {
     ]);
     assert.equal(problems.length, 1);
     assert.match(problems[0]!, /tv tv-ghost: peer id p-missin not found/);
+  });
+
+  it("rejects a link to an infrastructure peer", () => {
+    const infra = peer("p1", "olympus-router-1", ["g-dns", "g-all"]);
+    const { changes, groupEdits, problems } = planPeers(
+      [infra],
+      [tvLink("tv-x", "p1", ["svc-jellyfin"], ["svc-jellyfin"])],
+    );
+    assert.equal(changes.length, 0);
+    assert.equal(groupEdits.length, 0);
+    assert.equal(problems.length, 1);
+    assert.match(problems[0]!, /infrastructure \(dns-adguard\)/);
+  });
+
+  it("grants only svc-* groups even when both sides share netbird-enroll", () => {
+    const p = peer("p1", "tv-living", []);
+    const { changes, groupEdits } = planPeers(
+      [p],
+      [
+        tvLink(
+          "tv-living",
+          "p1",
+          ["netbird-enroll", "svc-jellyfin"],
+          ["netbird-enroll", "svc-jellyfin"],
+        ),
+      ],
+    );
+    assert.deepEqual(changes[0]!.added, ["svc-jellyfin"]);
+    assert.deepEqual(groupEdits, [
+      { groupId: "g-jellyfin", add: ["p1"], remove: [] },
+    ]);
   });
 });

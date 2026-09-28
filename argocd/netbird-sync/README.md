@@ -73,9 +73,11 @@ kubectl --context default -n netbird-sync logs -l job-name=<name>
 ## Add a TV
 
 A TV is a Hecate service account linked to a NetBird peer; the job grants
-the peer `owner-groups ∩ tv-allowlist` at each run. A TV needs no
-`netbird-enroll` permission: per-service DNS zones are distributed to the
-`svc-*` group itself, not the enrolling user.
+the peer `owner-groups ∩ tv-allowlist` at each run, `svc-*` groups only.
+The peer id must be the TV's own enrolled peer — a peer already carrying
+infrastructure groups is rejected. A TV needs no `netbird-enroll`
+permission: per-service DNS zones are distributed to the `svc-*` group
+itself, not the enrolling user.
 
 1. In Hecate, create a service account `tv-<room>`; make it a member of the
    allowlist groups (e.g. `svc-jellyfin`); set attribute

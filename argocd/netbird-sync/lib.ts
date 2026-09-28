@@ -200,12 +200,17 @@ export interface PeerPlan {
   problems: string[];
 }
 
+/** TV grants never exceed this prefix — `netbird-enroll` must stay human-only. */
+export const TV_GROUP_PREFIX = "svc-";
+
 /**
  * Plan jwt-group membership for non-user peers. A setup-key peer holds jwt
  * groups only through a TV link (owner groups intersected with the TV's
- * allowlist); unlinked or stale peers are stripped of jwt groups. User-owned
- * peers are never touched. Nothing throws: config problems are collected and
- * main.ts throws after applying everything else.
+ * allowlist, `svc-*` names only); unlinked or stale peers are stripped of
+ * jwt groups. User-owned peers are never touched, and a link to a peer that
+ * already carries a non-jwt group besides `All` is infrastructure, not a TV.
+ * Nothing throws: config problems are collected and main.ts throws after
+ * applying everything else.
  */
 export const planPeerUpdates = ({
   peers,
@@ -259,10 +264,25 @@ export const planPeerUpdates = ({
       continue; // user-owned peers are never touched
     }
 
+    // A linked peer carrying a non-jwt group other than `All` is
+    // infrastructure (router, DNS sidecar), not a TV: reject the link and
+    // treat the peer as unlinked so any stray jwt groups are stripped.
+    const infraNames = peer.groups
+      .map((g) => g.name)
+      .filter((n) => !managedIdByName.has(n) && n !== "All");
+    let effectiveLink = link;
+    if (link && infraNames.length > 0) {
+      problems.push(
+        `tv ${link.tv}: peer ${peer.name} is infrastructure (${infraNames.join(", ")}); not linked`,
+      );
+      effectiveLink = undefined;
+    }
+
     const desiredNames = new Set<string>();
-    if (link && !duplicatePeerIds.has(peer.id)) {
-      const allow = new Set(link.allowlist);
-      for (const name of link.ownerGroups) {
+    if (effectiveLink && !duplicatePeerIds.has(peer.id)) {
+      const allow = new Set(effectiveLink.allowlist);
+      for (const name of effectiveLink.ownerGroups) {
+        if (!name.startsWith(TV_GROUP_PREFIX)) continue;
         if (!allow.has(name)) continue;
         if (!managedIdByName.has(name)) {
           missing.add(name);
@@ -283,7 +303,7 @@ export const planPeerUpdates = ({
     changes.push({
       peerId: peer.id,
       peerName: peer.name,
-      tv: link?.tv,
+      tv: effectiveLink?.tv,
       added: added.sort(),
       removed: removed.sort(),
     });
