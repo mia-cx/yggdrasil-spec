@@ -317,6 +317,12 @@ const run = async (): Promise<void> => {
   for (const ak of akUsers) {
     const ownerName = ak.attributes?.[TV_OWNER_ATTR];
     if (typeof ownerName !== "string" || ownerName === "") continue;
+    if (ak.type !== "service_account") {
+      linkProblems.push(
+        `tv ${ak.username}: not a service account (${ak.type})`,
+      );
+      continue;
+    }
     const peerId = ak.attributes?.[TV_PEER_ATTR];
     if (typeof peerId !== "string" || peerId === "") {
       console.log(`tv ${ak.username}: not linked yet`);
@@ -360,10 +366,13 @@ const run = async (): Promise<void> => {
       `DRY_RUN: ${peerPlan.groupEdits.length} peer group edit(s) not applied`,
     );
   else {
-    for (const edit of peerPlan.groupEdits) {
-      // PUT /groups replaces peers AND resources wholesale; re-read right
-      // before the write so concurrent changes (and resources) survive.
-      const fresh = (await nbGet(`/groups/${edit.groupId}`)) as {
+    // PUT /groups replaces peers AND resources wholesale; re-read right
+    // before the write so concurrent changes (and resources) survive.
+    const applyGroupEdit = async (
+      groupId: string,
+      mutate: (ids: Set<string>) => void,
+    ): Promise<void> => {
+      const fresh = (await nbGet(`/groups/${groupId}`)) as {
         name: string;
         peers?: ({ id: string } | string)[];
         resources?: { id: string; type: string }[];
@@ -371,9 +380,8 @@ const run = async (): Promise<void> => {
       const nextPeerIds = new Set(
         (fresh.peers ?? []).map((p) => (typeof p === "string" ? p : p.id)),
       );
-      for (const id of edit.add) nextPeerIds.add(id);
-      for (const id of edit.remove) nextPeerIds.delete(id);
-      const res = await fetch(`${env.netbirdApi}/groups/${edit.groupId}`, {
+      mutate(nextPeerIds);
+      const res = await fetch(`${env.netbirdApi}/groups/${groupId}`, {
         method: "PUT",
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         headers: {
@@ -386,8 +394,21 @@ const run = async (): Promise<void> => {
           resources: fresh.resources ?? [],
         }),
       });
-      if (!res.ok)
-        throw new Error(`PUT group ${edit.groupId}: HTTP ${res.status}`);
+      if (!res.ok) throw new Error(`PUT group ${groupId}: HTTP ${res.status}`);
+    };
+    // Removals before additions: a run that dies midway leaves peers with
+    // less access, never more.
+    for (const edit of peerPlan.groupEdits) {
+      if (edit.remove.length === 0) continue;
+      await applyGroupEdit(edit.groupId, (ids) => {
+        for (const id of edit.remove) ids.delete(id);
+      });
+    }
+    for (const edit of peerPlan.groupEdits) {
+      if (edit.add.length === 0) continue;
+      await applyGroupEdit(edit.groupId, (ids) => {
+        for (const id of edit.add) ids.add(id);
+      });
     }
   }
 
