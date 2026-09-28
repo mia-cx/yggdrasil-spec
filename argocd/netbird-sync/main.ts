@@ -330,8 +330,6 @@ const run = async (): Promise<void> => {
 
   for (const missing of peerPlan.missingGroups)
     console.warn(`claim group "${missing}" has no NetBird group; skipped`);
-  for (const tv of peerPlan.unknownPeers)
-    console.warn(`tv ${tv}: linked peer id not found in NetBird`);
 
   for (const change of peerPlan.changes) {
     const label = change.tv

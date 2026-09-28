@@ -263,11 +263,11 @@ describe("planPeerUpdates", () => {
     assert.deepEqual(changes[0]!.added, []);
   });
 
-  it("aggregates edits per group and reports unknown peers", () => {
+  it("aggregates edits per group and fails on unknown peers", () => {
     const p1 = peer("p1", "tv-a-peer", []);
     const p2 = peer("p2", "tv-b-peer", []);
     const correct = peer("p3", "tv-c-peer", ["g-jellyfin"]);
-    const { changes, groupEdits, unknownPeers } = planPeers(
+    const { changes, groupEdits, problems } = planPeers(
       [p1, p2, correct],
       [
         tvLink("tv-a", "p1", ["svc-jellyfin"], ["svc-jellyfin"]),
@@ -280,6 +280,7 @@ describe("planPeerUpdates", () => {
     assert.deepEqual(groupEdits, [
       { groupId: "g-jellyfin", add: ["p1", "p2"], remove: [] },
     ]);
-    assert.deepEqual(unknownPeers, ["tv-ghost"]);
+    assert.equal(problems.length, 1);
+    assert.match(problems[0]!, /tv tv-ghost: peer id p-missin not found/);
   });
 });

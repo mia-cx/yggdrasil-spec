@@ -197,8 +197,6 @@ export interface PeerPlan {
   changes: PeerChange[];
   groupEdits: GroupEdit[];
   missingGroups: string[];
-  /** TV usernames whose configured peer id isn't in NetBird. */
-  unknownPeers: string[];
   problems: string[];
 }
 
@@ -227,7 +225,6 @@ export const planPeerUpdates = ({
   }
 
   const problems: string[] = [];
-  const unknownPeers: string[] = [];
   const missing = new Set<string>();
 
   const peerById = new Map(peers.map((p) => [p.id, p]));
@@ -242,7 +239,10 @@ export const planPeerUpdates = ({
       continue;
     }
     linkByPeerId.set(link.peerId, link);
-    if (!peerById.has(link.peerId)) unknownPeers.push(link.tv);
+    if (!peerById.has(link.peerId))
+      problems.push(
+        `tv ${link.tv}: peer id ${link.peerId.slice(0, 8)} not found in NetBird`,
+      );
   }
 
   const changes: PeerChange[] = [];
@@ -310,7 +310,6 @@ export const planPeerUpdates = ({
     changes,
     groupEdits,
     missingGroups: [...missing].sort(),
-    unknownPeers,
     problems,
   };
 };

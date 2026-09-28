@@ -105,6 +105,10 @@ Removal: deactivate or delete the TV service account, or revoke the owner's
 permission — the next run strips the peer's jwt groups. Deleting the
 service-account attributes unlinks the peer the same way.
 
+A reinstalled TV enrolls as a new peer with a new id: update
+`netbird_peer_id` on the service account. Until then every run fails on the
+stale link (and emails once, on the failure edge).
+
 ## PAT rotation
 
 The NetBird PAT expires 365 days after creation. The failure email is the
