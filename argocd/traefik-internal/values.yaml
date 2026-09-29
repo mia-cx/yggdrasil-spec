@@ -19,6 +19,7 @@ providers:
     # Explicit list, not cluster-wide: new namespaces opt in deliberately.
     namespaces:
       - canary
+      - open-wearables
     allowCrossNamespace: false
   kubernetesIngress:
     enabled: false
@@ -34,6 +35,11 @@ service:
 ports:
   canary:
     port: 10001
+    expose:
+      default: false
+    protocol: TCP
+  open-wearables:
+    port: 10002
     expose:
       default: false
     protocol: TCP

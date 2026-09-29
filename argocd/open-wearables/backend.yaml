@@ -1,0 +1,184 @@
+## Open Wearables backend: one image, three roles selected by start command.
+## Shared env comes from the ConfigMap below, Secret `open-wearables`
+## (created out of band, see README.md) and the CNPG app Secret.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: open-wearables
+  namespace: open-wearables
+data:
+  ENVIRONMENT: production
+  API_BASE_URL: https://health.mia.cx
+  FRONTEND_URL: https://health.mia.cx
+  CORS_ORIGINS: '["https://health.mia.cx"]'
+  DB_HOST: open-wearables-db-rw
+  DB_NAME: open_wearables
+  DB_USER: open_wearables
+  REDIS_HOST: open-wearables-valkey
+  SENTRY_ENABLED: "false"
+  # Apple Health arrives from the phone; no provider pulls or outgoing webhooks.
+  OUTGOING_WEBHOOKS_ENABLED: "false"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-wearables-api
+  namespace: open-wearables
+spec:
+  replicas: 1
+  # The API runs migrations on start; never two at once.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: open-wearables-api
+  template:
+    metadata:
+      labels:
+        app: open-wearables-api
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/critical
+                    operator: Exists
+      containers:
+        - name: api
+          image: themomentum/open-wearables-backend:0.9.0
+          command: [scripts/start/app.sh]
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: open-wearables
+            - secretRef:
+                name: open-wearables
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: open-wearables-db-app
+                  key: password
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+          # Startup runs migrations and seeds before the server listens.
+          startupProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            failureThreshold: 60
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: open-wearables-api
+  namespace: open-wearables
+spec:
+  selector:
+    app: open-wearables-api
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-wearables-worker
+  namespace: open-wearables
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: open-wearables-worker
+  template:
+    metadata:
+      labels:
+        app: open-wearables-worker
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/critical
+                    operator: Exists
+      containers:
+        - name: worker
+          image: themomentum/open-wearables-backend:0.9.0
+          command: [scripts/start/worker.sh]
+          envFrom:
+            - configMapRef:
+                name: open-wearables
+            - secretRef:
+                name: open-wearables
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: open-wearables-db-app
+                  key: password
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-wearables-beat
+  namespace: open-wearables
+spec:
+  replicas: 1
+  # A second scheduler would enqueue every periodic task twice.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: open-wearables-beat
+  template:
+    metadata:
+      labels:
+        app: open-wearables-beat
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/critical
+                    operator: Exists
+      containers:
+        - name: beat
+          image: themomentum/open-wearables-backend:0.9.0
+          command: [scripts/start/beat.sh]
+          envFrom:
+            - configMapRef:
+                name: open-wearables
+            - secretRef:
+                name: open-wearables
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: open-wearables-db-app
+                  key: password
+          resources:
+            requests:
+              cpu: 10m
+              memory: 128Mi
+            limits:
+              memory: 512Mi

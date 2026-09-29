@@ -1,0 +1,39 @@
+# Namespace-local certificate; nothing outside open-wearables reads it.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: open-wearables-tls
+  namespace: open-wearables
+spec:
+  secretName: open-wearables-tls
+  dnsNames:
+    - health.mia.cx
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer
+---
+# The class annotation keeps this off the public Traefik; the private one
+# serves it on the `open-wearables` entrypoint only.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: open-wearables
+  namespace: open-wearables
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
+spec:
+  entryPoints:
+    - open-wearables
+  routes:
+    - match: Host(`health.mia.cx`) && PathPrefix(`/api/`)
+      kind: Rule
+      services:
+        - name: open-wearables-api
+          port: 8000
+    - match: Host(`health.mia.cx`)
+      kind: Rule
+      services:
+        - name: open-wearables-frontend
+          port: 3000
+  tls:
+    secretName: open-wearables-tls

@@ -25,3 +25,5 @@ spec:
       ports:
         - protocol: TCP
           port: 10001
+        - protocol: TCP
+          port: 10002

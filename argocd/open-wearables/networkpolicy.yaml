@@ -1,0 +1,28 @@
+# The API and portal accept only the private Traefik, so no pod can skip the
+# mesh path and reach health data directly.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: open-wearables-web
+  namespace: open-wearables
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values: [open-wearables-api, open-wearables-frontend]
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-internal
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: traefik-internal-traefik-internal
+      ports:
+        - protocol: TCP
+          port: 8000
+        - protocol: TCP
+          port: 3000
