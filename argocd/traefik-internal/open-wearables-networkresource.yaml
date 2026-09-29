@@ -1,0 +1,24 @@
+# svc-open-wearables peers get TCP 443 to res-open-wearables via policy
+# `open-wearables`.
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-open-wearables
+  namespace: traefik-internal
+spec:
+  name: res-open-wearables
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: open-wearables
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: open-wearables
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-open-wearables

@@ -1,0 +1,57 @@
+## Developer portal. The browser calls the API on the same origin; the
+## IngressRoute sends /api to the backend.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-wearables-frontend
+  namespace: open-wearables
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: open-wearables-frontend
+  template:
+    metadata:
+      labels:
+        app: open-wearables-frontend
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/critical
+                    operator: Exists
+      containers:
+        - name: frontend
+          image: themomentum/open-wearables-frontend:0.9.0
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            # Read at runtime and injected into the page for the browser.
+            - name: VITE_API_URL
+              value: https://health.mia.cx
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: open-wearables-frontend
+  namespace: open-wearables
+spec:
+  selector:
+    app: open-wearables-frontend
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http

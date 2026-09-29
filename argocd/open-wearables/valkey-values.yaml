@@ -1,0 +1,19 @@
+## Valkey (Redis-compatible) Celery broker for Open Wearables
+## Chart: valkey/valkey (official, BSD)
+## Repo: https://valkey.io/valkey-helm/
+
+fullnameOverride: open-wearables-valkey
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: workloads/critical
+              operator: Exists
+
+# Queued syncs survive a restart.
+dataStorage:
+  enabled: true
+  requestedSize: 1Gi
+  className: longhorn

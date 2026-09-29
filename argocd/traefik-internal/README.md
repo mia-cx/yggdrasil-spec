@@ -35,9 +35,10 @@ Each private service gets its own enforceable network destination:
   service's entrypoint port, and the backend admits only the Traefik pods
   (see `networkpolicy.yaml` here and `argocd/canary/networkpolicy.yaml`).
 
-| Service | Entrypoint port | ClusterIP   | Resource group | Permission group | Hostname      |
-| ------- | --------------- | ----------- | -------------- | ---------------- | ------------- |
-| canary  | 10001           | 10.43.0.128 | res-canary     | svc-canary       | canary.mia.cx |
+| Service        | Entrypoint port | ClusterIP   | Resource group     | Permission group   | Hostname      |
+| -------------- | --------------- | ----------- | ------------------ | ------------------ | ------------- |
+| canary         | 10001           | 10.43.0.128 | res-canary         | svc-canary         | canary.mia.cx |
+| open-wearables | 10002           | 10.43.0.129 | res-open-wearables | svc-open-wearables | health.mia.cx |
 
 ## Adding a service
 

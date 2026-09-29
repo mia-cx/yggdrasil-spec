@@ -1,0 +1,28 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: open-wearables-db
+  namespace: open-wearables
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1" # Create DB before the backend
+spec:
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.6-system-trixie
+  instances: 2
+
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: workloads/critical
+                operator: Exists
+
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+
+  # CNPG writes the owner's password to Secret open-wearables-db-app.
+  bootstrap:
+    initdb:
+      database: open_wearables
+      owner: open_wearables

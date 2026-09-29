@@ -1,0 +1,43 @@
+## Open Wearables — Apple Health data behind one API, queried by agents via MCP.
+## Mesh-only at health.mia.cx through the private Traefik. Valkey chart +
+## plain manifests (CNPG cluster, backend, frontend, IngressRoute).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: open-wearables
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://valkey.io/valkey-helm/
+      chart: valkey
+      targetRevision: "0.12.0"
+      helm:
+        releaseName: open-wearables-valkey
+        valueFiles:
+          - $values/argocd/open-wearables/valkey-values.yaml
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      path: argocd/open-wearables
+      directory:
+        exclude: "{valkey-values.yaml,README.md}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: open-wearables
+  # CNPG operator adds default affinity (pod anti-affinity); ArgoCD sees drift and fails
+  ignoreDifferences:
+    - group: postgresql.cnpg.io
+      kind: Cluster
+      namespace: open-wearables
+      name: open-wearables-db
+      jqPathExpressions:
+        - .spec.affinity
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
