@@ -39,6 +39,7 @@ Each private service gets its own enforceable network destination:
 | -------------- | --------------- | ----------- | ------------------ | ------------------ | ------------- |
 | canary         | 10001           | 10.43.0.128 | res-canary         | svc-canary         | canary.mia.cx |
 | open-wearables | 10002           | 10.43.0.129 | res-open-wearables | svc-open-wearables | health.mia.cx |
+| oddreads       | 10003           | 10.43.0.130 | res-oddreads       | svc-oddreads       | slop.mia.cx   |
 
 ## Adding a service
 

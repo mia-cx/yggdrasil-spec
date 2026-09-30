@@ -37,6 +37,7 @@ data:
       - {model: authentik_core.group, id: svc-ssh, identifiers: {name: svc-ssh}, attrs: {is_superuser: false}}
       - {model: authentik_core.group, id: svc-canary, identifiers: {name: svc-canary}, attrs: {is_superuser: false}}
       - {model: authentik_core.group, id: svc-open-wearables, identifiers: {name: svc-open-wearables}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-oddreads, identifiers: {name: svc-oddreads}, attrs: {is_superuser: false}}
       # Permission to enroll a personal device; the NetBird application is
       # bound to it below.
       - {model: authentik_core.group, id: netbird-enroll, identifiers: {name: netbird-enroll}, attrs: {is_superuser: false}}
@@ -68,6 +69,7 @@ data:
             - !KeyOf svc-ssh
             - !KeyOf svc-canary
             - !KeyOf svc-open-wearables
+            - !KeyOf svc-oddreads
             - !KeyOf netbird-enroll
       - model: authentik_core.group
         identifiers: {name: role-family}

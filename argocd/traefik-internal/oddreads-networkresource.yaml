@@ -1,0 +1,23 @@
+# svc-oddreads peers get TCP 443 to res-oddreads via policy `oddreads`.
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-oddreads
+  namespace: traefik-internal
+spec:
+  name: res-oddreads
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: oddreads
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: oddreads
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-oddreads

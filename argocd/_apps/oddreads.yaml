@@ -1,0 +1,21 @@
+## oddreads — mesh-only route to the shorts review app on athena-hephaestus, behind the private Traefik.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: oddreads
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+    targetRevision: main
+    path: argocd/oddreads
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: oddreads
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

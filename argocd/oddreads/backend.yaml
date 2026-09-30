@@ -1,0 +1,32 @@
+# The oddreads review app runs on athena-hephaestus, outside the cluster, so the
+# private Traefik reaches it through a selector-less Service + EndpointSlice.
+# Being off-cluster, it can't take the Ingress NetworkPolicy other private
+# backends use; it is also reachable on the LAN at 10.0.3.2:5190.
+apiVersion: v1
+kind: Service
+metadata:
+  name: oddreads
+  namespace: oddreads
+spec:
+  ports:
+    - name: http
+      port: 5190
+      targetPort: 5190
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: oddreads-external
+  namespace: oddreads
+  labels:
+    kubernetes.io/service-name: oddreads
+addressType: IPv4
+endpoints:
+  - addresses:
+      - "10.0.3.2"  # athena-hephaestus
+    conditions:
+      ready: true
+ports:
+  - name: http
+    port: 5190
+    protocol: TCP
