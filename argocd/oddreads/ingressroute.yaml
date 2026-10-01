@@ -1,0 +1,20 @@
+# The class annotation keeps this off the public Traefik; the private one
+# serves it on the `oddreads` entrypoint only.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: oddreads
+  namespace: oddreads
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
+spec:
+  entryPoints:
+    - oddreads
+  routes:
+    - match: Host(`slop.mia.cx`)
+      kind: Rule
+      services:
+        - name: oddreads
+          port: 5190
+  tls:
+    secretName: oddreads-tls

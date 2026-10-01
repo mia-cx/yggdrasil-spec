@@ -1,0 +1,20 @@
+# Mesh destination for slop.mia.cx (oddreads). The NetBird DNS zone answers
+# this pinned ClusterIP, so it must never change; see the README allocation
+# table.
+apiVersion: v1
+kind: Service
+metadata:
+  name: oddreads
+  namespace: traefik-internal
+spec:
+  type: ClusterIP
+  clusterIP: 10.43.0.130
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+      # Pod port of the `oddreads` Traefik entrypoint (containerPort 10003).
+      targetPort: oddreads
+  selector:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik-internal-traefik-internal

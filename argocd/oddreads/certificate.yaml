@@ -1,0 +1,13 @@
+# Namespace-local certificate for slop.mia.cx; nothing outside oddreads reads it.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: oddreads-tls
+  namespace: oddreads
+spec:
+  secretName: oddreads-tls
+  dnsNames:
+    - slop.mia.cx
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer
