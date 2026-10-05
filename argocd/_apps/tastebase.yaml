@@ -1,0 +1,31 @@
+## tastebase — Postgres + pgvector embedding database (CNPG), plain manifests.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tastebase
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+    targetRevision: main
+    path: argocd/tastebase
+    directory:
+      exclude: "README.md"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tastebase
+  # CNPG operator adds default affinity (pod anti-affinity); ArgoCD sees drift and fails
+  ignoreDifferences:
+    - group: postgresql.cnpg.io
+      kind: Cluster
+      namespace: tastebase
+      name: tastebase-db
+      jqPathExpressions:
+        - .spec.affinity
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
