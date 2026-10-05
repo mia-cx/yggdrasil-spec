@@ -3,7 +3,8 @@
 Postgres + pgvector for [tastebase](https://github.com/mia-cx/tastebase): an
 embedding database of music — CLAP audio embeddings and lyrics embeddings,
 one vector per audio window. CNPG `Cluster` `tastebase-db`, two instances on
-`workloads/critical` nodes, Longhorn storage.
+`workloads/critical` nodes, 50 GiB each on single-replica Longhorn
+(`longhorn-single`): CNPG already replicates between its instances.
 
 ## LAN endpoint
 

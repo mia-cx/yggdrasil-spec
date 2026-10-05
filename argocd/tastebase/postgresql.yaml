@@ -18,8 +18,8 @@ spec:
                 operator: Exists
 
   storage:
-    size: 20Gi
-    storageClass: longhorn
+    size: 50Gi
+    storageClass: longhorn-single
     resizeInUseVolumes: true
 
   resources:
