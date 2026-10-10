@@ -19,6 +19,7 @@ The import preserved existing authentication flows and brand assignments.
 Mia confirmed receipt of both a test email and an invitation on 10 October 2026.
 Enrollment with real devices still needs a pilot.
 Mandatory MFA on later sign-ins and other enrollment routes remain separate rollout decisions.
-The admin form and group assignment pass isolated tests; their live import still needs approval.
+Mia approved the admin form and group assignment update on 10 October 2026.
+Both are live; admins can invite from the dashboard and choose existing service groups.
 
 For dashboard instructions, configuration, and pilot checks, read [Hecate invitations](apps/docs/content/infrastructure/authentik-invitations.md).

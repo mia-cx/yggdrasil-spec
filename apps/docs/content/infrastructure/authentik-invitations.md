@@ -4,12 +4,12 @@ title: Hecate invitations
 
 # Hecate invitations
 
-Mia approved the flow, and we imported it into live Hecate on 10 October 2026.
-It runs on Authentik **2026.8.1**. The blueprint lives outside ArgoCD's watched paths.
+Mia approved both invitation blueprints, and we imported them into live Hecate on 10 October 2026.
+Hecate runs Authentik **2026.8.1**. The blueprints live outside ArgoCD's watched paths.
 Live stage and policy checks pass. The public flow rejects links without an invitation.
 Mia confirmed receipt of both a test email and an invitation on 10 October 2026.
 Enrollment with real devices remains a pilot check.
-The admin form and group assignment are prepared and tested in isolated Authentik; their live import is pending.
+Live checks confirm admin-only access to the form and dashboard tile.
 
 ## Account creation
 
@@ -42,9 +42,7 @@ enrollment flows. Adding this flow alone does not disable other registration pat
 
 ## Invite someone
 
-After importing both blueprints:
-
-1. Open **Invite someone** on your application dashboard, or `/if/flow/hecate-admin-invite/`.
+1. Open **Invite someone** on your application dashboard, or [open the form directly](https://id.mia.cx/if/flow/hecate-admin-invite/).
 2. Enter the email address and tick the service groups to grant.
 3. Select **Continue** to queue the invitation email. The next screen confirms the recipient.
 
