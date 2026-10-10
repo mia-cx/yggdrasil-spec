@@ -120,6 +120,7 @@ with transaction.atomic():
             "https://id.mia.cx/if/flow/hecate-invitation-enrollment/?itoken=")
         redirect = post(client, admin_url, component="ak-stage-prompt", email=address)
         assert redirect["final_redirect"] is True
+        assert redirect["to"] == "/if/admin/#/flow/stages/invitations", redirect
         assert client.get(admin_url).json()["component"] == "ak-stage-prompt"
         assert email.call_count == 1
         print("PASS: selected groups bind to one invitation; forged admin selection and repeated POSTs add nothing")
