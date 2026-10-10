@@ -45,6 +45,7 @@ enrollment flows. Adding this flow alone does not disable other registration pat
 1. Open **Invite someone** on your application dashboard, or [open the form directly](https://id.mia.cx/if/flow/hecate-admin-invite/).
 2. Enter the email address and tick the service groups to grant.
 3. Select **Continue** to queue the invitation email. The next screen confirms the recipient.
+4. Select **Continue** again to return to [Invitations](https://id.mia.cx/if/admin/#/flow/stages/invitations).
 
 The form is limited to active Authentik superusers. Ordinary users cannot see its tile or submit the form.
 All groups start unchecked. The choices are Nextcloud, Jellyfin, Immich, Vaultwarden, Pelican, Proxmox, Media Admin, and NetBird.
