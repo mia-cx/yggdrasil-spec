@@ -7,7 +7,8 @@ title: Hecate invitations
 Mia approved the flow, and we imported it into live Hecate on 10 October 2026.
 It runs on Authentik **2026.8.1**. The blueprint lives outside ArgoCD's watched paths.
 Live stage and policy checks pass. The public flow rejects links without an invitation.
-Actual email delivery and enrollment with real devices remain pilot checks.
+Mia confirmed receipt of both a test email and an invitation on 10 October 2026.
+Enrollment with real devices remains a pilot check.
 The admin form and group assignment are prepared and tested in isolated Authentik; their live import is pending.
 
 ## Account creation

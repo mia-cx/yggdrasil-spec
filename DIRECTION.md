@@ -16,7 +16,8 @@ The invitation holds those choices; the account receives them after MFA setup.
 
 Mia approved the original enrollment flow's live import on 10 October 2026.
 The import preserved existing authentication flows and brand assignments.
-Email delivery and enrollment with real devices still need a pilot.
+Mia confirmed receipt of both a test email and an invitation on 10 October 2026.
+Enrollment with real devices still needs a pilot.
 Mandatory MFA on later sign-ins and other enrollment routes remain separate rollout decisions.
 The admin form and group assignment pass isolated tests; their live import still needs approval.
 
