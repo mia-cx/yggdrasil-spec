@@ -171,7 +171,7 @@ entries:
                 ak_message("Email queuing failed. Submit the form again to retry.")
                 return False
         # Finish the flow normally so the next invitation starts with a fresh form.
-        request.http_request.session[SESSION_KEY_PLAN].context["redirect"] = "/if/admin/#/stages/invitation/invitations"
+        request.http_request.session[SESSION_KEY_PLAN].context["redirect"] = "/if/admin/#/flow/stages/invitations"
         return True
   - model: authentik_stages_prompt.promptstage
     id: invite-form
