@@ -73,7 +73,7 @@ kubectl apply -f argocd/authentik/ingressroute.yaml
 
 ### Invitations
 
-See [Hecate invitations](authentik-invitations.md) for the prepared email invitation
+See [Hecate invitations](authentik-invitations.md) for the live email invitation
 flow with account creation and a choice of TOTP or passkey enrollment.
 
 ### Initial Setup

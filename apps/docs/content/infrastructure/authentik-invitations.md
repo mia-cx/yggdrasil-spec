@@ -4,9 +4,10 @@ title: Hecate invitations
 
 # Hecate invitations
 
-Prepared for Authentik **2026.8.1**, the version pinned in this repository.
-The blueprint requires review and explicit approval before importing into live
-Hecate. It lives outside ArgoCD's watched paths.
+Mia approved the flow, and we imported it into live Hecate on 10 October 2026.
+It runs on Authentik **2026.8.1**. The blueprint lives outside ArgoCD's watched paths.
+Live stage and policy checks pass. The public flow rejects links without an invitation.
+Actual email delivery and enrollment with real devices remain pilot checks.
 
 ## Account creation
 
@@ -19,13 +20,12 @@ The invitation supplies the email address. The recipient cannot replace it.
 There is no second verification email. The password requires at least 12 characters.
 Passkeys require user verification and discoverable credentials; device and password-manager passkeys are allowed.
 
-## Prepare Hecate
+## Configuration
 
-Import `config/authentik/invitation-enrollment.yaml`
-through **Customization > Blueprints** after approval.
-It creates the `hecate-invitation-enrollment` flow and its own stages and policies.
-It does not replace a brand's authentication or enrollment flow, change existing
-SSO integrations, or grant service permissions.
+The imported `config/authentik/invitation-enrollment.yaml` creates the
+`hecate-invitation-enrollment` flow and its own stages and policies.
+The import preserved existing flows and brand assignments. Service permissions remain separate assignments.
+For a fresh instance, import the blueprint through **Customization > Blueprints** after review and approval.
 
 Before rollout, inspect the current authentication flow. Require TOTP or WebAuthn
 in its MFA validation stage before User Login. Set **Not configured action** to
@@ -38,7 +38,23 @@ enrollment flows. Adding this flow alone does not disable other registration pat
 
 ## Invite someone
 
-Once rollout is approved, set `AUTHENTIK_TOKEN` in your shell from an API token.
+In the admin dashboard:
+
+1. Open **Directory > Invitations** and create an invitation.
+2. Select **Hecate invitation enrollment**, enable **Single use**, and set a 48-hour expiry.
+3. Set **Custom attributes** to the recipient's email:
+
+```yaml
+email: person@example.com
+```
+
+4. Save, then use **Send via Email** with that same recipient and the default Invitation template.
+
+Create one invitation per person. A shared single-use link is not a batch invitation.
+
+### Email-only command
+
+Set `AUTHENTIK_TOKEN` in your shell from an API token.
 It needs permission to read flows and users, create invitations, and send their emails.
 
 ```bash
@@ -54,17 +70,6 @@ Authentik queues email asynchronously. A successful command means **queued**, no
 delivered. Check System Tasks and the recipient's inbox during the approved pilot.
 Verify the email link uses `https://id.mia.cx`, including correct forwarded scheme
 headers on the ingress.
-
-For the native admin UI, create an invitation under **Directory > Invitations**.
-Select `hecate-invitation-enrollment`, enable **Single use**, set a 48-hour expiry,
-and enter these custom attributes:
-
-```yaml
-email: person@example.com
-```
-
-Use **Send via Email** with that same recipient and the default Invitation template.
-Create one invitation per person. A shared single-use link is not a batch invitation.
 
 ## Interrupted setup
 
