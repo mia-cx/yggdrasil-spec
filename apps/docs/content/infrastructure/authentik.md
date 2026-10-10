@@ -71,6 +71,11 @@ kubectl apply -f argocd/authentik/ingressroute.yaml
 
 ## Configuration
 
+### Invitations
+
+See [Hecate invitations](authentik-invitations.md) for the prepared email invitation
+flow with account creation and a choice of TOTP or passkey enrollment.
+
 ### Initial Setup
 
 Retrieve the bootstrap password:
