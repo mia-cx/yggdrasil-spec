@@ -1,0 +1,174 @@
+# Import manually after review. This file is outside ArgoCD's watched paths.
+version: 1
+metadata:
+  name: Hecate invitation enrollment
+entries:
+  - model: authentik_flows.flow
+    id: enrollment
+    identifiers: { slug: hecate-invitation-enrollment }
+    attrs:
+      name: Hecate invitation enrollment
+      title: Create your account
+      designation: enrollment
+      authentication: require_unauthenticated
+      denied_action: message
+
+  # Check the link before showing the form, without consuming the invitation.
+  - model: authentik_policies_expression.expressionpolicy
+    id: valid-invitation
+    identifiers: { name: hecate-valid-invitation }
+    attrs:
+      expression: |
+        from uuid import UUID
+        from django.core.exceptions import ValidationError
+        from django.core.validators import validate_email
+        from authentik.flows.views.executor import SESSION_KEY_GET
+        from authentik.stages.invitation.models import Invitation
+
+        query = request.http_request.session.get(SESSION_KEY_GET, {})
+        try:
+            token = UUID(query.get("itoken", ""))
+            invitation = Invitation.objects.filter(pk=token).first()
+            if not invitation or not invitation.flow or invitation.flow.slug != "hecate-invitation-enrollment":
+                raise ValidationError("Invalid invitation")
+            validate_email(invitation.fixed_data.get("email", ""))
+        except (ValueError, ValidationError):
+            ak_message("This invitation is unavailable. Ask Mia for a new invitation.")
+            return False
+        return True
+  - model: authentik_policies.policybinding
+    identifiers: { target: !KeyOf enrollment, order: 0 }
+    attrs: { policy: !KeyOf valid-invitation }
+
+  - model: authentik_stages_prompt.prompt
+    id: name
+    identifiers: { name: hecate-invitation-name }
+    attrs:
+      { field_key: name, label: Name, type: text, required: true, order: 0 }
+  - model: authentik_stages_prompt.prompt
+    id: username
+    identifiers: { name: hecate-invitation-username }
+    attrs:
+      {
+        field_key: username,
+        label: Username,
+        type: username,
+        required: true,
+        order: 1,
+      }
+  - model: authentik_stages_prompt.prompt
+    id: password
+    identifiers: { name: hecate-invitation-password }
+    attrs:
+      {
+        field_key: password,
+        label: Password,
+        type: password,
+        required: true,
+        order: 2,
+      }
+  - model: authentik_stages_prompt.prompt
+    id: password-repeat
+    identifiers: { name: hecate-invitation-password-repeat }
+    attrs:
+      {
+        field_key: password_repeat,
+        label: Confirm password,
+        type: password,
+        required: true,
+        order: 3,
+      }
+  - model: authentik_policies_password.passwordpolicy
+    id: password-policy
+    identifiers: { name: hecate-invitation-password-policy }
+    attrs:
+      length_min: 12
+      error_message: Use a password with at least 12 characters.
+  - model: authentik_stages_prompt.promptstage
+    id: profile
+    identifiers: { name: hecate-invitation-profile }
+    attrs:
+      fields:
+        [!KeyOf name, !KeyOf username, !KeyOf password, !KeyOf password-repeat]
+      validation_policies: [!KeyOf password-policy]
+
+  # Native invitations enforce the email after form submission. GET-only email
+  # scanners cannot consume the link, and submitted email overrides cannot win.
+  - model: authentik_stages_invitation.invitationstage
+    id: invitation
+    identifiers: { name: hecate-invitation-accept }
+    attrs: { continue_flow_without_invitation: false }
+  - model: authentik_stages_user_write.userwritestage
+    id: create-user
+    identifiers: { name: hecate-invitation-create-user }
+    attrs:
+      user_creation_mode: always_create
+      create_users_as_inactive: true
+      user_type: internal
+      user_path_template: users/invited
+
+  - model: authentik_stages_authenticator_totp.authenticatortotpstage
+    id: totp
+    identifiers: { name: hecate-invitation-totp }
+    attrs: { friendly_name: Authenticator app, digits: 6 }
+  - model: authentik_stages_authenticator_webauthn.authenticatorwebauthnstage
+    id: passkey
+    identifiers: { name: hecate-invitation-passkey }
+    attrs:
+      friendly_name: Passkey
+      user_verification: required
+      resident_key_requirement: required
+      authenticator_attachment: null
+  - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
+    id: mfa
+    identifiers: { name: hecate-invitation-mfa }
+    attrs:
+      device_classes: [totp, webauthn]
+      not_configured_action: configure
+      configuration_stages: [!KeyOf passkey, !KeyOf totp]
+      webauthn_user_verification: required
+      last_auth_threshold: seconds=0
+
+  # A saved user is needed to register a device. Activate only after a confirmed
+  # device exists, so abandoning setup cannot yield a password-only account.
+  - model: authentik_policies_expression.expressionpolicy
+    id: activate
+    identifiers: { name: hecate-invitation-activate }
+    attrs:
+      expression: |
+        user = request.context.get("pending_user")
+        if not user or not (
+            ak_user_has_authenticator(user, "totp")
+            or ak_user_has_authenticator(user, "webauthn")
+        ):
+            return False
+        request.context["flow_plan"].context["prompt_data"] = {"is_active": True}
+        return True
+  - model: authentik_stages_user_write.userwritestage
+    id: activate-user
+    identifiers: { name: hecate-invitation-activate-user }
+    attrs: { user_creation_mode: never_create }
+  - model: authentik_stages_user_login.userloginstage
+    id: login
+    identifiers: { name: hecate-invitation-login }
+
+  - model: authentik_flows.flowstagebinding
+    identifiers: { target: !KeyOf enrollment, stage: !KeyOf profile, order: 10 }
+  - model: authentik_flows.flowstagebinding
+    identifiers:
+      { target: !KeyOf enrollment, stage: !KeyOf invitation, order: 20 }
+  - model: authentik_flows.flowstagebinding
+    identifiers:
+      { target: !KeyOf enrollment, stage: !KeyOf create-user, order: 30 }
+  - model: authentik_flows.flowstagebinding
+    identifiers: { target: !KeyOf enrollment, stage: !KeyOf mfa, order: 40 }
+  - model: authentik_flows.flowstagebinding
+    id: activation-binding
+    identifiers:
+      { target: !KeyOf enrollment, stage: !KeyOf activate-user, order: 50 }
+    attrs: { evaluate_on_plan: false, re_evaluate_policies: true }
+  - model: authentik_policies.policybinding
+    identifiers: { target: !KeyOf activation-binding, order: 0 }
+    attrs: { policy: !KeyOf activate }
+  - model: authentik_flows.flowstagebinding
+    identifiers: { target: !KeyOf enrollment, stage: !KeyOf login, order: 60 }
