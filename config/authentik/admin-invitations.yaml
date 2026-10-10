@@ -1,0 +1,225 @@
+# Import with invitation-enrollment.yaml after review. No ArgoCD auto-import.
+version: 1
+metadata:
+  name: Hecate admin invitations
+entries:
+  - model: authentik_flows.flow
+    id: admin-invite
+    identifiers: { slug: hecate-admin-invite }
+    attrs:
+      name: Hecate invite someone
+      title: Invite someone
+      designation: stage_configuration
+      authentication: require_authenticated
+      denied_action: message
+
+  - model: authentik_policies_expression.expressionpolicy
+    id: admin-only
+    identifiers: { name: hecate-invitation-admin-only }
+    attrs:
+      expression: |
+        return request.user.is_authenticated and request.user.is_active and request.user.is_superuser
+  - model: authentik_policies.policybinding
+    identifiers: { target: !KeyOf admin-invite, order: 0 }
+    attrs: { policy: !KeyOf admin-only }
+
+  - model: authentik_stages_prompt.prompt
+    id: email
+    identifiers: { name: hecate-admin-invitation-email }
+    attrs:
+      { field_key: email, label: Email, type: email, required: true, order: 0 }
+
+  # These are existing human service groups, not new permission definitions.
+  # Add a checkbox with field_key "group:<existing group name>" to extend the form.
+  - model: authentik_stages_prompt.prompt
+    id: nextcloud
+    identifiers: { name: hecate-admin-invitation-nextcloud }
+    attrs:
+      {
+        field_key: "group:Nextcloud",
+        label: Nextcloud,
+        type: checkbox,
+        required: false,
+        order: 1,
+      }
+  - model: authentik_stages_prompt.prompt
+    id: jellyfin
+    identifiers: { name: hecate-admin-invitation-jellyfin }
+    attrs:
+      {
+        field_key: "group:Jellyfin",
+        label: Jellyfin,
+        type: checkbox,
+        required: false,
+        order: 2,
+      }
+  - model: authentik_stages_prompt.prompt
+    id: immich
+    identifiers: { name: hecate-admin-invitation-immich }
+    attrs:
+      {
+        field_key: "group:Immich",
+        label: Immich,
+        type: checkbox,
+        required: false,
+        order: 3,
+      }
+  - model: authentik_stages_prompt.prompt
+    id: vaultwarden
+    identifiers: { name: hecate-admin-invitation-vaultwarden }
+    attrs:
+      {
+        field_key: "group:Vaultwarden",
+        label: Vaultwarden,
+        type: checkbox,
+        required: false,
+        order: 4,
+      }
+  - model: authentik_stages_prompt.prompt
+    id: pelican
+    identifiers: { name: hecate-admin-invitation-pelican }
+    attrs:
+      {
+        field_key: "group:Pelican",
+        label: Pelican,
+        type: checkbox,
+        required: false,
+        order: 5,
+      }
+  - model: authentik_stages_prompt.prompt
+    id: proxmox
+    identifiers: { name: hecate-admin-invitation-proxmox }
+    attrs:
+      {
+        field_key: "group:Proxmox",
+        label: Proxmox,
+        type: checkbox,
+        required: false,
+        order: 6,
+      }
+  - model: authentik_stages_prompt.prompt
+    id: media-admin
+    identifiers: { name: hecate-admin-invitation-media-admin }
+    attrs:
+      {
+        field_key: "group:Media Admin",
+        label: Media Admin,
+        type: checkbox,
+        required: false,
+        order: 7,
+      }
+  - model: authentik_stages_prompt.prompt
+    id: netbird
+    identifiers: { name: hecate-admin-invitation-netbird }
+    attrs:
+      {
+        field_key: "group:netbird-enroll",
+        label: NetBird,
+        type: checkbox,
+        required: false,
+        order: 8,
+      }
+
+  # Validation policies run only for submitted forms, never on a GET or planning.
+  # Roll back the invitation if email queuing fails.
+  - model: authentik_policies_expression.expressionpolicy
+    id: send-invite
+    identifiers: { name: hecate-admin-send-invitation }
+    attrs:
+      expression: |
+        from datetime import timedelta
+        from uuid import uuid4
+        from django.db import transaction
+        from django.utils.timezone import now
+        from authentik.core.models import Group, User
+        from authentik.flows.models import Flow
+        from authentik.flows.views.executor import SESSION_KEY_PLAN
+        from authentik.stages.invitation.models import Invitation
+
+        if not request.user.is_authenticated or not request.user.is_active or not request.user.is_superuser:
+            return False
+        data = request.context["prompt_data"]
+        email = data["email"]
+        if User.objects.filter(email__iexact=email).exists():
+            ak_message("An account already uses this email. Use account recovery instead.")
+            return False
+        names = [key.removeprefix("group:") for key, selected in data.items()
+                 if key.startswith("group:") and selected is True]
+        groups = list(Group.objects.filter(name__in=names))
+        if len(groups) != len(names):
+            ak_message("A selected group is unavailable. Ask Mia to update the invitation form.")
+            return False
+        flow = Flow.objects.filter(slug="hecate-invitation-enrollment").first()
+        if not flow:
+            ak_message("The enrollment flow is unavailable. Import it before sending invitations.")
+            return False
+        with transaction.atomic():
+            invitation = Invitation.objects.create(
+                name=f"invite-{uuid4()}", created_by=request.user, flow=flow,
+                single_use=True, expires=now() + timedelta(hours=48),
+                fixed_data={"email": email, "groups": [str(group.pk) for group in groups]},
+            )
+            if not ak_send_email(
+                address=email, subject="You have been invited to Hecate",
+                template="email/invitation.html",
+                context={
+                    "url": f"https://id.mia.cx/if/flow/{flow.slug}/?itoken={invitation.pk}",
+                    "expires": invitation.expires, "host": "id.mia.cx",
+                },
+            ):
+                transaction.set_rollback(True)
+                ak_message("Email queuing failed. Submit the form again to retry.")
+                return False
+        # Finish the flow normally so the next invitation starts with a fresh form.
+        request.http_request.session[SESSION_KEY_PLAN].context["redirect"] = "/if/admin/#/stages/invitation/invitations"
+        return True
+  - model: authentik_stages_prompt.promptstage
+    id: invite-form
+    identifiers: { name: hecate-admin-invitation-form }
+    attrs:
+      fields:
+        [
+          !KeyOf email,
+          !KeyOf nextcloud,
+          !KeyOf jellyfin,
+          !KeyOf immich,
+          !KeyOf vaultwarden,
+          !KeyOf pelican,
+          !KeyOf proxmox,
+          !KeyOf media-admin,
+          !KeyOf netbird,
+        ]
+      validation_policies: [!KeyOf send-invite]
+
+  - model: authentik_stages_prompt.prompt
+    id: queued
+    identifiers: { name: hecate-admin-invitation-queued }
+    attrs:
+      field_key: queued
+      label: Invitation
+      type: static
+      required: false
+      initial_value_expression: true
+      initial_value: |
+        from html import escape
+        return f"Invitation email queued for {escape(prompt_context['email'])}."
+  - model: authentik_stages_prompt.promptstage
+    id: result
+    identifiers: { name: hecate-admin-invitation-result }
+    attrs: { fields: [!KeyOf queued] }
+  - model: authentik_flows.flowstagebinding
+    identifiers:
+      { target: !KeyOf admin-invite, stage: !KeyOf invite-form, order: 10 }
+  - model: authentik_flows.flowstagebinding
+    identifiers:
+      { target: !KeyOf admin-invite, stage: !KeyOf result, order: 20 }
+  - model: authentik_core.application
+    id: invite-app
+    identifiers: { slug: hecate-invite }
+    attrs:
+      name: Invite someone
+      meta_launch_url: https://id.mia.cx/if/flow/hecate-admin-invite/
+      open_in_new_tab: false
+  - model: authentik_policies.policybinding
+    identifiers: { target: !KeyOf invite-app, order: 0 }
+    attrs: { policy: !KeyOf admin-only }

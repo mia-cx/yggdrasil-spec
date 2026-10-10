@@ -22,6 +22,7 @@ entries:
         from uuid import UUID
         from django.core.exceptions import ValidationError
         from django.core.validators import validate_email
+        from authentik.core.models import Group
         from authentik.flows.views.executor import SESSION_KEY_GET
         from authentik.stages.invitation.models import Invitation
 
@@ -32,6 +33,12 @@ entries:
             if not invitation or not invitation.flow or invitation.flow.slug != "hecate-invitation-enrollment":
                 raise ValidationError("Invalid invitation")
             validate_email(invitation.fixed_data.get("email", ""))
+            groups = invitation.fixed_data.get("groups", [])
+            if not isinstance(groups, list):
+                raise ValidationError("Invalid groups")
+            group_ids = {UUID(group) for group in groups if isinstance(group, str)}
+            if len(group_ids) != len(groups) or Group.objects.filter(pk__in=group_ids).count() != len(groups):
+                raise ValidationError("Unavailable groups")
         except (ValueError, ValidationError):
             ak_message("This invitation is unavailable. Ask Mia for a new invitation.")
             return False
@@ -136,13 +143,26 @@ entries:
     identifiers: { name: hecate-invitation-activate }
     attrs:
       expression: |
+        from authentik.core.models import Group
+
         user = request.context.get("pending_user")
         if not user or not (
             ak_user_has_authenticator(user, "totp")
             or ak_user_has_authenticator(user, "webauthn")
         ):
             return False
-        request.context["flow_plan"].context["prompt_data"] = {"is_active": True}
+        plan = request.context["flow_plan"]
+        invitation = plan.context.get("invitation")
+        if not invitation:
+            return False
+        # Read the stored invitation, never the recipient's merged input.
+        group_ids = invitation.fixed_data.get("groups", [])
+        groups = list(Group.objects.filter(pk__in=group_ids))
+        if len(groups) != len(group_ids):
+            ak_message("An invited group is unavailable. Ask Mia to restart your invitation.")
+            return False
+        plan.context["groups"] = groups
+        plan.context["prompt_data"] = {"is_active": True}
         return True
   - model: authentik_stages_user_write.userwritestage
     id: activate-user
