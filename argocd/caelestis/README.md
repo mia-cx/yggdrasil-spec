@@ -12,13 +12,16 @@ The frontend handles its public read-only WebSocket endpoint at `/api/v1/telemet
 HTTP redirects to HTTPS. The `caelestis-tls` certificate covers `caelest.is` and `*.caelest.is` and renews
 through the existing `letsencrypt-cloudflare` issuer.
 
-Images and chart come from the Caelestis server release `server-backend-0.9.0-frontend-0.7.1`.
-Values pin the GHCR digests of the semantic tags `0.9.0` (Bun backend) and `0.7.1` (frontend); the
-Application pins the chart to the same release tag. Both Yggdrasil nodes run the amd64 variant.
+The Bun backend is version `0.9.2` and the frontend is version `0.7.3`. Values pin their Docker Hub
+manifest digests; the Application pins the chart to release commit
+`a7f546b20e8677bd6c3cd5ea2ba99250c307fa67`. Both Yggdrasil nodes run the amd64 variant.
+The images are the checksummed artifacts from [release validation](https://github.com/mia-cx/Caelestis/actions/runs/38635742579),
+published by [the TAC recovery job](https://github.com/mia-cx/Caelestis/actions/runs/38921108963)
+after the original server publishing job failed.
 
 Provisioning:
 
-1. Publish the tested backend and frontend GHCR images and make the packages public.
+1. Publish the tested backend and frontend images and verify anonymous pulls from their registry.
    This deployment's backend image selects Bun.
 2. Give the existing Cloudflare token in `cert-manager` Zone Read and DNS Edit access to `caelest.is`.
    The DNS-only `tac.caelest.is` CNAME points to `yggdrasil.mia.cx`.

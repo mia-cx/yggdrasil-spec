@@ -1,14 +1,14 @@
-replicaCount: 0
+replicaCount: 1
 image:
-  repository: ghcr.io/mia-riezebos/caelestis-backend
-  tag: 0.9.0
-  digest: sha256:31e6e27935fd775caa6995b3c8393e028ddaaecd5f76114376a82e707bc74d00
+  repository: docker.io/miacx/caelestis-backend
+  tag: 0.9.2
+  digest: sha256:26ffee877aadc20ecec983a2a5887dd77a1c7412bc46bed01b26fa297fd0c721
   pullPolicy: IfNotPresent
 frontend:
   image:
-    repository: ghcr.io/mia-riezebos/caelestis-frontend
-    tag: 0.7.1
-    digest: sha256:93bb482fb1ae1e0404dc66cab47f388f120df98703a124a67090ffbcb157f619
+    repository: docker.io/miacx/caelestis-frontend
+    tag: 0.7.3
+    digest: sha256:dda06701a8c4d8a039884b64d527904b690bb0657d8a4bc20aeedc519c3a5540
     pullPolicy: IfNotPresent
 
 server:

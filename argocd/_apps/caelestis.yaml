@@ -7,8 +7,8 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: https://github.com/mia-riezebos/Caelestis.git
-      targetRevision: server-backend-0.9.0-frontend-0.7.1
+    - repoURL: https://github.com/mia-cx/Caelestis.git
+      targetRevision: a7f546b20e8677bd6c3cd5ea2ba99250c307fa67
       path: deploy/helm/caelestis
       helm:
         releaseName: tac
