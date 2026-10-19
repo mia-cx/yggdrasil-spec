@@ -6,15 +6,13 @@ The native `discord-mcp` Deployment runs the Discord OAuth relay from
 
 ## Cutover state
 
-The native workload is prepared alongside the old Athena Docker backend.
-The public IngressRoute still targets the selectorless `discord-mcp` Service,
-which forwards to Athena at `10.0.3.2:3000`. Keep that route until the OAuth
-credentials are entered and the native deployment is Ready.
+The public IngressRoute targets the native `discord-mcp-relay` Service.
+The OAuth credentials are saved and the deployment is Ready. Public health,
+OAuth discovery, and unauthenticated MCP challenges verify the cutover.
+The hostname and existing Traefik wildcard certificate are unchanged.
 
-Once Ready, verify discovery, health, and an unauthenticated MCP challenge.
-Then change `ingressroute.yaml` to target `discord-mcp-relay` and commit to main.
-The hostname and existing Traefik wildcard certificate do not change.
-Do not route traffic to a missing-secret pod.
+The old Athena Docker backend remains intact but receives no public traffic.
+Do not restore its PAT/OIDC route without an explicit recovery decision.
 
 ## Namespace secrets
 

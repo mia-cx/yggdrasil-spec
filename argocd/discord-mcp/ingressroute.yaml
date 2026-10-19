@@ -10,7 +10,7 @@ spec:
     - match: Host(`discord.mia.cx`)
       kind: Rule
       services:
-        - name: discord-mcp
+        - name: discord-mcp-relay
           port: 3000
   # The existing Traefik TLSStore supplies the *.mia.cx certificate.
   tls: {}
