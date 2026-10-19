@@ -1,7 +1,7 @@
 # Discord MCP deployment
 
 The native `discord-mcp` Deployment runs the Discord OAuth relay from
-`mia-cx/discord-mcp` main at `b7e419b`. Its image is pinned by digest in
+`mia-cx/discord-mcp` main. Its image is pinned by digest in
 `deployment.yaml`. The `discord-mcp-relay` Service selects its pod.
 
 ## Cutover state
@@ -22,14 +22,21 @@ Do not restore its PAT/OIDC route without an explicit recovery decision.
 
 Secrets live outside Git in namespace `discord-mcp`:
 
-| Secret               | Keys                                                     | Owner                                                                       |
-| -------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `discord-mcp-oauth`  | `DISCORD_OAUTH_CLIENT_ID`, `DISCORD_OAUTH_CLIENT_SECRET` | Enter from the existing Discord application using the setup wizard.         |
-| `discord-mcp-crypto` | `OAUTH_ENCRYPTION_KEY`                                   | Generated once during deployment; preserve it across restarts and upgrades. |
+| Secret               | Keys                                                                                       | Owner                                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `discord-mcp-oauth`  | `DISCORD_OAUTH_CLIENT_ID`, `DISCORD_OAUTH_CLIENT_SECRET`, `DISCORD_OAUTH_ALLOWED_USER_IDS` | Enter application credentials using the setup wizard; sync accepted Team members explicitly for the access list. |
+| `discord-mcp-crypto` | `OAUTH_ENCRYPTION_KEY`                                                                     | Generated once during deployment; preserve it across restarts and upgrades.                                      |
 
 Only the OAuth client secret needs hidden human input. The encryption key is
 32 random bytes encoded as base64. Changing it invalidates issued logins.
 Neither Secret contains an agent's Discord bot token.
+
+The live access list is an explicit snapshot of accepted members of the OAuth
+application's Discord developer Team. Check the application ID and accepted
+membership before updating it. Store only user IDs in the allowlist key, never
+the lookup bot token. Repeat the sync after Team changes and restart the
+Deployment. The relay enforces the list for new logins and existing credentials.
+An empty list denies everyone; never unset it or use `*` as a sync-failure fallback.
 
 In the existing Discord application, open OAuth2 and save this exact redirect:
 
