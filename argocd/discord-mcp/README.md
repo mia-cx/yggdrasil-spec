@@ -31,11 +31,12 @@ Only the OAuth client secret needs hidden human input. The encryption key is
 32 random bytes encoded as base64. Changing it invalidates issued logins.
 Neither Secret contains an agent's Discord bot token.
 
-The live access list is an explicit snapshot of accepted members of the OAuth
-application's Discord developer Team. Check the application ID and accepted
-membership before updating it. Store only user IDs in the allowlist key, never
-the lookup bot token. Repeat the sync after Team changes and restart the
-Deployment. The relay enforces the list for new logins and existing credentials.
+The live access list includes accepted members of the OAuth application's Discord
+developer Team and additional accounts Mia explicitly approves. Check the
+application ID and accepted membership for Team updates, preserving separately
+approved accounts. Store only user IDs in the allowlist key, never the lookup bot
+token. Repeat the sync after Team changes and restart the Deployment. The relay
+enforces the list for new logins and existing credentials.
 An empty list denies everyone; never unset it or use `*` as a sync-failure fallback.
 
 In the existing Discord application, open OAuth2 and save this exact redirect:
