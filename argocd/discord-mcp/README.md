@@ -11,6 +11,10 @@ The OAuth credentials are saved and the deployment is Ready. Public health,
 OAuth discovery, and unauthenticated MCP challenges verify the cutover.
 The hostname and existing Traefik wildcard certificate are unchanged.
 
+Access logging is disabled for this route. Shared Traefik logging retains request
+headers, which would otherwise persist OAuth and bot credentials. Keep this
+route-local override when updating the service; other routes are unaffected.
+
 The old Athena Docker backend remains intact but receives no public traffic.
 Do not restore its PAT/OIDC route without an explicit recovery decision.
 

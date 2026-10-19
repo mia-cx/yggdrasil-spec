@@ -9,6 +9,9 @@ spec:
   routes:
     - match: Host(`discord.mia.cx`)
       kind: Rule
+      # Shared access logs retain headers, including per-request bot credentials.
+      observability:
+        accessLogs: false
       services:
         - name: discord-mcp-relay
           port: 3000
