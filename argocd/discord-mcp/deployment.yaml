@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discord-mcp
+  namespace: discord-mcp
+spec:
+  # Authorization-code replay protection is process-local. Never overlap replicas.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: discord-mcp-relay
+  template:
+    metadata:
+      labels:
+        app: discord-mcp-relay
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: server
+          # discord-mcp main b7e419b: Discord OAuth plus caller-supplied bot credentials.
+          image: ghcr.io/mia-cx/discord-mcp/server@sha256:c998f2b3363a6110005f84e7126d8949affeda4aa6ce13dccdf93c81108bf017
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: MCP_TRANSPORT
+              value: http
+            - name: MCP_HTTP_HOST
+              value: 0.0.0.0
+            - name: MCP_HTTP_PORT
+              value: "3000"
+            - name: PUBLIC_BASE_URL
+              value: https://discord.mia.cx
+            - name: ALLOWED_HOSTS
+              value: discord.mia.cx,discord-mcp-relay,localhost,127.0.0.1
+            - name: DISCORD_MCP_REST_TIMEOUT_MS
+              value: "15000"
+            - name: DISCORD_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: discord-mcp-oauth
+                  key: DISCORD_OAUTH_CLIENT_ID
+            - name: DISCORD_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: discord-mcp-oauth
+                  key: DISCORD_OAUTH_CLIENT_SECRET
+            - name: OAUTH_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: discord-mcp-crypto
+                  key: OAUTH_ENCRYPTION_KEY
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: discord.mia.cx
+            periodSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: discord.mia.cx
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: discord.mia.cx
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+# Prepare the native workload without redirecting public traffic before credentials are saved.
+apiVersion: v1
+kind: Service
+metadata:
+  name: discord-mcp-relay
+  namespace: discord-mcp
+spec:
+  selector:
+    app: discord-mcp-relay
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
