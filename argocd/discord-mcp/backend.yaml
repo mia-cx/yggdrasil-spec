@@ -1,0 +1,32 @@
+# Athena's socket relay forwards this LAN address to the loopback-only Docker port.
+apiVersion: v1
+kind: Service
+metadata:
+  name: discord-mcp
+  namespace: discord-mcp
+spec:
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+---
+# ArgoCD excludes EndpointSlices globally. Apply this file during bootstrap;
+# see README.md rather than changing the shared exclusion for one backend.
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: discord-mcp-athena
+  namespace: discord-mcp
+  labels:
+    kubernetes.io/service-name: discord-mcp
+    endpointslice.kubernetes.io/managed-by: yggdrasil-spec
+addressType: IPv4
+endpoints:
+  - addresses:
+      - "10.0.3.2"
+    conditions:
+      ready: true
+ports:
+  - name: http
+    port: 3000
+    protocol: TCP

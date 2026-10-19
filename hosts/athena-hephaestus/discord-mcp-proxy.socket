@@ -1,0 +1,10 @@
+[Unit]
+Description=LAN listener for Discord MCP ingress from k3s
+
+[Socket]
+ListenStream=10.0.3.2:3000
+FreeBind=yes
+NoDelay=true
+
+[Install]
+WantedBy=sockets.target

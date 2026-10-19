@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: discord-mcp
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+    targetRevision: main
+    path: argocd/discord-mcp
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: discord-mcp
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

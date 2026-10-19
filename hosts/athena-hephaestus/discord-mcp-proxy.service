@@ -1,0 +1,9 @@
+[Unit]
+Description=Forward Discord MCP ingress to its loopback Docker port
+Requires=discord-mcp-proxy.socket
+After=discord-mcp-proxy.socket
+
+[Service]
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd 127.0.0.1:3000
+Restart=on-failure
+NoNewPrivileges=yes
