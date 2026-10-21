@@ -35,11 +35,13 @@ Each private service gets its own enforceable network destination:
   service's entrypoint port, and the backend admits only the Traefik pods
   (see `networkpolicy.yaml` here and `argocd/canary/networkpolicy.yaml`).
 
-| Service        | Entrypoint port | ClusterIP   | Resource group     | Permission group   | Hostname      |
-| -------------- | --------------- | ----------- | ------------------ | ------------------ | ------------- |
-| canary         | 10001           | 10.43.0.128 | res-canary         | svc-canary         | canary.mia.cx |
-| open-wearables | 10002           | 10.43.0.129 | res-open-wearables | svc-open-wearables | health.mia.cx |
-| oddreads       | 10003           | 10.43.0.130 | res-oddreads       | svc-oddreads       | slop.mia.cx   |
+| Service        | Entrypoint port | ClusterIP   | Resource group     | Permission group   | Hostname         |
+| -------------- | --------------- | ----------- | ------------------ | ------------------ | ---------------- |
+| canary         | 10001           | 10.43.0.128 | res-canary         | svc-canary         | canary.mia.cx    |
+| open-wearables | 10002           | 10.43.0.129 | res-open-wearables | svc-open-wearables | health.mia.cx    |
+| oddreads       | 10003           | 10.43.0.130 | res-oddreads       | svc-oddreads       | slop.mia.cx      |
+| cliproxyapi    | 10004           | 10.43.0.131 | res-cliproxyapi    | svc-cliproxyapi    | cpa.mia.cx       |
+| cpa-usage      | 10005           | 10.43.0.132 | res-cpa-usage      | svc-cliproxyapi    | cpa-usage.mia.cx |
 
 ## Adding a service
 

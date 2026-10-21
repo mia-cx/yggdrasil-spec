@@ -21,6 +21,7 @@ providers:
       - canary
       - open-wearables
       - oddreads
+      - cliproxyapi
     allowCrossNamespace: false
   kubernetesIngress:
     enabled: false
@@ -46,6 +47,16 @@ ports:
     protocol: TCP
   oddreads:
     port: 10003
+    expose:
+      default: false
+    protocol: TCP
+  cliproxyapi:
+    port: 10004
+    expose:
+      default: false
+    protocol: TCP
+  cpa-usage:
+    port: 10005
     expose:
       default: false
     protocol: TCP

@@ -1,0 +1,49 @@
+# Only private Traefik reaches the dashboards/API. Keeper additionally needs
+# CPA's authenticated management and RESP usage endpoints on the same port.
+# Egress stays on the ordinary cluster gateway, with no NetBird sidecar/exit.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cliproxyapi
+  namespace: cliproxyapi
+spec:
+  podSelector:
+    matchLabels:
+      app: cliproxyapi
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-internal
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: traefik-internal-traefik-internal
+        - podSelector:
+            matchLabels:
+              app: cpa-usage-keeper
+      ports:
+        - protocol: TCP
+          port: 8317
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cpa-usage-keeper
+  namespace: cliproxyapi
+spec:
+  podSelector:
+    matchLabels:
+      app: cpa-usage-keeper
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-internal
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: traefik-internal-traefik-internal
+      ports:
+        - protocol: TCP
+          port: 8080
