@@ -1,0 +1,22 @@
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-pelican
+  namespace: traefik-internal
+spec:
+  name: res-pelican
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: pelican
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: pelican
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-pelican
