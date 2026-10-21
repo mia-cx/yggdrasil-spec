@@ -25,4 +25,7 @@ PR #61 is merged. ArgoCD owns the healthy CPA and customised Keeper workloads,
 persistent Longhorn volumes, private routes and dedicated `svc-cliproxyapi`
 permission. Its JWT-issued NetBird group grants TCP 443 to both destinations;
 private DNS maps `cpa.mia.cx` and `cpa-usage.mia.cx` to their dedicated Services.
-Mia's provider sign-ins and a real usage request remain to validate.
+Claude and Codex provider sign-ins work. Hephaestus has a dedicated primary
+NetBird machine identity scoped to CPA, independent of its Repair client.
+Its `claude-cpa` and `codex-cpa` launchers pass real provider requests while
+preserving the ordinary client commands and host DNS/gateway.
