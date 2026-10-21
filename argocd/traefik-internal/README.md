@@ -78,6 +78,12 @@ the JWT-issued `svc-cliproxyapi` group:
   `svc-cliproxyapi`, search domain off, apex A records pointing at
   `10.43.0.131` and `10.43.0.132`, respectively.
 
+Added on 2026-10-21, when Nextcloud and Pelican went mesh-only, in the same
+shape: policies `nextcloud` and `pelican` (source `svc-<name>`, destination
+`res-<name>`, unidirectional TCP 443), and DNS zones `cloud.mia.cx` →
+`10.43.0.133` and `panel.mia.cx` → `10.43.0.134`, distributed to the matching
+`svc-<name>` group.
+
 NetBird 0.79.0 doesn't push DNS zone or record changes to connected peers.
 The server logs `failed to get network map data ... context canceled`, and
 peers keep their old DNS settings until they reconnect
