@@ -42,6 +42,7 @@ spec:
               mkdir -p /data/auths /data/plugins /data/cache /data/static
               if [ ! -f /data/config.yaml ]; then
                 cp /bootstrap/config.yaml /data/config.yaml
+                chmod 600 /data/config.yaml
               fi
           securityContext:
             allowPrivilegeEscalation: false
