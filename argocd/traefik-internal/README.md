@@ -87,6 +87,12 @@ shape: policies `nextcloud` and `pelican` (source `svc-<name>`, destination
 `10.43.0.133` and `panel.mia.cx` → `10.43.0.134`, distributed to the matching
 `svc-<name>` group.
 
+Added on 2026-10-21, when Tdarr and Tunarr went mesh-only for the Node.js
+security release, in the same shape: policies `tdarr` and `tunarr`, and DNS
+zones `tdarr.yggdrasil.mia.cx` → `10.43.0.136` and `tunarr.yggdrasil.mia.cx`
+→ `10.43.0.137`. Immich's policy and `photos.mia.cx` zone wait for the
+JWT-issued `svc-immich` group, which the first permitted sign-in creates.
+
 NetBird 0.79.0 doesn't push DNS zone or record changes to connected peers.
 The server logs `failed to get network map data ... context canceled`, and
 peers keep their old DNS settings until they reconnect
