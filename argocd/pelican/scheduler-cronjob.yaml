@@ -33,7 +33,7 @@ spec:
                         operator: Exists
           containers:
             - name: scheduler
-              image: ghcr.io/pelican-dev/panel:latest@sha256:45cecf27176630ac628ebc9badc0ad273bdaa9bf441648c363dd8daeb9cc3bff
+              image: ghcr.io/pelican/panel:v1.0.0-rc.1@sha256:6cdbd674c14221b760da980cbeecab1982cdd1d38746ae204306fe156b19239d
               imagePullPolicy: IfNotPresent
               command:
                 - php
