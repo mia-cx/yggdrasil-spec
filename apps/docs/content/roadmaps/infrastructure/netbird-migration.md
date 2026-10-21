@@ -44,7 +44,7 @@ Run for 14 days. Self-recovering glitches are acceptable; log and fix anything n
 
 Mia approves each group as one decision, per the [order and rollback decision](https://github.com/mia-cx/yggdrasil-spec/issues/14#issuecomment-5848465635):
 
-1. Prowlarr as canary, then Sonarr, Radarr, Lidarr, Readarr, SABnzbd, qBittorrent, Tdarr, Tunarr.
+1. Prowlarr as canary, then Sonarr, Radarr, Lidarr, Readarr, SABnzbd, qBittorrent, Tunarr.
 2. Longhorn, ArgoCD, Proxmox. kubectl and Repair remain recovery paths.
 3. Pelican and Hermes: Wings browser WebSockets and signed transfers, the SFTP alias, and Hermes callbacks per the [routing contract](https://github.com/mia-cx/yggdrasil-spec/issues/12#issuecomment-5743163099).
 4. Seerr.

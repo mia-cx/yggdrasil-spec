@@ -29,7 +29,7 @@ Low-level cluster components run **unconstrained** so the scheduler can place th
 | Label                   | Nodes        | Workloads |
 | ----------------------- | ------------ | --------- |
 | `workloads/critical`    | antheia, athena | Authentik, Vaultwarden, cert-manager (controller), cloudflare-ddns |
-| `workloads/media`       | athena only  | Jellyfin, Tunarr, Tdarr; also required for *arr + downloaders |
+| `workloads/media`       | athena only  | Jellyfin, Tunarr; also required for *arr + downloaders |
 | `workloads/downloading` | athena only  | SABnzbd, Sonarr, Radarr, Prowlarr, etc. |
 | `workloads/cloud-data`  | athena only  | Immich, Nextcloud (photo/library and file sync) |
 

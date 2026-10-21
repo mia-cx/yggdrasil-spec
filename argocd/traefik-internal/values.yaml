@@ -85,11 +85,6 @@ ports:
       respondingTimeouts:
         readTimeout: 0
         writeTimeout: 0
-  tdarr:
-    port: 10009
-    expose:
-      default: false
-    protocol: TCP
   tunarr:
     port: 10010
     expose:
