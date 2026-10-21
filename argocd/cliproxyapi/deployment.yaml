@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cliproxyapi
+  namespace: cliproxyapi
+spec:
+  replicas: 1
+  # Config and OAuth refresh state have one writer on an RWO volume.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: cliproxyapi
+  template:
+    metadata:
+      labels:
+        app: cliproxyapi
+    spec:
+      # Normal pod networking and CoreDNS keep upstream egress off NetBird.
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/critical
+                    operator: Exists
+      initContainers:
+        - name: seed-config
+          image: eceasy/cli-proxy-api:v8.0.36@sha256:bc25ea627f675e4e3714f48d3b1dd22643e45464dcc1c3c7c5688f51bc6b49fb
+          command: [/bin/sh, -ec]
+          args:
+            - |
+              umask 077
+              mkdir -p /data/auths /data/plugins /data/cache /data/static
+              if [ ! -f /data/config.yaml ]; then
+                cp /bootstrap/config.yaml /data/config.yaml
+                chmod 600 /data/config.yaml
+              fi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: bootstrap
+              mountPath: /bootstrap
+              readOnly: true
+      containers:
+        - name: proxy
+          image: eceasy/cli-proxy-api:v8.0.36@sha256:bc25ea627f675e4e3714f48d3b1dd22643e45464dcc1c3c7c5688f51bc6b49fb
+          command: [/CLIProxyAPI/CLIProxyAPI]
+          args: [--config, /data/config.yaml]
+          workingDir: /data
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: http
+              containerPort: 8317
+          env:
+            - name: HOME
+              value: /data
+            - name: XDG_CACHE_HOME
+              value: /data/cache
+            - name: MANAGEMENT_STATIC_PATH
+              value: /data/static
+            - name: TZ
+              value: Europe/Amsterdam
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: cliproxyapi-data
+        - name: bootstrap
+          secret:
+            secretName: cliproxyapi-bootstrap
+            defaultMode: 0440
+            items:
+              - key: config.yaml
+                path: config.yaml
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cliproxyapi
+  namespace: cliproxyapi
+spec:
+  selector:
+    app: cliproxyapi
+  ports:
+    - name: http
+      port: 8317
+      targetPort: http

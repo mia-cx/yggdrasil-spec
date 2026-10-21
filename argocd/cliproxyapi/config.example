@@ -1,0 +1,38 @@
+# Seeded from the private cliproxyapi-bootstrap Secret once. Subsequent UI
+# configuration changes live on the PVC and survive ArgoCD reconciliation.
+config-version: 8
+server:
+  host: 0.0.0.0
+  port: 8317
+  # Cluster pod CIDR; ingress policy limits actual proxies to private Traefik.
+  trusted-proxies: [10.42.0.0/16]
+management:
+  allow-remote: true
+  secret-key: REPLACE_MANAGEMENT_KEY
+  disable-auto-update-panel: true
+access:
+  api-keys:
+    - REPLACE_CLIENT_KEY
+oauth:
+  auth-dir: /data/auths
+routing:
+  session-affinity: true
+requests:
+  proxy-url: ""
+observability:
+  logs:
+    logging-to-file: false
+    request-log: false
+    error-logs-max-files: 10
+  usage:
+    usage-statistics-enabled: true
+    redis-usage-queue-retention-seconds: 3600
+plugins:
+  enabled: true
+  dir: /data/plugins
+  store-sources:
+    - https://raw.githubusercontent.com/UNICKCHENG/cliproxyapi-plugins/main/registry.json
+  configs:
+    auth-cursor:
+      enabled: true
+      proxy-url: ""

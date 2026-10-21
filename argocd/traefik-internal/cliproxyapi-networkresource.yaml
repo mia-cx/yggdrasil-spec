@@ -1,0 +1,45 @@
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-cliproxyapi
+  namespace: traefik-internal
+spec:
+  name: res-cliproxyapi
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: cliproxyapi
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: cliproxyapi
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-cliproxyapi
+---
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-cpa-usage
+  namespace: traefik-internal
+spec:
+  name: res-cpa-usage
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: cpa-usage
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: cpa-usage
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-cpa-usage

@@ -1,0 +1,52 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cliproxyapi
+  namespace: cliproxyapi
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
+spec:
+  entryPoints: [cliproxyapi]
+  routes:
+    - match: Host(`cpa.mia.cx`)
+      kind: Rule
+      # Shared access logs retain headers; avoid persisting provider secrets.
+      observability:
+        accessLogs: false
+      services:
+        - name: cliproxyapi
+          port: 8317
+  tls:
+    secretName: cpa-tls
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cpa-usage-keeper
+  namespace: cliproxyapi
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
+spec:
+  entryPoints: [cpa-usage]
+  routes:
+    - match: Host(`cpa-usage.mia.cx`)
+      kind: Rule
+      observability:
+        accessLogs: false
+      services:
+        - name: cpa-usage-keeper
+          port: 8080
+  tls:
+    secretName: cpa-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: cpa-tls
+  namespace: cliproxyapi
+spec:
+  secretName: cpa-tls
+  dnsNames: [cpa.mia.cx, cpa-usage.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer

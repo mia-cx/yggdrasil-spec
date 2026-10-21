@@ -1,0 +1,103 @@
+# Only private Traefik reaches the dashboards/API. Keeper additionally needs
+# CPA's authenticated management and RESP usage endpoints on the same port.
+# Egress stays on the ordinary cluster gateway, with no NetBird sidecar/exit.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cliproxyapi
+  namespace: cliproxyapi
+spec:
+  podSelector:
+    matchLabels:
+      app: cliproxyapi
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-internal
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: traefik-internal-traefik-internal
+        - podSelector:
+            matchLabels:
+              app: cpa-usage-keeper
+      ports:
+        - protocol: TCP
+          port: 8317
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cpa-usage-keeper
+  namespace: cliproxyapi
+spec:
+  podSelector:
+    matchLabels:
+      app: cpa-usage-keeper
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-internal
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: traefik-internal-traefik-internal
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: cliproxyapi
+      ports:
+        - protocol: TCP
+          port: 8317
+---
+# Shared outbound boundary: CoreDNS and public web endpoints only. This also
+# prevents management api-call and plugins from reaching LAN/mesh workloads.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cpa-public-egress
+  namespace: cliproxyapi
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values: [cliproxyapi, cpa-usage-keeper]
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 0.0.0.0/8
+              - 10.0.0.0/8
+              - 100.64.0.0/10
+              - 127.0.0.0/8
+              - 169.254.0.0/16
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 224.0.0.0/4
+              - 240.0.0.0/4
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443

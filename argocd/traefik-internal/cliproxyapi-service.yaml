@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cliproxyapi
+  namespace: traefik-internal
+spec:
+  type: ClusterIP
+  clusterIP: 10.43.0.131
+  ports:
+    - name: https
+      port: 443
+      targetPort: cliproxyapi
+  selector:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik-internal-traefik-internal
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cpa-usage
+  namespace: traefik-internal
+spec:
+  type: ClusterIP
+  clusterIP: 10.43.0.132
+  ports:
+    - name: https
+      port: 443
+      targetPort: cpa-usage
+  selector:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik-internal-traefik-internal

@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cpa-usage-keeper
+  namespace: cliproxyapi
+spec:
+  replicas: 1
+  # SQLite and its scheduled backups share one RWO filesystem.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: cpa-usage-keeper
+  template:
+    metadata:
+      labels:
+        app: cpa-usage-keeper
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workloads/critical
+                    operator: Exists
+      containers:
+        - name: keeper
+          # Upstream v2.0.0 plus the overview patch built from ea07cbd.
+          image: ghcr.io/mia-cx/yggdrasil-cpa-usage-keeper@sha256:ca934df02bfd5358e0fc0572fb4d320d54fe13519677bfb87316209fda590fe7
+          # Bypass the image's root-only chown/su-exec entrypoint; fsGroup owns data.
+          command: [/app/cpa-usage-keeper]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: CPA_BASE_URL
+              value: http://cliproxyapi:8317
+            - name: CPA_PUBLIC_URL
+              value: https://cpa.mia.cx
+            - name: CPA_MANAGEMENT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cliproxyapi-bootstrap
+                  key: management-key
+            - name: LOGIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cliproxyapi-bootstrap
+                  key: keeper-password
+            - name: AUTH_ENABLED
+              value: "true"
+            # Ingress policy admits only private Traefik from this pod CIDR.
+            - name: TRUSTED_PROXY_CIDRS
+              value: 10.42.0.0/16
+            - name: WORK_DIR
+              value: /data
+            - name: TZ
+              value: Europe/Amsterdam
+            - name: LOG_FILE_ENABLED
+              value: "false"
+          startupProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: keeper-data
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cpa-usage-keeper
+  namespace: cliproxyapi
+spec:
+  selector:
+    app: cpa-usage-keeper
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
