@@ -1,3 +1,89 @@
+diff --git a/web/src/components/dashboard/DashboardToolbar.module.scss b/web/src/components/dashboard/DashboardToolbar.module.scss
+index a397593..11660c1 100644
+--- a/web/src/components/dashboard/DashboardToolbar.module.scss
++++ b/web/src/components/dashboard/DashboardToolbar.module.scss
+@@ -91,7 +91,9 @@
+ .pageTrigger[aria-expanded='true'] > svg { transform: rotate(180deg); }
+ .currentPage { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 32px; padding: 5px 12px; line-height: 20px; font-weight: 650; overflow-wrap: anywhere; }
+ .collapse { color: var(--toolbar-muted); }
+-.refresh { color: var(--toolbar-action); }
++// A labelled pill while the toolbar has room; an outlined icon once it runs out.
++.refresh { width: auto; flex-basis: auto; height: 46px; gap: 8px; padding: 0 18px 0 16px; border: 1px solid var(--toolbar-line); border-radius: 999px; color: var(--toolbar-action); font-size: 13px; font-weight: 600; }
++.refreshLabel { white-space: nowrap; }
+ .host[data-compact='true'] {
+   .dock { width: max-content; }
+   .tabs { display: none; }
+@@ -100,27 +102,28 @@
+ 
+ .filters { display: flex; align-items: center; flex: 0 0 auto; width: max-content; max-width: 100%; min-width: 0; gap: 10px; }
+ .filter, .filter > div { flex: 0 1 auto; width: max-content; max-width: 100%; min-width: 0; }
+-.filter [data-time-range-shell] { width: max-content; max-width: 100%; min-height: 44px; padding: 0; grid-template-columns: minmax(0, 1fr); border: 0; background: transparent; box-shadow: none; }
+-.filter { display: flex; align-items: center; gap: 8px; }
+-.filter [data-dashboard-filter-caption] { flex: 0 0 auto; font-size: 10px; color: var(--toolbar-muted); font-weight: 500; white-space: nowrap; }
++.filter [data-time-range-shell] { width: max-content; max-width: 100%; min-height: 0; padding: 0; gap: 12px; grid-template-columns: minmax(0, 1fr); border: 0; background: transparent; box-shadow: none; }
++// Each filter is a captioned pill holding its control's own outlined pill.
++.filter { display: flex; align-items: center; gap: 12px; padding: 3px 3px 3px 16px; border: 1px solid var(--toolbar-line); border-radius: 999px; }
++.filter [data-dashboard-filter-caption], .filter [data-time-range-shell] > span { flex: 0 0 auto; font-size: 12px; line-height: 1; color: var(--toolbar-muted); font-weight: 500; white-space: nowrap; }
+ // 只修饰顶部控件的触发区域；Select/TimeRangeControl 的 portal 弹层仍由原组件管理。
+ .filter > div > button, .filter [data-time-range-trigger] {
+   justify-content: center;
+   width: max-content;
+   max-width: 100%;
+   height: auto;
+-  min-height: 44px;
+-  padding: 4px 8px;
+-  gap: 6px;
+-  border-radius: 22px;
+-  border-color: transparent;
++  min-height: 38px;
++  padding: 4px 14px;
++  gap: 8px;
++  border: 1px solid var(--toolbar-line);
++  border-radius: 999px;
+   background: transparent;
+   box-shadow: none;
+   color: var(--toolbar-ink);
+   font: inherit;
+-  font-size: 12px;
++  font-size: 13px;
+   font-weight: 400;
+-  &:hover, &[aria-expanded='true'] { border-color: transparent; background: var(--toolbar-hover); box-shadow: none; }
++  &:hover, &[aria-expanded='true'] { border-color: var(--toolbar-line); background: var(--toolbar-hover); box-shadow: none; }
+   &:focus { box-shadow: none; outline: none; }
+   &:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
+ }
+@@ -129,7 +132,7 @@
+ .filter [data-dashboard-filter-value], .filter [data-time-range-value] { flex: 0 1 auto; min-width: 0; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; line-height: 1.4; font-weight: 600; color: var(--text-primary); }
+ 
+ .host[data-flow='split'] {
+-  .dock { display: grid; width: 100%; grid-template-columns: 44px minmax(0, 1fr) 44px; grid-template-areas: 'collapse navigation refresh' 'filters filters filters'; gap: 4px var(--toolbar-gap); border-radius: 24px; }
++  .dock { display: grid; width: 100%; grid-template-columns: 44px minmax(0, 1fr) auto; grid-template-areas: 'collapse navigation refresh' 'filters filters filters'; gap: 4px var(--toolbar-gap); border-radius: 24px; }
+   .collapse { grid-area: collapse; }
+   .tabs, .pageTrigger { grid-area: navigation; }
+   .pageTrigger { justify-self: start; }
+@@ -171,6 +174,10 @@
+ @container (max-width: 1100px) {
+   .tab { padding-inline: 8px; }
+   .filter [data-dashboard-filter-caption], .filter [data-time-range-shell] > span { display: none; }
++  .filter { padding: 0; border-color: transparent; }
++  .filter > div > button, .filter [data-time-range-trigger] { min-height: 44px; }
++  .refresh { width: 44px; flex-basis: 44px; height: 44px; padding: 0; }
++  .refreshLabel { display: none; }
+ }
+ @container (max-width: 900px) {
+   .dock { --toolbar-inset: 12px; --toolbar-gap: 8px; }
+diff --git a/web/src/components/dashboard/DashboardToolbar.tsx b/web/src/components/dashboard/DashboardToolbar.tsx
+index 661e535..1a84183 100644
+--- a/web/src/components/dashboard/DashboardToolbar.tsx
++++ b/web/src/components/dashboard/DashboardToolbar.tsx
+@@ -226,6 +226,7 @@ export function DashboardToolbar<T extends string>({ items, activeId, onNavigate
+         </div>}
+         <button type="button" className={styles.refresh} data-dashboard-refresh aria-label={t('usage_stats.refresh')} aria-busy={refreshing} title={t('usage_stats.refresh')} disabled={refreshDisabled || refreshing} onClick={onRefresh}>
+           {refreshing ? <LoadingSpinner size={16} /> : <IconRefreshCw size={16} aria-hidden="true" />}
++          <span className={styles.refreshLabel}>{t('usage_stats.refresh')}</span>
+         </button>
+       </div>
+         {menuOpen && <div ref={menuRef} id={menuId} className={styles.pageMenu} data-dashboard-page-menu role="menu" aria-label={t('usage_stats.tabs_aria_label')} onKeyDown={(event) => {
 diff --git a/web/src/components/usage/DailyAverageCard.tsx b/web/src/components/usage/DailyAverageCard.tsx
 index b451d4e..365ab37 100644
 --- a/web/src/components/usage/DailyAverageCard.tsx
@@ -102,12 +188,12 @@ index b451d4e..365ab37 100644
    );
  }
 diff --git a/web/src/components/usage/StatCards.tsx b/web/src/components/usage/StatCards.tsx
-index 197661a..f1094c8 100644
+index 197661a..9340336 100644
 --- a/web/src/components/usage/StatCards.tsx
 +++ b/web/src/components/usage/StatCards.tsx
 @@ -1,14 +1,6 @@
 -import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
-+import { useMemo, type CSSProperties, type ReactNode } from 'react';
++import { useMemo, type ReactNode } from 'react';
  import { useTranslation } from 'react-i18next';
  import { Line } from './charts/UsageChart';
 -import {
@@ -121,12 +207,10 @@ index 197661a..f1094c8 100644
  import {
    calculateCacheReadRate,
    formatCompactNumber,
-@@ -18,17 +10,15 @@ import {
- } from '@/utils/usage';
+@@ -19,16 +11,13 @@ import {
  import { sparklineOptions } from '@/utils/usage/chartConfig';
  import type { UsageOverviewPayload, UsagePayload } from './hooks/useUsageData';
--import type { SparklineBundle } from './hooks/useSparklines';
-+import { SPARKLINE_COLORS, type SparklineBundle } from './hooks/useSparklines';
+ import type { SparklineBundle } from './hooks/useSparklines';
 +import { formatComparisonBucket } from './usageComparisonData';
  import { buildDailyAverageMetrics, DailyAverageCard } from './DailyAverageCard';
  import styles from '@/pages/UsagePage.module.scss';
@@ -135,13 +219,13 @@ index 197661a..f1094c8 100644
    key: string;
    label: string;
 -  icon: ReactNode;
-   accent: string;
+-  accent: string;
 -  accentSoft: string;
 -  accentBorder: string;
    value: string;
    meta?: ReactNode;
    trend: SparklineBundle | null;
-@@ -49,15 +39,26 @@ export interface StatCardsProps {
+@@ -49,15 +38,26 @@ export interface StatCardsProps {
    };
  }
  
@@ -169,7 +253,7 @@ index 197661a..f1094c8 100644
  const safeNumber = (value: unknown): number => {
    const parsed = Number(value);
    return Number.isFinite(parsed) ? parsed : 0;
-@@ -71,6 +72,30 @@ const calculateSuccessRate = (usageSnapshot: UsagePayload | null): number | null
+@@ -71,6 +71,30 @@ const calculateSuccessRate = (usageSnapshot: UsagePayload | null): number | null
    return (Math.max(safeNumber(usageSnapshot?.success_count), 0) / totalRequests) * 100;
  };
  
@@ -200,7 +284,7 @@ index 197661a..f1094c8 100644
  export function buildStatCardMetrics({ usage }: { usage: UsageOverviewPayload | null }): StatCardMetrics {
    // overview 运行态和旧测试夹具的 snapshot 位置不同，这里统一后再计算请求成功率。
    const usageSnapshot = (usage?.usage ?? usage) as UsagePayload | null;
-@@ -80,7 +105,7 @@ export function buildStatCardMetrics({ usage }: { usage: UsageOverviewPayload |
+@@ -80,7 +104,7 @@ export function buildStatCardMetrics({ usage }: { usage: UsageOverviewPayload |
      return {
        requestStats,
        tokenBreakdown: { cacheReadTokens: 0, cacheCreationTokens: 0, reasoningTokens: 0 },
@@ -209,7 +293,7 @@ index 197661a..f1094c8 100644
        cacheReadRateStats: { cacheReadRate: null, cacheReadTokens: 0, inputTokens: 0 },
        totalCost: 0,
        costAvailable: false,
-@@ -90,6 +115,7 @@ export function buildStatCardMetrics({ usage }: { usage: UsageOverviewPayload |
+@@ -90,6 +114,7 @@ export function buildStatCardMetrics({ usage }: { usage: UsageOverviewPayload |
    const cacheReadTokens = Math.max(safeNumber(usage.summary.cache_read_tokens), 0);
    const cacheCreationTokens = Math.max(safeNumber(usage.summary.cache_creation_tokens), 0);
    const inputTokens = Math.max(safeNumber(usage.summary.input_tokens), 0);
@@ -217,7 +301,7 @@ index 197661a..f1094c8 100644
  
    return {
      requestStats,
-@@ -103,6 +129,8 @@ export function buildStatCardMetrics({ usage }: { usage: UsageOverviewPayload |
+@@ -103,6 +128,8 @@ export function buildStatCardMetrics({ usage }: { usage: UsageOverviewPayload |
        tpm: usage.summary.tpm ?? 0,
        requestCount: Math.max(safeNumber(usageSnapshot?.total_requests), 0),
        tokenCount: Math.max(safeNumber(usageSnapshot?.total_tokens), 0),
@@ -226,7 +310,7 @@ index 197661a..f1094c8 100644
      },
      cacheReadRateStats: {
        cacheReadRate: calculateCacheReadRate({ inputTokens, cacheReadTokens }),
-@@ -121,206 +149,104 @@ export function StatCards({
+@@ -121,206 +148,105 @@ export function StatCards({
    reserveDailyAverage,
    sparklines,
  }: StatCardsProps) {
@@ -245,6 +329,13 @@ index 197661a..f1094c8 100644
 -    const frame = window.requestAnimationFrame(() => setDailyAverageExpanded(shouldExpandDailyAverage));
 -    return () => window.cancelAnimationFrame(frame);
 -  }, [shouldExpandDailyAverage]);
++  // Sparse traffic averages well under one request a minute; keep its significant digits instead of rounding to 0.
++  const formatRate = (value: number) => (
++    value > 0 && value < 1
++      ? new Intl.NumberFormat(i18n.language, { maximumSignificantDigits: 3 }).format(value)
++      : formatPerMinuteValue(value)
++  );
++
 +  const describeRate = (peak: SeriesPeak | null, formatPeak: (value: number) => string) => {
 +    if (loading) return '-';
 +    if (!peak) return t('usage_stats.stat_rate_average');
@@ -258,12 +349,12 @@ index 197661a..f1094c8 100644
    const statsCards: StatCardData[] = [
      {
        key: 'requests',
-       label: t('usage_stats.total_requests'),
+-      label: t('usage_stats.total_requests'),
 -      icon: <IconSatellite size={16} />,
 -      accent: '#3b82f6',
 -      accentSoft: 'rgba(59, 130, 246, 0.18)',
 -      accentBorder: 'rgba(59, 130, 246, 0.34)',
-+      accent: SPARKLINE_COLORS.requests.border,
++      label: t('usage_stats.stat_label_requests'),
        value: loading ? '-' : (usageSnapshot?.total_requests ?? 0).toLocaleString(),
 -      meta: (
 -        <>
@@ -290,12 +381,12 @@ index 197661a..f1094c8 100644
      },
      {
        key: 'tokens',
-       label: t('usage_stats.total_tokens'),
+-      label: t('usage_stats.total_tokens'),
 -      icon: <IconDiamond size={16} />,
 -      accent: '#8b5cf6',
 -      accentSoft: 'rgba(139, 92, 246, 0.18)',
 -      accentBorder: 'rgba(139, 92, 246, 0.35)',
-+      accent: SPARKLINE_COLORS.tokens.border,
++      label: t('usage_stats.stat_label_tokens'),
        value: loading ? '-' : formatCompactNumber(usageSnapshot?.total_tokens ?? 0),
 -      meta: (
 -        <>
@@ -322,48 +413,50 @@ index 197661a..f1094c8 100644
      },
      {
        key: 'rpm',
-       label: t('usage_stats.rpm'),
+-      label: t('usage_stats.rpm'),
 -      icon: <IconTimer size={16} />,
 -      accent: '#22c55e',
 -      accentSoft: 'rgba(34, 197, 94, 0.18)',
 -      accentBorder: 'rgba(34, 197, 94, 0.32)',
-+      accent: SPARKLINE_COLORS.rpm.border,
-       value: loading ? '-' : formatPerMinuteValue(rateStats.rpm),
+-      value: loading ? '-' : formatPerMinuteValue(rateStats.rpm),
 -      meta: (
 -        <span className={styles.statMetaItem}>
 -          {t('usage_stats.total_requests')}:{' '}
 -          {loading ? '-' : rateStats.requestCount.toLocaleString()}
 -        </span>
 -      ),
-+      meta: describeRate(rateStats.rpmPeak, formatPerMinuteValue),
++      label: t('usage_stats.stat_label_rpm'),
++      value: loading ? '-' : formatRate(rateStats.rpm),
++      meta: describeRate(rateStats.rpmPeak, formatRate),
        trend: sparklines.rpm,
      },
      {
        key: 'tpm',
-       label: t('usage_stats.tpm'),
+-      label: t('usage_stats.tpm'),
 -      icon: <IconTrendingUp size={16} />,
 -      accent: '#f97316',
 -      accentSoft: 'rgba(249, 115, 22, 0.18)',
 -      accentBorder: 'rgba(249, 115, 22, 0.32)',
-+      accent: SPARKLINE_COLORS.tpm.border,
-       value: loading ? '-' : formatPerMinuteValue(rateStats.tpm),
+-      value: loading ? '-' : formatPerMinuteValue(rateStats.tpm),
 -      meta: (
 -        <span className={styles.statMetaItem}>
 -          {t('usage_stats.total_tokens')}:{' '}
 -          {loading ? '-' : formatCompactNumber(rateStats.tokenCount)}
 -        </span>
 -      ),
++      label: t('usage_stats.stat_label_tpm'),
++      value: loading ? '-' : formatRate(rateStats.tpm),
 +      meta: describeRate(rateStats.tpmPeak, formatCompactNumber),
        trend: sparklines.tpm,
      },
      {
        key: 'cache-read-rate',
-       label: t('usage_stats.cache_rate'),
+-      label: t('usage_stats.cache_rate'),
 -      icon: <IconPercent size={16} />,
 -      accent: '#14b8a6',
 -      accentSoft: 'rgba(20, 184, 166, 0.18)',
 -      accentBorder: 'rgba(20, 184, 166, 0.34)',
-+      accent: SPARKLINE_COLORS.cacheReadRate.border,
++      label: t('usage_stats.stat_label_cache_rate'),
        value: loading || cacheReadRateStats.cacheReadRate === null ? '-' : `${formatFixedTwoDecimals(cacheReadRateStats.cacheReadRate)}%`,
 -      meta: (
 -        <>
@@ -385,12 +478,12 @@ index 197661a..f1094c8 100644
      },
      {
        key: 'cost',
-       label: t('usage_stats.total_cost'),
+-      label: t('usage_stats.total_cost'),
 -      icon: <IconDollarSign size={16} />,
 -      accent: '#f59e0b',
 -      accentSoft: 'rgba(245, 158, 11, 0.18)',
 -      accentBorder: 'rgba(245, 158, 11, 0.32)',
-+      accent: SPARKLINE_COLORS.cost.border,
++      label: t('usage_stats.stat_label_cost'),
        value: loading ? '-' : formatUsd(totalCost),
 -      meta: (
 -        <>
@@ -461,7 +554,7 @@ index 197661a..f1094c8 100644
 +    <section className={styles.statsSection} aria-label={t('usage_stats.tab_overview')}>
 +      <div className={styles.statsGrid}>
 +        {statsCards.map((card) => (
-+          <div key={card.key} className={styles.statCell} style={{ '--accent': card.accent } as CSSProperties}>
++          <div key={card.key} className={styles.statCell}>
 +            <span className={styles.statCellLabel}>{card.label}</span>
 +            <strong className={styles.statCellValue}>{card.value}</strong>
 +            <p className={styles.statCellMeta}>{card.meta}</p>
@@ -481,11 +574,70 @@ index 197661a..f1094c8 100644
 +    </section>
    );
  }
+diff --git a/web/src/components/usage/hooks/test/useSparklines.test.ts b/web/src/components/usage/hooks/test/useSparklines.test.ts
+index 0544ff7..2b2a259 100644
+--- a/web/src/components/usage/hooks/test/useSparklines.test.ts
++++ b/web/src/components/usage/hooks/test/useSparklines.test.ts
+@@ -90,6 +90,47 @@ describe('buildUsageSparklineSeries', () => {
+   });
+ });
+ 
++describe('buildUsageSparklineSeries across the selected range', () => {
++  // 2026-10-21 05:25 in Amsterdam (UTC+2).
++  const nowMs = Date.parse('2026-10-21T05:25:00+02:00');
++  const sparse = (buckets: string[]): UsageOverviewPayload => ({
++    ...usageWithBackendSeries,
++    timezone: 'Europe/Amsterdam',
++    series: {
++      buckets,
++      requests: buckets.map(() => 7),
++      tokens: buckets.map(() => 70),
++      rpm: buckets.map(() => 0.1),
++      tpm: buckets.map(() => 1),
++      cost: buckets.map(() => 0.5),
++      cache_read_rate: buckets.map(() => 90),
++    },
++  });
++  const ninetyMergedDays = Array.from({ length: 90 }, (_, index) => new Date(Date.UTC(2025, 9, 21) + index * 4 * 86_400_000).toISOString().slice(0, 10));
++
++  it.each([
++    { name: 'a 30-day range with traffic only today', range: { range: '30d' }, buckets: ['2026-10-21'], first: '2026-09-21', count: 31, realAt: [30] },
++    { name: 'a 24-hour range with traffic in one hour', range: { range: '24h' }, buckets: ['2026-10-21T04:00:00+02:00'], first: '2026-10-20T03:00:00.000Z', count: 25, realAt: [23] },
++    { name: 'today up to the current hour', range: { range: 'today' }, buckets: ['2026-10-21T01:00:00+02:00', '2026-10-21T04:00:00+02:00'], first: '2026-10-20T22:00:00.000Z', count: 6, realAt: [1, 4] },
++    { name: 'all of yesterday', range: { range: 'yesterday' }, buckets: ['2026-10-20T12:00:00+02:00'], first: '2026-10-19T22:00:00.000Z', count: 24, realAt: [12] },
++    { name: 'a custom five-hour range', range: { range: 'custom', unit: 'hour', start: '2026-10-21T00:00:00+02:00', end: '2026-10-21T04:00:00+02:00' }, buckets: ['2026-10-21T02:00:00+02:00'], first: '2026-10-20T22:00:00.000Z', count: 5, realAt: [2] },
++    // The backend already lists every day of long custom ranges, merged to 90 points; filling would invent days between them.
++    { name: 'a merged year-long range', range: { range: 'custom', unit: 'day', start: '2025-10-21', end: '2026-10-21' }, buckets: ninetyMergedDays, first: '2025-10-21', count: 90, realAt: ninetyMergedDays.map((_, index) => index) },
++  ] as const)('draws $name with quiet buckets at zero', ({ range, buckets, first, count, realAt }) => {
++    const series = buildUsageSparklineSeries({ usage: sparse([...buckets]), range: { ...range }, nowMs });
++
++    expect(series.labels).toHaveLength(count);
++    expect(series.labels[0]).toBe(first);
++    series.labels.forEach((_, index) => {
++      const real = (realAt as readonly number[]).includes(index);
++      expect(series.requests[index]).toBe(real ? 7 : 0);
++      expect(series.cost[index]).toBe(real ? 0.5 : 0);
++      // No traffic means no input tokens, so the cache rate is undefined rather than zero.
++      expect(series.cacheReadRate[index]).toBe(real ? 90 : null);
++    });
++  });
++});
++
+ it('keeps the last successful sparkline while a refresh is pending', () => {
+   function Probe() {
+     const { tokensSparkline } = useSparklines({ usage: usageWithBackendSeries, loading: true });
 diff --git a/web/src/components/usage/hooks/useSparklines.ts b/web/src/components/usage/hooks/useSparklines.ts
-index eb59d03..0812f24 100644
+index eb59d03..614fe7d 100644
 --- a/web/src/components/usage/hooks/useSparklines.ts
 +++ b/web/src/components/usage/hooks/useSparklines.ts
-@@ -8,9 +8,10 @@ export interface SparklineData {
+@@ -1,4 +1,6 @@
+ import { useCallback, useMemo } from 'react';
++import type { UsageRangeRequest } from '@/lib/types';
++import { useThemeStore } from '@/stores';
+ import type { UsageOverviewPayload } from './useUsageData';
+ 
+ export interface SparklineData {
+@@ -8,9 +10,10 @@ export interface SparklineData {
        data: Array<number | null>;
        borderColor: string;
        backgroundColor: string;
@@ -498,9 +650,20 @@ index eb59d03..0812f24 100644
        borderWidth: number;
      }
    ];
-@@ -45,14 +46,16 @@ export interface UsageSparklineSeries {
+@@ -23,6 +26,8 @@ export interface SparklineBundle {
+ export interface UseSparklinesOptions {
+   usage: UsageOverviewPayload | null;
+   loading: boolean;
++  /** The range the usage was loaded for; quiet buckets inside it are drawn as zero. */
++  range?: UsageRangeRequest;
  }
  
+ export interface UseSparklinesReturn {
+@@ -44,15 +49,21 @@ export interface UsageSparklineSeries {
+   cost: number[];
+ }
+ 
++// One warm accent for every metric, tuned per theme so the thin stroke keeps its contrast.
  export const SPARKLINE_COLORS = {
 -  requests: { border: '#3b82f6', background: 'rgba(59, 130, 246, 0.18)' },
 -  tokens: { border: '#8b5cf6', background: 'rgba(139, 92, 246, 0.18)' },
@@ -508,44 +671,240 @@ index eb59d03..0812f24 100644
 -  tpm: { border: '#f97316', background: 'rgba(249, 115, 22, 0.18)' },
 -  cacheReadRate: { border: '#14b8a6', background: 'rgba(20, 184, 166, 0.18)' },
 -  cost: { border: '#f59e0b', background: 'rgba(245, 158, 11, 0.18)' },
-+  requests: { border: '#3b82f6', background: 'rgba(59, 130, 246, 0.1)' },
-+  tokens: { border: '#8b5cf6', background: 'rgba(139, 92, 246, 0.1)' },
-+  rpm: { border: '#22c55e', background: 'rgba(34, 197, 94, 0.1)' },
-+  tpm: { border: '#f97316', background: 'rgba(249, 115, 22, 0.1)' },
-+  cacheReadRate: { border: '#14b8a6', background: 'rgba(20, 184, 166, 0.1)' },
-+  cost: { border: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)' },
++  dark: { border: '#d9b47e', background: 'rgba(217, 180, 126, 0.12)' },
++  light: { border: '#9a6b2f', background: 'rgba(154, 107, 47, 0.1)' },
  } as const;
  
-+const SPARKLINE_END_DOT_RADIUS = 3;
++const SPARKLINE_END_DOT_RADIUS = 2.5;
++const HOUR_MS = 60 * 60 * 1000;
++const DAY_MS = 24 * HOUR_MS;
++const DAILY_BUCKET = /^\d{4}-\d{2}-\d{2}$/;
++const BUCKET_OFFSET = /(?:Z|[+-]\d{2}:\d{2})$/;
++const ROLLING_RANGE = /^(\d+)([hd])$/;
++// Mirrors usageOverviewSeriesMaxPoints: longer day ranges arrive merged, and filling between merged points would invent days.
++const MAX_FILLED_DAILY_BUCKETS = 90;
 +
  const normalizeSparklineNumber = (value: unknown): number => {
    const parsed = Number(value);
    return Number.isFinite(parsed) ? Math.max(parsed, 0) : 0;
-@@ -102,6 +105,8 @@ export function useSparklines({ usage, loading }: UseSparklinesOptions): UseSpar
-       if (initialLoading || !input?.data?.length) {
+@@ -65,99 +76,150 @@ const normalizeNullableSparklineNumber = (value: unknown): number | null => {
+   return normalizeSparklineNumber(value);
+ };
+ 
+-export function buildUsageSparklineSeries({ usage }: Omit<UseSparklinesOptions, 'loading'>): UsageSparklineSeries {
+-  if (!usage?.series) {
+-    return { labels: [], requests: [], tokens: [], rpm: [], tpm: [], cacheReadRate: [], cost: [] };
++const addDays = (date: string, days: number): string => {
++  const [year, month, day] = date.split('-').map(Number);
++  return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
++};
++
++/**
++ * Lists every bucket the range covers, in order, merged with the buckets the backend returned.
++ * The backend only returns buckets that saw traffic, so a sparse series would otherwise draw
++ * one lonely point instead of a quiet baseline. Returns null when the window cannot be resolved.
++ */
++export function listRangeBuckets(
++  buckets: string[],
++  range: UsageRangeRequest,
++  timeZone: string | undefined,
++  nowMs: number,
++): string[] | null {
++  if (!buckets.length) return null;
++  let dateKey: (ms: number) => string;
++  try {
++    const formatter = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' });
++    dateKey = (ms) => formatter.format(ms);
++  } catch {
++    return null;
+   }
+ 
+-  const labels = usage.series.buckets ?? [];
+-  if (!labels.length) {
++  const today = dateKey(nowMs);
++  const rolling = ROLLING_RANGE.exec(range.range);
++  const rollingStartMs = rolling ? nowMs - Number(rolling[1]) * (rolling[2] === 'h' ? HOUR_MS : DAY_MS) : null;
++  const firstDate = range.range === 'today' ? today
++    : range.range === 'yesterday' ? addDays(today, -1)
++    : range.range === 'custom' && range.unit === 'day' ? range.start
++    : rollingStartMs !== null ? dateKey(rollingStartMs)
++    : range.start && dateKey(Date.parse(range.start));
++  const lastDate = range.range === 'yesterday' ? addDays(today, -1)
++    : range.range === 'custom' && range.unit === 'day' && range.end && range.end < today ? range.end
++    : range.range === 'custom' && range.unit === 'hour' && range.end ? dateKey(Date.parse(range.end))
++    : today;
++  if (!firstDate || firstDate > lastDate) return null;
++
++  if (DAILY_BUCKET.test(buckets[0])) {
++    const expected: string[] = [];
++    for (let date = firstDate; date <= lastDate && expected.length <= MAX_FILLED_DAILY_BUCKETS; date = addDays(date, 1)) {
++      expected.push(date);
++    }
++    if (expected.length > MAX_FILLED_DAILY_BUCKETS) return null;
++    return [...new Set([...expected, ...buckets])].sort();
++  }
++
++  // Hourly keys carry the server's UTC offset, which places the window's midnights.
++  const offset = BUCKET_OFFSET.exec(buckets[0])?.[0];
++  const phaseMs = Date.parse(buckets[0]);
++  if (!offset || !Number.isFinite(phaseMs)) return null;
++  const midnight = (date: string) => Date.parse(`${date}T00:00:00${offset}`);
++  const startMs = rollingStartMs
++    ?? (range.range === 'custom' && range.unit === 'hour' && range.start ? Date.parse(range.start) : midnight(firstDate));
++  const endMs = range.range === 'custom' && range.unit === 'hour' && range.end
++    ? Date.parse(range.end)
++    : Math.min(nowMs, midnight(addDays(lastDate, 1)) - 1);
++  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || startMs > endMs) return null;
++
++  const byTime = new Map(buckets.map((bucket) => [Date.parse(bucket), bucket]));
++  const firstHourMs = startMs - ((((startMs - phaseMs) % HOUR_MS) + HOUR_MS) % HOUR_MS);
++  for (let hourMs = firstHourMs; hourMs <= endMs; hourMs += HOUR_MS) {
++    if (!byTime.has(hourMs)) byTime.set(hourMs, new Date(hourMs).toISOString());
++  }
++  return [...byTime.entries()].sort(([a], [b]) => a - b).map(([, bucket]) => bucket);
++}
++
++export function buildUsageSparklineSeries({
++  usage,
++  range,
++  nowMs = Date.now(),
++}: Pick<UseSparklinesOptions, 'usage' | 'range'> & { nowMs?: number }): UsageSparklineSeries {
++  const buckets = usage?.series?.buckets ?? [];
++  if (!usage?.series || !buckets.length) {
+     return { labels: [], requests: [], tokens: [], rpm: [], tpm: [], cacheReadRate: [], cost: [] };
+   }
+ 
++  const series = usage.series;
++  const labels = (range && listRangeBuckets(buckets, range, usage.timezone, nowMs)) || buckets;
++  const indexOf = new Map(buckets.map((bucket, index) => [bucket, index]));
++  // A bucket without traffic has zero of every count; its cache rate is undefined, not zero.
++  const pick = (values: unknown[] | undefined) => labels.map((label) => {
++    const index = indexOf.get(label);
++    return index === undefined ? 0 : normalizeSparklineNumber(values?.[index]);
++  });
++
+   return {
+     labels,
+-    requests: labels.map((_, index) => normalizeSparklineNumber(usage.series?.requests?.[index])),
+-    tokens: labels.map((_, index) => normalizeSparklineNumber(usage.series?.tokens?.[index])),
+-    rpm: labels.map((_, index) => normalizeSparklineNumber(usage.series?.rpm?.[index])),
+-    tpm: labels.map((_, index) => normalizeSparklineNumber(usage.series?.tpm?.[index])),
+-    cacheReadRate: labels.map((_, index) => normalizeNullableSparklineNumber(usage.series?.cache_read_rate?.[index])),
+-    cost: labels.map((_, index) => normalizeSparklineNumber(usage.series?.cost?.[index])),
++    requests: pick(series.requests),
++    tokens: pick(series.tokens),
++    rpm: pick(series.rpm),
++    tpm: pick(series.tpm),
++    cacheReadRate: labels.map((label) => {
++      const index = indexOf.get(label);
++      return index === undefined ? null : normalizeNullableSparklineNumber(series.cache_read_rate?.[index]);
++    }),
++    cost: pick(series.cost),
+   };
+ }
+ 
+-export function useSparklines({ usage, loading }: UseSparklinesOptions): UseSparklinesReturn {
++export function useSparklines({ usage, loading, range }: UseSparklinesOptions): UseSparklinesReturn {
+   const initialLoading = loading && !usage;
++  const isDark = useThemeStore((state) => state.resolvedTheme) === 'dark';
+   const series = useMemo(
+-    () => buildUsageSparklineSeries({ usage }),
+-    [usage]
++    () => buildUsageSparklineSeries({ usage, range }),
++    [usage, range]
+   );
+ 
+   const buildSparkline = useCallback(
+-    (
+-      input: { labels: string[]; data: Array<number | null> },
+-      color: string,
+-      backgroundColor: string
+-    ): SparklineBundle | null => {
+-      if (initialLoading || !input?.data?.length) {
++    (data: Array<number | null>): SparklineBundle | null => {
++      if (initialLoading || !data.length) {
          return null;
        }
++      const color = SPARKLINE_COLORS[isDark ? 'dark' : 'light'];
 +      // Only the latest bucket with a value gets a dot, marking where the line ends.
-+      const lastIndex = input.data.reduce<number>((last, value, index) => (value === null ? last : index), -1);
++      const lastIndex = data.reduce<number>((last, value, index) => (value === null ? last : index), -1);
        return {
          data: {
-           labels: input.labels,
-@@ -110,10 +115,11 @@ export function useSparklines({ usage, loading }: UseSparklinesOptions): UseSpar
-               data: input.data,
-               borderColor: color,
-               backgroundColor,
+-          labels: input.labels,
++          labels: series.labels,
+           datasets: [
+             {
+-              data: input.data,
+-              borderColor: color,
+-              backgroundColor,
 -              fill: true,
 -              tension: 0.45,
 -              pointRadius: 0,
 -              borderWidth: 2
++              data,
++              borderColor: color.border,
++              backgroundColor: color.background,
 +              fill: 'start',
 +              tension: 0,
-+              pointRadius: input.data.map((_, index) => (index === lastIndex ? SPARKLINE_END_DOT_RADIUS : 0)),
-+              pointBackgroundColor: color,
++              pointRadius: data.map((_, index) => (index === lastIndex ? SPARKLINE_END_DOT_RADIUS : 0)),
++              pointBackgroundColor: color.border,
 +              borderWidth: 1.5
              }
            ]
          }
+       };
+     },
+-    [initialLoading]
+-  );
+-
+-  const requestsSparkline = useMemo(
+-    () => buildSparkline({ labels: series.labels, data: series.requests }, SPARKLINE_COLORS.requests.border, SPARKLINE_COLORS.requests.background),
+-    [buildSparkline, series.labels, series.requests]
+-  );
+-
+-  const tokensSparkline = useMemo(
+-    () => buildSparkline({ labels: series.labels, data: series.tokens }, SPARKLINE_COLORS.tokens.border, SPARKLINE_COLORS.tokens.background),
+-    [buildSparkline, series.labels, series.tokens]
+-  );
+-
+-  const rpmSparkline = useMemo(
+-    () => buildSparkline({ labels: series.labels, data: series.rpm }, SPARKLINE_COLORS.rpm.border, SPARKLINE_COLORS.rpm.background),
+-    [buildSparkline, series.labels, series.rpm]
+-  );
+-
+-  const tpmSparkline = useMemo(
+-    () => buildSparkline({ labels: series.labels, data: series.tpm }, SPARKLINE_COLORS.tpm.border, SPARKLINE_COLORS.tpm.background),
+-    [buildSparkline, series.labels, series.tpm]
++    [initialLoading, isDark, series.labels]
+   );
+ 
+-  const cacheReadRateSparkline = useMemo(
+-    () => buildSparkline({ labels: series.labels, data: series.cacheReadRate }, SPARKLINE_COLORS.cacheReadRate.border, SPARKLINE_COLORS.cacheReadRate.background),
+-    [buildSparkline, series.cacheReadRate, series.labels]
+-  );
+-
+-  const costSparkline = useMemo(
+-    () => buildSparkline({ labels: series.labels, data: series.cost }, SPARKLINE_COLORS.cost.border, SPARKLINE_COLORS.cost.background),
+-    [buildSparkline, series.labels, series.cost]
+-  );
+-
+-  return {
+-    requestsSparkline,
+-    tokensSparkline,
+-    rpmSparkline,
+-    tpmSparkline,
+-    cacheReadRateSparkline,
+-    costSparkline
+-  };
++  return useMemo(() => ({
++    requestsSparkline: buildSparkline(series.requests),
++    tokensSparkline: buildSparkline(series.tokens),
++    rpmSparkline: buildSparkline(series.rpm),
++    tpmSparkline: buildSparkline(series.tpm),
++    cacheReadRateSparkline: buildSparkline(series.cacheReadRate),
++    costSparkline: buildSparkline(series.cost),
++  }), [buildSparkline, series]);
+ }
 diff --git a/web/src/components/usage/test/DailyAverageCard.test.tsx b/web/src/components/usage/test/DailyAverageCard.test.tsx
 index f0faf1c..1ae09cf 100644
 --- a/web/src/components/usage/test/DailyAverageCard.test.tsx
@@ -618,10 +977,10 @@ index 3c2d1bb..2d9f2ae 100644
 +  });
 +});
 diff --git a/web/src/i18n/index.ts b/web/src/i18n/index.ts
-index 50e7d59..955a7c4 100644
+index 50e7d59..f917a51 100644
 --- a/web/src/i18n/index.ts
 +++ b/web/src/i18n/index.ts
-@@ -230,11 +230,19 @@ const resources = {
+@@ -230,11 +230,25 @@ const resources = {
          overview_realtime_dimension_auth_files: 'Auth Files',
          overview_realtime_dimension_ai_providers: 'AI Provider',
          overview_realtime_load_failed: 'Failed to load realtime overview',
@@ -642,11 +1001,17 @@ index 50e7d59..955a7c4 100644
 +        stat_rate_peak_on: 'average, peak {{value}} on {{when}}',
 +        stat_rate_peak_at: 'average, peak {{value}} at {{when}}',
 +        stat_cache_meta: '{{read}} of {{input}} input',
++        stat_label_requests: 'Requests',
++        stat_label_tokens: 'Tokens',
++        stat_label_rpm: 'Requests per minute',
++        stat_label_tpm: 'Tokens per minute',
++        stat_label_cache_rate: 'Cache rate',
++        stat_label_cost: 'Cost',
 +        cost_priced_only: 'priced models only, some have no price',
          total_requests: 'Total Requests',
          success_requests: 'Success',
          failed_requests: 'Failed',
-@@ -1179,10 +1187,18 @@ const resources = {
+@@ -1179,10 +1193,24 @@ const resources = {
          overview_realtime_dimension_ai_providers: 'AI 提供商',
          overview_realtime_load_failed: '实时概览加载失败',
          daily_average: '每日平均',
@@ -665,11 +1030,17 @@ index 50e7d59..955a7c4 100644
 +        stat_rate_peak_on: '平均值，峰值 {{value}}（{{when}}）',
 +        stat_rate_peak_at: '平均值，峰值 {{value}}（{{when}}）',
 +        stat_cache_meta: '输入 {{input}} 中命中缓存 {{read}}',
++        stat_label_requests: '请求',
++        stat_label_tokens: 'Token',
++        stat_label_rpm: '每分钟请求',
++        stat_label_tpm: '每分钟 Token',
++        stat_label_cache_rate: '缓存率',
++        stat_label_cost: '费用',
 +        cost_priced_only: '仅统计已定价模型，部分模型未定价',
          total_requests: '请求总数',
          success_requests: '成功',
          failed_requests: '失败',
-@@ -2127,10 +2143,18 @@ const resources = {
+@@ -2127,10 +2155,24 @@ const resources = {
          overview_realtime_dimension_ai_providers: 'AI 供應商',
          overview_realtime_load_failed: '即時概覽載入失敗',
          daily_average: '每日平均',
@@ -688,15 +1059,56 @@ index 50e7d59..955a7c4 100644
 +        stat_rate_peak_on: '平均值，峰值 {{value}}（{{when}}）',
 +        stat_rate_peak_at: '平均值，峰值 {{value}}（{{when}}）',
 +        stat_cache_meta: '輸入 {{input}} 中命中快取 {{read}}',
++        stat_label_requests: '請求',
++        stat_label_tokens: 'Token',
++        stat_label_rpm: '每分鐘請求',
++        stat_label_tpm: '每分鐘 Token',
++        stat_label_cache_rate: '快取率',
++        stat_label_cost: '費用',
 +        cost_priced_only: '僅統計已定價模型，部分模型未定價',
          total_requests: '請求總數',
          success_requests: '成功',
          failed_requests: '失敗',
+diff --git a/web/src/pages/KeyAnalysisPage.tsx b/web/src/pages/KeyAnalysisPage.tsx
+index 6773610..c99a616 100644
+--- a/web/src/pages/KeyAnalysisPage.tsx
++++ b/web/src/pages/KeyAnalysisPage.tsx
+@@ -174,7 +174,7 @@ export function KeyAnalysisPage({ apiKey, onNavigate, onAuthRequired }: KeyAnaly
+       activePage="analysis"
+       apiKey={apiKey}
+       loading={analysisLoading && !currentAnalysis}
+-      filters={[<TimeRangeControl key="range" value={timeRange} customRange={customRange} timeZone={rangeTimeZone} onChange={handleTimeRangeChange} ariaLabel={t('usage_stats.range_filter')} labelInsideTrigger />]}
++      filters={[<TimeRangeControl key="range" value={timeRange} customRange={customRange} timeZone={rangeTimeZone} onChange={handleTimeRangeChange} ariaLabel={t('usage_stats.range_filter')} />]}
+       onRefresh={() => void handleManualRefresh()}
+       refreshing={manualRefreshLoading}
+       onNavigate={onNavigate}
+diff --git a/web/src/pages/KeyOverviewPage.tsx b/web/src/pages/KeyOverviewPage.tsx
+index 444b383..2f0b495 100644
+--- a/web/src/pages/KeyOverviewPage.tsx
++++ b/web/src/pages/KeyOverviewPage.tsx
+@@ -370,7 +370,7 @@ export function KeyOverviewPage({ page = 'overview', apiKey, onNavigate, onAuthR
+     tpmSparkline,
+     cacheReadRateSparkline,
+     costSparkline,
+-  } = useSparklines({ usage: visibleUsage, loading });
++  } = useSparklines({ usage: visibleUsage, loading, range: usageRangeQuery });
+ 
+   const refreshDisabled = manualRefreshLoading;
+   const handleManualRefresh = useCallback(async () => {
+@@ -400,7 +400,7 @@ export function KeyOverviewPage({ page = 'overview', apiKey, onNavigate, onAuthR
+       activePage={page}
+       apiKey={apiKey}
+       loading={page === 'overview' && loading && !visibleUsage}
+-      filters={page === 'overview' ? [<TimeRangeControl key="range" value={timeRange} customRange={customRange} timeZone={rangeTimeZone} onChange={handleTimeRangeChange} ariaLabel={t('usage_stats.range_filter')} labelInsideTrigger />] : []}
++      filters={page === 'overview' ? [<TimeRangeControl key="range" value={timeRange} customRange={customRange} timeZone={rangeTimeZone} onChange={handleTimeRangeChange} ariaLabel={t('usage_stats.range_filter')} />] : []}
+       onRefresh={() => void handleManualRefresh()}
+       refreshing={manualRefreshLoading}
+       refreshDisabled={refreshDisabled}
 diff --git a/web/src/pages/UsagePage.module.scss b/web/src/pages/UsagePage.module.scss
-index 5211380..c5851a5 100644
+index 5211380..a43f3a4 100644
 --- a/web/src/pages/UsagePage.module.scss
 +++ b/web/src/pages/UsagePage.module.scss
-@@ -891,142 +891,19 @@
+@@ -891,278 +891,121 @@
  }
  
  // Stats Layout
@@ -705,16 +1117,23 @@ index 5211380..c5851a5 100644
    display: flex;
    flex-direction: column;
 -  gap: 14px;
--}
--
+ }
+ 
 -.primaryStatsRow {
 -  display: flex;
 -  align-items: stretch;
 -  gap: 14px;
 -  width: 100%;
 -  min-height: 176px;
--
--  @include tablet {
++.statsGrid {
++  display: grid;
++  grid-template-columns: repeat(3, minmax(0, 1fr));
++  border: 1px solid var(--border-color);
++  border-top: 0;
++  // Clips each cell's divider where it would land on the grid's outer edge.
++  overflow: hidden;
+ 
+   @include tablet {
 -    overflow-x: auto;
 -    scroll-snap-type: x proximity;
 -    scrollbar-width: none;
@@ -722,20 +1141,25 @@ index 5211380..c5851a5 100644
 -    &::-webkit-scrollbar {
 -      display: none;
 -    }
--  }
--
--  @include mobile {
++    grid-template-columns: repeat(2, minmax(0, 1fr));
+   }
+ 
+   @include mobile {
 -    flex-direction: column;
 -    min-height: 168px;
 -    overflow: visible;
 -    scroll-snap-type: none;
--  }
--}
--
++    grid-template-columns: minmax(0, 1fr);
++    border-inline: 0;
+   }
+ }
+ 
 -.dailyAverageSlot {
--  display: flex;
++.statCell {
+   display: flex;
 -  flex: 0 1 0;
--  min-width: 0;
++  flex-direction: column;
+   min-width: 0;
 -  margin-right: -14px;
 -  opacity: 0;
 -  overflow: hidden;
@@ -760,8 +1184,12 @@ index 5211380..c5851a5 100644
 -    flex: 0 0 0;
 -    scroll-snap-align: start;
 -  }
--
--  @include mobile {
++  padding: 30px 32px 26px;
++  box-shadow:
++    1px 0 0 var(--border-color),
++    0 1px 0 var(--border-color);
+ 
+   @include mobile {
 -    flex: 0 0 auto;
 -    width: 100%;
 -    max-height: 0;
@@ -769,9 +1197,10 @@ index 5211380..c5851a5 100644
 -    margin-bottom: -14px;
 -    scroll-snap-align: none;
 -    transform: translateY(-6px) scale(0.98);
--  }
--}
--
++    padding: 22px 4px 20px;
+   }
+ }
+ 
 -.primaryStatsRowExpanded {
 -  .dailyAverageSlot {
 -    flex-grow: 0.72;
@@ -781,15 +1210,33 @@ index 5211380..c5851a5 100644
 -    pointer-events: auto;
 -    transform: translateX(0) scale(1);
 -  }
--
++.statCellLabel {
++  color: var(--text-secondary);
++  font-size: 15px;
++  font-weight: 500;
++  line-height: 1.3;
++}
+ 
 -  @include tablet {
 -    .dailyAverageSlot {
 -      flex-basis: calc(50% - 7px);
 -      flex-grow: 0;
 -    }
 -  }
--
--  @include mobile {
++.statCellValue {
++  margin-top: 10px;
++  color: var(--text-primary);
++  font-family:
++    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
++    monospace;
++  font-size: 36px;
++  font-weight: 500;
++  line-height: 1.15;
++  letter-spacing: 0;
++  font-variant-numeric: tabular-nums;
++  overflow-wrap: anywhere;
+ 
+   @include mobile {
 -    .dailyAverageSlot {
 -      flex-basis: auto;
 -      flex-grow: 0;
@@ -797,9 +1244,10 @@ index 5211380..c5851a5 100644
 -      margin-bottom: 0;
 -      transform: translateY(0) scale(1);
 -    }
--  }
--}
--
++    font-size: 30px;
+   }
+ }
+ 
 -@media (prefers-reduced-motion: reduce) {
 -  .dailyAverageSlot {
 -    transition: none;
@@ -809,8 +1257,13 @@ index 5211380..c5851a5 100644
 -  .primaryStatsRowExpanded .dailyAverageSlot {
 -    transform: none;
 -  }
--}
--
++.statCellMeta {
++  margin: 8px 0 0;
++  color: var(--text-secondary);
++  font-size: 14px;
++  line-height: 1.45;
+ }
+ 
 -.primaryStatSlot {
 -  display: flex;
 -  flex: 1 1 0;
@@ -831,26 +1284,31 @@ index 5211380..c5851a5 100644
 -    width: 100%;
 -    scroll-snap-align: none;
 -  }
++.statPartialCost {
++  color: var(--warning-color);
  }
  
 -.secondaryStatsGrid {
-+.statsGrid {
-   display: grid;
+-  display: grid;
 -  gap: 14px;
 -  grid-template-columns: repeat(4, minmax(0, 1fr));
-+  grid-template-columns: repeat(3, minmax(0, 1fr));
-+  border: 1px solid var(--border-color);
-+  border-top: 0;
-+  // Clips each cell's divider where it would land on the grid's outer edge.
-+  overflow: hidden;
- 
-   @include tablet {
-     grid-template-columns: repeat(2, minmax(0, 1fr));
-@@ -1034,135 +911,95 @@
+-
+-  @include tablet {
+-    grid-template-columns: repeat(2, minmax(0, 1fr));
+-  }
++// A compact trend under the numbers, not a chart: about 60% of the cell, wide and short.
++.statCellTrend {
++  width: 60%;
++  min-width: 180px;
++  max-width: 360px;
++  aspect-ratio: 11 / 2;
++  margin-top: auto;
++  padding-top: 28px;
++  box-sizing: content-box;
  
    @include mobile {
-     grid-template-columns: minmax(0, 1fr);
-+    border-inline: 0;
+-    grid-template-columns: minmax(0, 1fr);
++    padding-top: 18px;
    }
  }
  
@@ -866,64 +1324,40 @@ index 5211380..c5851a5 100644
 -  );
 -
 -  height: 100%;
-+.statCell {
-+  display: flex;
-+  flex-direction: column;
-   min-width: 0;
+-  min-width: 0;
 -  min-height: 0;
 -  padding-inline: 18px;
 -  background:
 -    radial-gradient(90% 120% at 0% 0%, rgba(59, 130, 246, 0.14), transparent 58%),
 -    linear-gradient(180deg, rgba(139, 92, 246, 0.07), rgba(255, 255, 255, 0)),
 -    var(--bg-primary);
-+  padding: 28px 28px 24px;
-+  box-shadow:
-+    1px 0 0 var(--border-color),
-+    0 1px 0 var(--border-color);
- 
+-
 -  @include desktop {
 -    padding-inline: 22px;
-+  @include mobile {
-+    padding: 22px 4px 20px;
-   }
+-  }
++.sparkline {
++  width: 100%;
++  height: 100% !important;
  }
  
 -.dailyAverageCardHeader {
--  display: flex;
++.dailyAverageRow {
+   display: flex;
 -  align-items: center;
 -  justify-content: space-between;
 -  gap: 10px;
 -  min-width: 0;
-+.statCellLabel {
-+  color: var(--text-secondary);
-+  font-size: 15px;
-+  font-weight: 500;
-+  line-height: 1.3;
- }
- 
+-}
+-
 -.dailyAverageTitle {
-+.statCellValue {
-+  margin-top: 10px;
-   color: var(--text-primary);
+-  color: var(--text-primary);
 -  font-size: 13px;
 -  font-weight: 800;
 -  line-height: 1.2;
-+  font-family:
-+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-+    monospace;
-+  font-size: 36px;
-+  font-weight: 500;
-+  line-height: 1.15;
-   letter-spacing: 0;
+-  letter-spacing: 0;
 -  white-space: nowrap;
-+  font-variant-numeric: tabular-nums;
-+  overflow-wrap: anywhere;
-+
-+  @include mobile {
-+    font-size: 30px;
-+  }
- }
- 
+-}
+-
 -.dailyAverageRangePill {
 -  flex: 0 1 auto;
 -  max-width: 100%;
@@ -932,27 +1366,27 @@ index 5211380..c5851a5 100644
 -  border-radius: $radius-full;
 -  border: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
 -  background: color-mix(in srgb, var(--bg-secondary) 86%, transparent);
-+.statCellMeta {
-+  margin: 8px 0 0;
++  flex-wrap: wrap;
++  align-items: baseline;
++  gap: 8px 40px;
++  padding: 18px 32px;
++  border-bottom: 1px solid var(--border-color);
++  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
    color: var(--text-secondary);
 -  font-size: 10px;
 -  font-weight: 700;
 -  line-height: 1.2;
 -  text-overflow: ellipsis;
 -  white-space: nowrap;
-+  font-size: 14px;
-+  line-height: 1.45;
- }
- 
+-}
+-
 -.dailyAverageMetrics {
 -  display: grid;
 -  flex: 1;
 -  grid-template-rows: repeat(3, minmax(0, 1fr));
 -  min-width: 0;
-+.statPartialCost {
-+  color: var(--warning-color);
- }
- 
+-}
+-
 -.dailyAverageMetric {
 -  --metric-accent: var(--primary-color);
 -
@@ -964,17 +1398,15 @@ index 5211380..c5851a5 100644
 -  min-height: 0;
 -  padding: 7px 0;
 -  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
--
++  font-size: 15px;
++  font-variant-numeric: tabular-nums;
+ 
 -  &:last-child {
 -    border-bottom: 0;
--  }
-+.statCellTrend {
-+  width: 100%;
-+  max-width: 380px;
-+  height: 64px;
-+  margin-top: auto;
-+  padding-top: 20px;
-+  box-sizing: content-box;
++  @include mobile {
++    gap: 6px 20px;
++    padding: 16px 4px;
+   }
  }
  
 -.dailyAverageMetricIcon {
@@ -985,28 +1417,15 @@ index 5211380..c5851a5 100644
 -  border-radius: $radius-md;
 -  background: color-mix(in srgb, var(--metric-accent) 12%, var(--bg-primary));
 -  color: var(--metric-accent);
-+.sparkline {
-+  width: 100%;
-+  height: 100% !important;
- }
- 
+-}
+-
 -.dailyAverageMetricCopy {
-+.dailyAverageRow {
-   display: flex;
+-  display: flex;
 -  min-width: 0;
 -  flex-direction: column;
 -  gap: 2px;
 -}
-+  flex-wrap: wrap;
-+  align-items: baseline;
-+  gap: 8px 40px;
-+  padding: 18px 28px;
-+  border-bottom: 1px solid var(--border-color);
-+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
-+  color: var(--text-secondary);
-+  font-size: 15px;
-+  font-variant-numeric: tabular-nums;
- 
+-
 -.dailyAverageMetricLabel {
 -  color: var(--text-tertiary);
 -  font-size: 11px;
@@ -1016,12 +1435,8 @@ index 5211380..c5851a5 100644
 -  overflow: hidden;
 -  text-overflow: ellipsis;
 -  white-space: nowrap;
-+  @include mobile {
-+    gap: 6px 20px;
-+    padding: 16px 4px;
-+  }
- }
- 
+-}
+-
 -.dailyAverageMetricValue {
 +.dailyAverageTitle {
    color: var(--text-primary);
@@ -1043,7 +1458,7 @@ index 5211380..c5851a5 100644
  }
  
  .statCard {
-@@ -1256,168 +1093,6 @@
+@@ -1256,168 +1099,6 @@
    }
  }
  
@@ -1212,6 +1627,60 @@ index 5211380..c5851a5 100644
  // API List (80%比例)
  .apiSortBar {
    display: flex;
+diff --git a/web/src/pages/UsagePage.tsx b/web/src/pages/UsagePage.tsx
+index 533919e..8138e02 100644
+--- a/web/src/pages/UsagePage.tsx
++++ b/web/src/pages/UsagePage.tsx
+@@ -2,7 +2,7 @@ import { ChartLifecycleProvider, useChartRefresh, type ChartRefreshSignal } from
+ import { CredentialEditModal } from '@/components/usage/credentials/CredentialEditModal';
+ import { UsageComparisonCharts } from '@/components/usage/UsageComparisonCharts';
+ import type { ModelSpeedRefreshSignal } from '@/components/usage/model-speed/modelSpeedAnimation';
+-import { useState, useMemo, useCallback, useEffect, useRef, type MouseEvent as ReactMouseEvent } from 'react';
++import { Fragment, useState, useMemo, useCallback, useEffect, useRef, type MouseEvent as ReactMouseEvent } from 'react';
+ import { useTranslation } from 'react-i18next';
+ import { ApiError, appPath, createUsageEventRequestLogDownloadURL, exportUsageEvents, fetchAnalysis, fetchAnalysisLatency, fetchAuthSessions, fetchCpaApiKeyOptions, fetchCpaApiKeySettings, fetchStatus, fetchUpdateCheck, fetchUsageEventModelFilterOptions, fetchUsageEventRequestLog, fetchUsageEventSourceFilterOptions, fetchUsageEvents, fetchUsageIdentity, fetchVersion, isCostsBusy, isUsageRangeBoundsConflict, logout, revokeAuthSession, updateAuthSessionAlias, updateCpaApiKeyAlias, type UsageEventsExportFormat } from '@/lib/api';
+ import type { AnalysisLatencyDiagnostics, AnalysisResponse, AuthManagedSessionItem, CpaApiKeyOption, CpaApiKeySettingsItem, OverviewRealtimeWindow, StatusResponse, UsageCustomRange, UsageEvent, UsageEventRequestLogResponse, UsageSourceFilterOption, UsageTimeRange, VersionResponse } from '@/lib/types';
+@@ -1972,7 +1972,7 @@ export function UsagePage({ onAuthRequired }: { onAuthRequired?: () => void }) {
+     tpmSparkline,
+     cacheReadRateSparkline,
+     costSparkline
+-  } = useSparklines({ usage: currentOverviewUsage, loading });
++  } = useSparklines({ usage: currentOverviewUsage, loading, range: usageRangeQuery });
+ 
+   const overviewDisplayLoading = getOverviewDisplayLoading({ loading, hasUsage: Boolean(usage) });
+   const reserveDailyAverageCard = isDailyAverageRange({
+@@ -2173,17 +2173,20 @@ export function UsagePage({ onAuthRequired }: { onAuthRequired?: () => void }) {
+               items={tabOptions.map((option) => ({ id: option.value, label: option.label, href: getUsageTabHref(option.value) }))}
+               onNavigate={activateUsageTab}
+               filters={showApiKeyFilter ? [
+-                <Select
+-                  key="api-key"
+-                  value={selectedApiKeyId}
+-                  options={apiKeySelectOptions}
+-                  onChange={setSelectedApiKeyId}
+-                  ariaLabel={`${t('usage_stats.api_key_filter')}: ${apiKeySelectOptions.find((option) => option.value === selectedApiKeyId)?.label ?? ''}`}
+-                  fullWidth={false}
+-                  dropdownMinWidth={180}
+-                  renderValue={(option) => <><span data-dashboard-filter-caption>{t('usage_stats.api_key_filter')}</span><span data-dashboard-filter-value>{option?.label}</span></>}
+-                />,
+-                ...showRangeControls ? [<TimeRangeControl key="range" value={timeRange} customRange={activeCustomRange} timeZone={rangeTimeZone} maxCustomDayRangeDays={activeTab === 'events' ? REQUEST_EVENTS_CUSTOM_DAY_RANGE_MAX_DAYS : undefined} onChange={handleTimeRangeChange} ariaLabel={t('usage_stats.range_filter')} labelInsideTrigger />] : [],
++                <Fragment key="api-key">
++                  {/* The caption sits beside the select like the range shell's label; the select's own label already names it. */}
++                  <span data-dashboard-filter-caption aria-hidden="true">{t('usage_stats.api_key_filter')}</span>
++                  <Select
++                    value={selectedApiKeyId}
++                    options={apiKeySelectOptions}
++                    onChange={setSelectedApiKeyId}
++                    ariaLabel={`${t('usage_stats.api_key_filter')}: ${apiKeySelectOptions.find((option) => option.value === selectedApiKeyId)?.label ?? ''}`}
++                    fullWidth={false}
++                    dropdownMinWidth={180}
++                    renderValue={(option) => <span data-dashboard-filter-value>{option?.label}</span>}
++                  />
++                </Fragment>,
++                ...showRangeControls ? [<TimeRangeControl key="range" value={timeRange} customRange={activeCustomRange} timeZone={rangeTimeZone} maxCustomDayRangeDays={activeTab === 'events' ? REQUEST_EVENTS_CUSTOM_DAY_RANGE_MAX_DAYS : undefined} onChange={handleTimeRangeChange} ariaLabel={t('usage_stats.range_filter')} />] : [],
+               ] : []}
+               onRefresh={() => void handleManualRefresh().catch(() => {})}
+               refreshing={manualRefreshLoading}
 diff --git a/web/src/pages/test/UsagePage.styles.test.ts b/web/src/pages/test/UsagePage.styles.test.ts
 index 9487656..ed969e9 100644
 --- a/web/src/pages/test/UsagePage.styles.test.ts
@@ -1257,19 +1726,22 @@ index 9487656..ed969e9 100644
  
    it('reflows Activity and realtime grids for narrow screens', () => {
 diff --git a/web/src/utils/usage/chartConfig.ts b/web/src/utils/usage/chartConfig.ts
-index c9d675d..f5c638c 100644
+index c9d675d..475c3bd 100644
 --- a/web/src/utils/usage/chartConfig.ts
 +++ b/web/src/utils/usage/chartConfig.ts
-@@ -98,9 +98,12 @@ export const buildUsageChartTooltipStyle = (chartTheme: UsageChartTheme) => ({
+@@ -98,9 +98,14 @@ export const buildUsageChartTooltipStyle = (chartTheme: UsageChartTheme) => ({
  export const sparklineOptions: ChartOptions<'line'> = {
    responsive: true,
    maintainAspectRatio: false,
 +  // Room for the end dot and the stroke at the extremes, which would otherwise be clipped by the canvas.
 +  layout: { padding: 4 },
-+  datasets: { line: { clip: 4 } },
++  // Cache rate has no value for idle buckets; join the observed rates instead of breaking the line.
++  datasets: { line: { clip: 4, spanGaps: true } },
    plugins: { legend: { display: false }, tooltip: { enabled: false } },
-   scales: { x: { display: false }, y: { display: false } },
+-  scales: { x: { display: false }, y: { display: false } },
 -  elements: { line: { tension: 0.45 }, point: { radius: 0 } }
++  // Zero-based, so a quiet series lies on the floor and spikes keep their true proportion.
++  scales: { x: { display: false }, y: { display: false, beginAtZero: true } },
 +  elements: { line: { tension: 0 } }
  };
  

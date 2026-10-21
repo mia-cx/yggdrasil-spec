@@ -2,8 +2,11 @@
 
 This image applies `overview.patch` to CPA Usage Keeper v2.0.0, pinned by
 source archive checksum and commit. The backend API stays upstream. The patch
-changes the overview to six metric cells with angular sparklines and a daily
-averages strip, using Keeper's actual overview data and existing palette.
+changes the overview to six metric cells with angular single-accent sparklines
+and a daily averages strip, and shows the toolbar filters as captioned pills
+with a labelled Refresh. Sparklines span the whole selected range: the backend
+only returns buckets with traffic, so quiet hours or days are drawn as zero
+(cache rate stays undefined there). All values are Keeper's actual overview data.
 
 ```sh
 docker build -t cpa-usage-keeper:yggdrasil apps/cpa-usage-keeper
