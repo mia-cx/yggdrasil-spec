@@ -1,0 +1,22 @@
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-immich
+  namespace: traefik-internal
+spec:
+  name: res-immich
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: immich
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: immich
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-immich

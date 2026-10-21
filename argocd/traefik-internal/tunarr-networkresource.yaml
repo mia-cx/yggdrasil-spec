@@ -1,0 +1,22 @@
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-tunarr
+  namespace: traefik-internal
+spec:
+  name: res-tunarr
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: tunarr
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: tunarr
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-tunarr

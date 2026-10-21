@@ -24,6 +24,8 @@ providers:
       - cliproxyapi
       - nextcloud
       - pelican
+      - immich
+      - media
     allowCrossNamespace: false
   kubernetesIngress:
     enabled: false
@@ -69,6 +71,27 @@ ports:
     protocol: TCP
   pelican:
     port: 10007
+    expose:
+      default: false
+    protocol: TCP
+  immich:
+    port: 10008
+    expose:
+      default: false
+    protocol: TCP
+    # Like the public websecure entrypoint: large uploads and video
+    # downloads outlast Traefik's 60-second default.
+    transport:
+      respondingTimeouts:
+        readTimeout: 0
+        writeTimeout: 0
+  tdarr:
+    port: 10009
+    expose:
+      default: false
+    protocol: TCP
+  tunarr:
+    port: 10010
     expose:
       default: false
     protocol: TCP

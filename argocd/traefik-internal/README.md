@@ -35,15 +35,18 @@ Each private service gets its own enforceable network destination:
   service's entrypoint port, and the backend admits only the Traefik pods
   (see `networkpolicy.yaml` here and `argocd/canary/networkpolicy.yaml`).
 
-| Service        | Entrypoint port | ClusterIP   | Resource group     | Permission group   | Hostname         |
-| -------------- | --------------- | ----------- | ------------------ | ------------------ | ---------------- |
-| canary         | 10001           | 10.43.0.128 | res-canary         | svc-canary         | canary.mia.cx    |
-| open-wearables | 10002           | 10.43.0.129 | res-open-wearables | svc-open-wearables | health.mia.cx    |
-| oddreads       | 10003           | 10.43.0.130 | res-oddreads       | svc-oddreads       | slop.mia.cx      |
-| cliproxyapi    | 10004           | 10.43.0.131 | res-cliproxyapi    | svc-cliproxyapi    | cpa.mia.cx       |
-| cpa-usage      | 10005           | 10.43.0.132 | res-cpa-usage      | svc-cliproxyapi    | cpa-usage.mia.cx |
-| nextcloud      | 10006           | 10.43.0.133 | res-nextcloud      | svc-nextcloud      | cloud.mia.cx     |
-| pelican        | 10007           | 10.43.0.134 | res-pelican        | svc-pelican        | panel.mia.cx     |
+| Service        | Entrypoint port | ClusterIP   | Resource group     | Permission group   | Hostname                |
+| -------------- | --------------- | ----------- | ------------------ | ------------------ | ----------------------- |
+| canary         | 10001           | 10.43.0.128 | res-canary         | svc-canary         | canary.mia.cx           |
+| open-wearables | 10002           | 10.43.0.129 | res-open-wearables | svc-open-wearables | health.mia.cx           |
+| oddreads       | 10003           | 10.43.0.130 | res-oddreads       | svc-oddreads       | slop.mia.cx             |
+| cliproxyapi    | 10004           | 10.43.0.131 | res-cliproxyapi    | svc-cliproxyapi    | cpa.mia.cx              |
+| cpa-usage      | 10005           | 10.43.0.132 | res-cpa-usage      | svc-cliproxyapi    | cpa-usage.mia.cx        |
+| nextcloud      | 10006           | 10.43.0.133 | res-nextcloud      | svc-nextcloud      | cloud.mia.cx            |
+| pelican        | 10007           | 10.43.0.134 | res-pelican        | svc-pelican        | panel.mia.cx            |
+| immich         | 10008           | 10.43.0.135 | res-immich         | svc-immich         | photos.mia.cx           |
+| tdarr          | 10009           | 10.43.0.136 | res-tdarr          | svc-tdarr          | tdarr.yggdrasil.mia.cx  |
+| tunarr         | 10010           | 10.43.0.137 | res-tunarr         | svc-tunarr         | tunarr.yggdrasil.mia.cx |
 
 ## Adding a service
 
