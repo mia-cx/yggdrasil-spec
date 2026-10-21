@@ -28,7 +28,7 @@ controllers:
       config-merger:
         image:
           repository: docker.io/library/alpine
-          tag: "3.22.5"
+          tag: "3.24.2"
           pullPolicy: IfNotPresent
         command:
           - /bin/sh
@@ -41,7 +41,7 @@ controllers:
       main:
         image:
           repository: docker.io/phueber/prefetcharr
-          tag: 1.6.2
+          tag: 1.7.0
           pullPolicy: IfNotPresent
         command:
           - /prefetcharr
