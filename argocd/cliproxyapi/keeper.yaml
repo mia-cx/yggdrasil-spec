@@ -61,6 +61,9 @@ spec:
                   key: keeper-password
             - name: AUTH_ENABLED
               value: "true"
+            # Ingress policy admits only private Traefik from this pod CIDR.
+            - name: TRUSTED_PROXY_CIDRS
+              value: 10.42.0.0/16
             - name: WORK_DIR
               value: /data
             - name: TZ

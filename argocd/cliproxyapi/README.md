@@ -10,6 +10,11 @@ Create the matching NetBird policies and DNS zones after that sign-in.
 CPA uses normal pod networking, CoreDNS and the cluster's WAN gateway.
 There is no NetBird sidecar, default mesh route, upstream proxy, host network,
 or public/NodePort Service. Mesh routers carry inbound requests only.
+Egress policies allow CoreDNS and public TCP 80/443; Keeper can additionally
+reach CPA on TCP 8317. Unrelated private, LAN and mesh destinations are denied.
+Both apps trust forwarded addresses from the cluster pod CIDR, with ingress
+policies limiting the actual proxies to private Traefik. NetBird router
+masquerading can still group clients behind the same observed source address.
 
 ## First install
 
