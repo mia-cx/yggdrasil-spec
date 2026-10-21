@@ -33,7 +33,8 @@ spec:
                     operator: Exists
       containers:
         - name: keeper
-          image: ghcr.io/willxup/cpa-usage-keeper:v2.0.0@sha256:595cb942ba6993b7ae68a5bf97ce68e3ab35d56b4989051c5bccb29681e67129
+          # Upstream v2.0.0 plus the overview patch built from ea07cbd.
+          image: ghcr.io/mia-cx/yggdrasil-cpa-usage-keeper@sha256:ca934df02bfd5358e0fc0572fb4d320d54fe13519677bfb87316209fda590fe7
           # Bypass the image's root-only chown/su-exec entrypoint; fsGroup owns data.
           command: [/app/cpa-usage-keeper]
           securityContext:
