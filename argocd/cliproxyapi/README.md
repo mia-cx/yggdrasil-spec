@@ -58,7 +58,8 @@ in `/management.html`; this deployment imports no desktop credentials.
 
 Cursor uses the community [`auth-cursor` plugin](https://github.com/UNICKCHENG/cliproxyapi-plugins/tree/main/auth-cursor).
 Its store is configured and `/data/plugins` and `/data/cache` are persistent.
-Install it through the plugin store, then import a Cursor dashboard API key.
+The initial deployment installs `auth-cursor` 2.1.1 through that store; a fresh
+installation needs the same step before importing a Cursor dashboard API key.
 Cursor traffic uses its SDK agent bridge; it is not a native inference API.
 The plugin's `proxy-url` is empty so it uses direct cluster egress too.
 
