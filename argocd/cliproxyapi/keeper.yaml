@@ -34,7 +34,7 @@ spec:
       containers:
         - name: keeper
           # Upstream v2.0.0 plus the overview polish built from 75cc222.
-          image: ghcr.io/mia-cx/yggdrasil-cpa-usage-keeper@sha256:c235685d01848dcceb8ec9d5b33d3b508c1f306c110d5c108d3c6cf9bd64083e
+          image: ghcr.io/mia-cx/yggdrasil-cpa-usage-keeper@sha256:a1e747d3cab7a3002be7628c81c6032333ed84b8712687d43446a8af806b8125
           # Bypass the image's root-only chown/su-exec entrypoint; fsGroup owns data.
           command: [/app/cpa-usage-keeper]
           securityContext:
