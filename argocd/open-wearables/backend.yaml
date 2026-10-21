@@ -18,6 +18,8 @@ data:
   SENTRY_ENABLED: "false"
   # Apple Health arrives from the phone; no provider pulls or outgoing webhooks.
   OUTGOING_WEBHOOKS_ENABLED: "false"
+  # 0.10.0 sends a daily anonymous usage ping by default.
+  TELEMETRY_ENABLED: "false"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -46,7 +48,7 @@ spec:
                     operator: Exists
       containers:
         - name: api
-          image: themomentum/open-wearables-backend:0.9.0
+          image: themomentum/open-wearables-backend:0.10.0
           command: [scripts/start/app.sh]
           ports:
             - name: http
@@ -116,7 +118,7 @@ spec:
                     operator: Exists
       containers:
         - name: worker
-          image: themomentum/open-wearables-backend:0.9.0
+          image: themomentum/open-wearables-backend:0.10.0
           command: [scripts/start/worker.sh]
           envFrom:
             - configMapRef:
@@ -163,7 +165,7 @@ spec:
                     operator: Exists
       containers:
         - name: beat
-          image: themomentum/open-wearables-backend:0.9.0
+          image: themomentum/open-wearables-backend:0.10.0
           command: [scripts/start/beat.sh]
           envFrom:
             - configMapRef:
