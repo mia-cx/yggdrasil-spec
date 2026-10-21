@@ -40,6 +40,4 @@ spec:
         - protocol: TCP
           port: 10008
         - protocol: TCP
-          port: 10009
-        - protocol: TCP
           port: 10010

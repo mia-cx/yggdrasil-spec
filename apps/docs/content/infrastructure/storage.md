@@ -264,11 +264,11 @@ exportfs -v
 
 ## NFS over Netbird (cross-site)
 
-NFS **can** be made available over the Netbird overlay so Tdarr nodes (or other pods) on different sites (e.g. Elysium, Arcadia) can mount the same media and transcode.
+NFS **can** be made available over the Netbird overlay so transcode workers (or other pods) on different sites (e.g. Elysium, Arcadia) can mount the same media and transcode.
 
 **How:** Ensure the NFS server (Storage LXC at 10.0.1.2, or the host that serves NFS) is a Netbird peer so it has an overlay IP and is routable from other sites. Configure Netbird ACLs so K3s nodes at every site can reach that peer. PVs today use LAN IPs (10.0.1.x); if Netbird routes Olympus LAN (e.g. 10.0.0.0/16) to the Olympus Netbird peer, remote nodes can mount using the same PV server address. Alternatively, run NFS on a host that has only an overlay IP and point the PVs at that overlay IP (requires NFS listen on the overlay interface).
 
-**Caveat:** NFS is stateful and sensitive to latency and packet loss. Over a WAN link (even through Netbird) you get higher RTT and possible jitter. For transcoding—mostly sequential read of a large file and write of the result—throughput is often acceptable on a solid link (e.g. 50–100+ Mbps, low loss). If transcodes are slow or NFS locks up, either (1) run Tdarr nodes only at the site that has the NFS server, or (2) sync media to the remote site (e.g. rclone) and run Tdarr there on local storage.
+**Caveat:** NFS is stateful and sensitive to latency and packet loss. Over a WAN link (even through Netbird) you get higher RTT and possible jitter. For transcoding—mostly sequential read of a large file and write of the result—throughput is often acceptable on a solid link (e.g. 50–100+ Mbps, low loss). If transcodes are slow or NFS locks up, either (1) run transcode workers only at the site that has the NFS server, or (2) sync media to the remote site (e.g. rclone) and transcode there on local storage.
 
 **Recommendation:** Try NFS over Netbird first. You don’t need to move media to object storage or another WAN-oriented system unless you hit real limits or reliability issues.
 

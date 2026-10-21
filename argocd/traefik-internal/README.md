@@ -45,7 +45,6 @@ Each private service gets its own enforceable network destination:
 | nextcloud      | 10006           | 10.43.0.133 | res-nextcloud      | svc-nextcloud      | cloud.mia.cx            |
 | pelican        | 10007           | 10.43.0.134 | res-pelican        | svc-pelican        | panel.mia.cx            |
 | immich         | 10008           | 10.43.0.135 | res-immich         | svc-immich         | photos.mia.cx           |
-| tdarr          | 10009           | 10.43.0.136 | res-tdarr          | svc-tdarr          | tdarr.yggdrasil.mia.cx  |
 | tunarr         | 10010           | 10.43.0.137 | res-tunarr         | svc-tunarr         | tunarr.yggdrasil.mia.cx |
 
 ## Adding a service
@@ -87,10 +86,10 @@ shape: policies `nextcloud` and `pelican` (source `svc-<name>`, destination
 `10.43.0.133` and `panel.mia.cx` → `10.43.0.134`, distributed to the matching
 `svc-<name>` group.
 
-Added on 2026-10-21, when Tdarr and Tunarr went mesh-only for the Node.js
-security release, in the same shape: policies `tdarr` and `tunarr`, and DNS
-zones `tdarr.yggdrasil.mia.cx` → `10.43.0.136` and `tunarr.yggdrasil.mia.cx`
-→ `10.43.0.137`. Immich's policy `immich` and zone `photos.mia.cx` →
+Added on 2026-10-21, when Tunarr went mesh-only for the Node.js security
+release, in the same shape: policy `tunarr` and DNS zone
+`tunarr.yggdrasil.mia.cx` → `10.43.0.137`. Tdarr's port 10009 and
+`10.43.0.136` are free since its removal. Immich's policy `immich` and zone `photos.mia.cx` →
 `10.43.0.135` followed in the same shape once sign-in created the JWT-issued
 `svc-immich` group.
 

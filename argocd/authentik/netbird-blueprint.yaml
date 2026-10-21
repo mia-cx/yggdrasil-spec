@@ -24,7 +24,6 @@ data:
       - {model: authentik_core.group, id: svc-readarr, identifiers: {name: svc-readarr}, attrs: {is_superuser: false}}
       - {model: authentik_core.group, id: svc-sabnzbd, identifiers: {name: svc-sabnzbd}, attrs: {is_superuser: false}}
       - {model: authentik_core.group, id: svc-qbittorrent, identifiers: {name: svc-qbittorrent}, attrs: {is_superuser: false}}
-      - {model: authentik_core.group, id: svc-tdarr, identifiers: {name: svc-tdarr}, attrs: {is_superuser: false}}
       - {model: authentik_core.group, id: svc-tunarr, identifiers: {name: svc-tunarr}, attrs: {is_superuser: false}}
       - {model: authentik_core.group, id: svc-longhorn, identifiers: {name: svc-longhorn}, attrs: {is_superuser: false}}
       - {model: authentik_core.group, id: svc-argocd, identifiers: {name: svc-argocd}, attrs: {is_superuser: false}}
@@ -59,7 +58,6 @@ data:
             - !KeyOf svc-readarr
             - !KeyOf svc-sabnzbd
             - !KeyOf svc-qbittorrent
-            - !KeyOf svc-tdarr
             - !KeyOf svc-tunarr
             - !KeyOf svc-longhorn
             - !KeyOf svc-argocd

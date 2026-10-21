@@ -39,7 +39,6 @@ Application services running in the K3s cluster. For platform-level components (
 | FlareSolverr  | `ghcr.io/flaresolverr/flaresolverr:latest`                | 8191 | `media`       | Cloudflare bypass            |
 | Privoxy       | `docker.io/vimagick/privoxy:latest`                       | 8118 | `media`       | HTTP proxy                   |
 | Prefetcharr   | `docker.io/phueber/prefetcharr:latest`                    | --   | `media`       | Prefetch next seasons        |
-| Tdarr         | `docker.io/haveagitgat/tdarr:latest`                      | 8265 | `media`       | Transcode automation         |
 | **Apps**      |
 | Nextcloud     | `nextcloud/nextcloud:32-apache`                           | 80   | `nextcloud`   | File sync + collaboration    |
 | Immich Server | `ghcr.io/immich-app/immich-server:v2.6.3`                 | 2283 | `immich`      | Photo management             |

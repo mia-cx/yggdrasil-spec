@@ -27,7 +27,6 @@ Automated media acquisition, organization, and transcoding. All services run in 
 | FlareSolverr | `ghcr.io/flaresolverr/flaresolverr` | 8191 | Cloudflare bypass proxy        |
 | Privoxy      | `docker.io/vimagick/privoxy`        | 8118 | HTTP proxy                     |
 | Prefetcharr  | `docker.io/phueber/prefetcharr`     | --   | Prefetch next seasons          |
-| Tdarr        | `docker.io/haveagitgat/tdarr`       | 8265 | Transcode automation           |
 | Tunarr       | `docker.io/chrisbenincasa/tunarr`   | 8000 | IPTV from Jellyfin/Plex        |
 
 ## Architecture
@@ -63,13 +62,13 @@ Automated media acquisition, organization, and transcoding. All services run in 
         │  /media (NFS)    │───▶│  Jellyfin    │
         │  MergerFS 29Ti   │    │  :8096       │
         └──────────────────┘    └──────┬───────┘
-                   │                   │ watching activity / collections API
-                   ▼                   ▼
-        ┌──────────────────┐    ┌──────────────┐
-        │  Tdarr           │    │  Prefetcharr │
-        │  :8265           │    │  (daemon)    │
-        │  Transcode       │    │  Prefetch    │
-        └──────────────────┘    └──────────────┘
+                                       │ watching activity / collections API
+                                       ▼
+                                ┌──────────────┐
+                                │  Prefetcharr │
+                                │  (daemon)    │
+                                │  Prefetch    │
+                                └──────────────┘
 
         ┌──────────────────┐
         │  FlareSolverr    │ Cloudflare bypass for Prowlarr
@@ -92,7 +91,6 @@ Automated media acquisition, organization, and transcoding. All services run in 
 | `argocd/flaresolverr/` | `values.yaml`                      |
 | `argocd/privoxy/`      | `values.yaml`                      |
 | `argocd/prefetcharr/`  | `values.yaml`, `configmap.yaml`    |
-| `argocd/tdarr/`        | `values.yaml`, `ingressroute.yaml` |
 | `argocd/tunarr/`       | `values.yaml`, `pvc.yaml`, `ingressroute.yaml` |
 
 ## Deployment
@@ -121,7 +119,6 @@ kubectl apply -f argocd/_apps/qbittorrent.yaml
 kubectl apply -f argocd/_apps/flaresolverr.yaml
 kubectl apply -f argocd/_apps/privoxy.yaml
 kubectl apply -f argocd/_apps/prefetcharr.yaml
-kubectl apply -f argocd/_apps/tdarr.yaml
 kubectl apply -f argocd/_apps/tunarr.yaml
 ```
 
@@ -131,11 +128,11 @@ kubectl apply -f argocd/_apps/tunarr.yaml
 helm repo add bjw-s https://bjw-s-labs.github.io/helm-charts
 helm repo update
 
-for svc in seerr sonarr radarr lidarr readarr prowlarr sabnzbd qbittorrent flaresolverr privoxy prefetcharr tdarr tunarr; do
+for svc in seerr sonarr radarr lidarr readarr prowlarr sabnzbd qbittorrent flaresolverr privoxy prefetcharr tunarr; do
   helm install $svc bjw-s/app-template --namespace media -f argocd/$svc/values.yaml
 done
 
-for svc in seerr sonarr radarr lidarr readarr prowlarr sabnzbd qbittorrent tdarr tunarr; do
+for svc in seerr sonarr radarr lidarr readarr prowlarr sabnzbd qbittorrent tunarr; do
   kubectl apply -f argocd/$svc/ingressroute.yaml
 done
 ```
@@ -193,10 +190,6 @@ If playback or offline sync stops and requires a restart:
 3. **Direct access test** — Connect to Jellyfin via `http://jellyfin.media:8096` (in-cluster) or port-forward, bypassing Traefik. If that works, the proxy was the cause.
 4. **Jellyfin Dashboard** — Transcoding → Temporary transcoding path: ensure it uses `/cache` (emptyDir, fast local I/O), not NFS.
 
-### Tdarr — Node resources in UI
-
-The Tdarr web UI shows **host (node)** RAM and CPU for each node (e.g. "OS Mem: 7.7GB/31.3GB"), not the container limits. That is expected: the process reads from the OS and in Kubernetes the pod often sees the node’s totals. Actual enforcement is via the pod’s resource limits in `argocd/tdarr/values.yaml` (e.g. 8 Gi memory, 4 CPU per node). Ignore the "available" numbers in the UI for scheduling; the limits are what apply.
-
 ### Seerr — Jellyfin and Sonarr/Radarr
 
 In Seerr’s initial setup (or Settings), add:
@@ -237,7 +230,6 @@ All services use the `internal-only` middleware -- accessible only via LAN or Ne
 | Prowlarr    | `https://prowlarr.yggdrasil.mia.cx`    |
 | SABnzbd     | `https://sabnzbd.yggdrasil.mia.cx`     |
 | qBittorrent | `https://qbittorrent.yggdrasil.mia.cx` |
-| Tdarr       | `https://tdarr.yggdrasil.mia.cx`       |
 | Tunarr      | `https://tunarr.yggdrasil.mia.cx`      |
 
 FlareSolverr, Privoxy, and Prefetcharr are internal-only services with no web UI exposed via ingress.
@@ -249,7 +241,7 @@ FlareSolverr, Privoxy, and Prefetcharr are internal-only services with no web UI
 
 ## Storage
 
-All services share NFS volumes via PVCs defined in `argocd/jellyfin/storage.yaml`. For Tdarr nodes on other sites (e.g. mini-PCs at Elysium/Arcadia), NFS can be made reachable over Netbird so they can transcode from the same library; see [Storage — NFS over Netbird](../infrastructure/storage.md#nfs-over-netbird-cross-site) for how and caveats (latency, fallbacks).
+All services share NFS volumes via PVCs defined in `argocd/jellyfin/storage.yaml`. For transcode workers on other sites (e.g. mini-PCs at Elysium/Arcadia), NFS can be made reachable over Netbird so they can transcode from the same library; see [Storage — NFS over Netbird](../infrastructure/storage.md#nfs-over-netbird-cross-site) for how and caveats (latency, fallbacks).
 
 | PVC                 | Mount        | Source                        |
 | ------------------- | ------------ | ----------------------------- |

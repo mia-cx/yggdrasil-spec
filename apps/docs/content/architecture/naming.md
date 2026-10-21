@@ -44,7 +44,7 @@ Categories: **abstract** (network / overall infra) → **site** → **hardware**
 | service  | Home Assistant         | TBD             | —         | Home automation (planned)                                            |
 | service  | Federated social       | TBD             | —         | Mastodon or Misskey+Cherrypick (planned)                             |
 
-**Note:** Backend / non–consumer-facing services (Radarr, Sonarr, Tdarr, Prowlarr, download clients, FlareSolverr, Privoxy, Tunarr, etc.) do not need deity names.
+**Note:** Backend / non–consumer-facing services (Radarr, Sonarr, Prowlarr, download clients, FlareSolverr, Privoxy, Tunarr, etc.) do not need deity names.
 
 **Optional services to host:** See [Services roadmap](../roadmaps/services/self-hosted.md) for candidate services (wiki, music, finance, analytics, bookmarks, etc.) with short descriptions and why to host them. Add a row and deity name in this table when you deploy one.
 

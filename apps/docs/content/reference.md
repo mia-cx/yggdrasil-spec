@@ -41,7 +41,6 @@ At-a-glance lookups. For detailed command recipes, see [Runbooks](./operations/r
 | Prowlarr      | `https://prowlarr.yggdrasil.mia.cx`    |
 | SABnzbd       | `https://sabnzbd.yggdrasil.mia.cx`     |
 | qBittorrent   | `https://qbittorrent.yggdrasil.mia.cx` |
-| Tdarr         | `https://tdarr.yggdrasil.mia.cx`       |
 | OpenSpeedTest | `https://speedtest.mia.cx`             |
 
 ## NFS Exports
@@ -54,16 +53,16 @@ At-a-glance lookups. For detailed command recipes, see [Runbooks](./operations/r
 
 ## Namespaces
 
-| Namespace         | Services                                                                                                             |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `kube-system`     | Traefik, kube-vip, CoreDNS, cert-manager                                                                             |
-| `argocd`          | ArgoCD server + repo server                                                                                          |
-| `longhorn-system` | Longhorn storage                                                                                                     |
-| `authentik`       | Authentik server + worker + PostgreSQL + Redis                                                                       |
-| `media`           | Jellyfin, Sonarr, Radarr, Lidarr, Readarr, Prowlarr, SABnzbd, qBittorrent, FlareSolverr, Privoxy, Prefetcharr, Tdarr |
-| `nextcloud`       | Nextcloud + MariaDB + Redis                                                                                          |
-| `immich`          | Immich server + ML + PostgreSQL + Valkey                                                                             |
-| `vaultwarden`     | Vaultwarden                                                                                                          |
-| `netbird`         | Exit node DaemonSet                                                                                                  |
-| `pelican`         | Pelican Panel                                                                                                        |
-| `speedtest`       | OpenSpeedTest                                                                                                        |
+| Namespace         | Services                                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| `kube-system`     | Traefik, kube-vip, CoreDNS, cert-manager                                                                      |
+| `argocd`          | ArgoCD server + repo server                                                                                   |
+| `longhorn-system` | Longhorn storage                                                                                              |
+| `authentik`       | Authentik server + worker + PostgreSQL + Redis                                                                |
+| `media`           | Jellyfin, Sonarr, Radarr, Lidarr, Readarr, Prowlarr, SABnzbd, qBittorrent, FlareSolverr, Privoxy, Prefetcharr |
+| `nextcloud`       | Nextcloud + MariaDB + Redis                                                                                   |
+| `immich`          | Immich server + ML + PostgreSQL + Valkey                                                                      |
+| `vaultwarden`     | Vaultwarden                                                                                                   |
+| `netbird`         | Exit node DaemonSet                                                                                           |
+| `pelican`         | Pelican Panel                                                                                                 |
+| `speedtest`       | OpenSpeedTest                                                                                                 |
