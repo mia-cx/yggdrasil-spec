@@ -21,7 +21,7 @@ NetBird carries incoming connections only. Provider traffic exits through the
 normal cluster WAN gateway, with explicit egress policies excluding unrelated
 private destinations. Credentials and OAuth state stay outside Git.
 
-The CPA and customised Keeper workloads are running with persistent Longhorn
-volumes. PR #61 adds GitOps ownership, private routes and the dedicated
-`svc-cliproxyapi` permission; activation awaits merge and a permission-holding
-NetBird sign-in.
+PR #61 is merged. ArgoCD owns the healthy CPA and customised Keeper workloads,
+persistent Longhorn volumes, private routes and dedicated `svc-cliproxyapi`
+permission. NetBird policy and DNS activation await the first permission-holding
+sign-in, which creates the JWT-issued group.
