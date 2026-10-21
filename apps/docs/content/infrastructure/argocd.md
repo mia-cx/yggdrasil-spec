@@ -26,7 +26,7 @@ GitOps continuous delivery -- automatically syncs all manifests and Helm charts 
 ```bash
 kubectl create namespace argocd
 kubectl apply --server-side --force-conflicts -n argocd \
-  -f https://raw.githubusercontent.com/argoproj/argo-cd/v3.4.5/manifests/install.yaml
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/v3.4.12/manifests/install.yaml
 kubectl wait --for=condition=Available -n argocd deployment/argocd-server --timeout=120s
 ```
 
@@ -40,7 +40,7 @@ official manifest server-side and verify every Argo workload:
 
 ```bash
 kubectl apply --server-side --force-conflicts -n argocd \
-  -f https://raw.githubusercontent.com/argoproj/argo-cd/v3.4.5/manifests/install.yaml
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/v3.4.12/manifests/install.yaml
 kubectl get pods -n argocd
 kubectl get applications -n argocd
 ```
