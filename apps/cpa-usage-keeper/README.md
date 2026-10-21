@@ -8,6 +8,12 @@ with a labelled Refresh. Sparklines span the whole selected range: the backend
 only returns buckets with traffic, so quiet hours or days are drawn as zero
 (cache rate stays undefined there). All values are Keeper's actual overview data.
 
+The rest of the app shares that design system through tokens in
+`web/src/styles/themes.scss` and mixins in `web/src/styles/mixins.scss`: flat
+hairline surfaces, Geist Mono numerals (`@fontsource-variable/geist-mono`), and
+one chart palette in `web/src/utils/usage/chartConfig.ts` (amber accent, muted
+category hues, red only for failures).
+
 ```sh
 docker build -t cpa-usage-keeper:yggdrasil apps/cpa-usage-keeper
 ```

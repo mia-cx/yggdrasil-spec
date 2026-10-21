@@ -1,3 +1,56 @@
+diff --git a/web/package-lock.json b/web/package-lock.json
+index e710805..0ceb7e8 100644
+--- a/web/package-lock.json
++++ b/web/package-lock.json
+@@ -8,6 +8,7 @@
+       "name": "web",
+       "version": "0.0.0",
+       "dependencies": {
++        "@fontsource-variable/geist-mono": "^5.3.0",
+         "@tanstack/react-virtual": "^3.14.5",
+         "chart.js": "^4.5.1",
+         "i18next": "^26.0.5",
+@@ -916,6 +917,15 @@
+         "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
+       }
+     },
++    "node_modules/@fontsource-variable/geist-mono": {
++      "version": "5.3.0",
++      "resolved": "https://registry.npmjs.org/@fontsource-variable/geist-mono/-/geist-mono-5.3.0.tgz",
++      "integrity": "sha512-vBbuwDEo9AkrqADMXOrlAR3DFcJi4/JxeuU43FoiQERnNwsfXNnvxvReZG02cQKmyk4DZkZdBZX3oTDvy2zBAw==",
++      "license": "OFL-1.1",
++      "funding": {
++        "url": "https://github.com/sponsors/ayuhito"
++      }
++    },
+     "node_modules/@humanfs/core": {
+       "version": "0.19.1",
+       "resolved": "https://registry.npmjs.org/@humanfs/core/-/core-0.19.1.tgz",
+diff --git a/web/package.json b/web/package.json
+index c2b304a..2c23d8e 100644
+--- a/web/package.json
++++ b/web/package.json
+@@ -12,6 +12,7 @@
+     "preview": "vite preview"
+   },
+   "dependencies": {
++    "@fontsource-variable/geist-mono": "^5.3.0",
+     "@tanstack/react-virtual": "^3.14.5",
+     "chart.js": "^4.5.1",
+     "i18next": "^26.0.5",
+diff --git a/web/src/components/dashboard/DashboardHeader.module.scss b/web/src/components/dashboard/DashboardHeader.module.scss
+index ff3daa8..87958ed 100644
+--- a/web/src/components/dashboard/DashboardHeader.module.scss
++++ b/web/src/components/dashboard/DashboardHeader.module.scss
+@@ -1,7 +1,7 @@
+ @use '../../styles/menu';
+ 
+ .header { position: relative; z-index: 40; display: flex; align-items: center; justify-content: space-between; min-height: 50px; gap: 16px; margin-inline: 5px; padding: 0 3px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+-.brand { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--text-primary); font-size: 18px; font-weight: 800; letter-spacing: .1em; gap: 11px; }
++.brand { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--text-primary); font-size: 18px; font-weight: 600; letter-spacing: .1em; gap: 11px; }
+ .brand img { width: 41px; height: 31px; }
+ .actions { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; }
+ .back {
 diff --git a/web/src/components/dashboard/DashboardToolbar.module.scss b/web/src/components/dashboard/DashboardToolbar.module.scss
 index a397593..11660c1 100644
 --- a/web/src/components/dashboard/DashboardToolbar.module.scss
@@ -84,6 +137,76 @@ index 661e535..1a84183 100644
          </button>
        </div>
          {menuOpen && <div ref={menuRef} id={menuId} className={styles.pageMenu} data-dashboard-page-menu role="menu" aria-label={t('usage_stats.tabs_aria_label')} onKeyDown={(event) => {
+diff --git a/web/src/components/ui/LanguageSwitcher.module.scss b/web/src/components/ui/LanguageSwitcher.module.scss
+index 35e0e86..4c27cb4 100644
+--- a/web/src/components/ui/LanguageSwitcher.module.scss
++++ b/web/src/components/ui/LanguageSwitcher.module.scss
+@@ -16,7 +16,7 @@
+   color: var(--text-secondary);
+   font: inherit;
+   font-size: 12px;
+-  font-weight: 700;
++  font-weight: 600;
+   padding: 6px 12px;
+   line-height: 18px;
+   border-radius: 999px;
+diff --git a/web/src/components/ui/MenuScrollArea.module.scss b/web/src/components/ui/MenuScrollArea.module.scss
+index fa1beb0..29af7ea 100644
+--- a/web/src/components/ui/MenuScrollArea.module.scss
++++ b/web/src/components/ui/MenuScrollArea.module.scss
+@@ -5,7 +5,7 @@
+   min-height: 0;
+   min-width: 0;
+   overflow: clip;
+-  border-radius: 18px;
++  border-radius: var(--keeper-float-radius);
+ }
+ 
+ .viewport {
+diff --git a/web/src/components/ui/QuestionMarkHelpButton.module.scss b/web/src/components/ui/QuestionMarkHelpButton.module.scss
+index 96e2037..2b1dc83 100644
+--- a/web/src/components/ui/QuestionMarkHelpButton.module.scss
++++ b/web/src/components/ui/QuestionMarkHelpButton.module.scss
+@@ -10,7 +10,7 @@
+   color: var(--text-secondary);
+   background: var(--bg-secondary);
+   font-size: 11px;
+-  font-weight: 750;
++  font-weight: 600;
+   line-height: 1;
+   font-family: inherit;
+   cursor: default;
+diff --git a/web/src/components/ui/Select.module.scss b/web/src/components/ui/Select.module.scss
+index c7a358b..b0bb3c9 100644
+--- a/web/src/components/ui/Select.module.scss
++++ b/web/src/components/ui/Select.module.scss
+@@ -20,9 +20,9 @@
+   height: 40px;
+   padding: 0 12px;
+   border: 1px solid var(--border-color);
+-  border-radius: $radius-md;
++  border-radius: var(--keeper-control-radius);
+   background-color: var(--bg-primary);
+-  box-shadow: var(--shadow);
++  box-shadow: none;
+   color: var(--text-primary);
+   font-size: 13px;
+   font-weight: 500;
+@@ -37,12 +37,12 @@
+ 
+   &:focus {
+     outline: none;
+-    box-shadow: var(--shadow), 0 0 0 3px rgba($primary-color, 0.18);
++    box-shadow: 0 0 0 3px rgba($primary-color, 0.18);
+   }
+ 
+   &[aria-expanded='true'] {
+     border-color: var(--primary-color);
+-    box-shadow: var(--shadow), 0 0 0 3px rgba($primary-color, 0.18);
++    box-shadow: 0 0 0 3px rgba($primary-color, 0.18);
+   }
+ 
+   &:disabled {
 diff --git a/web/src/components/usage/DailyAverageCard.tsx b/web/src/components/usage/DailyAverageCard.tsx
 index b451d4e..365ab37 100644
 --- a/web/src/components/usage/DailyAverageCard.tsx
@@ -187,6 +310,202 @@ index b451d4e..365ab37 100644
      </section>
    );
  }
+diff --git a/web/src/components/usage/LatencyScatterChart.tsx b/web/src/components/usage/LatencyScatterChart.tsx
+index 2a7e035..362d590 100644
+--- a/web/src/components/usage/LatencyScatterChart.tsx
++++ b/web/src/components/usage/LatencyScatterChart.tsx
+@@ -3,7 +3,7 @@ import '@/lib/chartjs';
+ import type { Chart, ChartData, ChartOptions, Plugin } from 'chart.js';
+ import { Scatter } from './charts/UsageChart';
+ import { formatDurationMs } from '@/utils/usage';
+-import { getUsageChartTheme, type UsageChartTheme } from '@/utils/usage/chartConfig';
++import { getUsageChartTheme, USAGE_CHART_LATENCY_COLORS, type UsageChartTheme } from '@/utils/usage/chartConfig';
+ 
+ export interface LatencyScatterData {
+   points: Array<{ ttft_ms: number; latency_ms: number }>;
+@@ -56,18 +56,7 @@ type LatencyReferenceHover = {
+ };
+ type LatencyPluginEventArgs = Parameters<NonNullable<Plugin<'scatter'>['afterEvent']>>[1];
+ 
+-const LATENCY_COLORS = {
+-  light: {
+-    pointFill: 'rgba(45, 212, 191, 0.62)',
+-    p95TTFT: '#38bdf8',
+-    p95Latency: '#fb7185',
+-  },
+-  dark: {
+-    pointFill: 'rgba(94, 234, 212, 0.72)',
+-    p95TTFT: '#7dd3fc',
+-    p95Latency: '#fda4af',
+-  },
+-} satisfies Record<'light' | 'dark', LatencyThemeColors>;
++const LATENCY_COLORS = USAGE_CHART_LATENCY_COLORS satisfies Record<'light' | 'dark', LatencyThemeColors>;
+ const LATENCY_REFERENCE_HIT_RADIUS_PX = 8;
+ const latencyReferenceHoverStates = new WeakMap<Chart<'scatter'>, LatencyReferenceHover>();
+ 
+diff --git a/web/src/components/usage/OverviewRealtimePanel.tsx b/web/src/components/usage/OverviewRealtimePanel.tsx
+index 70b455a..e6db29d 100644
+--- a/web/src/components/usage/OverviewRealtimePanel.tsx
++++ b/web/src/components/usage/OverviewRealtimePanel.tsx
+@@ -20,6 +20,7 @@ import {
+   formatPerMinuteValue,
+ } from '@/utils/usage';
+ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
++import { USAGE_CHART_REQUESTS_LINE_COLOR, USAGE_CHART_TOKEN_COLORS } from '@/utils/usage/chartConfig';
+ import styles from '@/pages/UsagePage.module.scss';
+ 
+ type RealtimeDimensionKey = 'models' | 'api_keys' | 'auth_files' | 'ai_providers';
+@@ -73,8 +74,8 @@ const THROUGHPUT_Y_INTERVAL_COUNT = THROUGHPUT_Y_TICK_COUNT - 1;
+ const THROUGHPUT_LEGEND_BOTTOM_GAP = 10;
+ 
+ const CHART_COLORS = {
+-  token: '#3b82f6',
+-  request: '#f97316',
++  token: USAGE_CHART_TOKEN_COLORS.input.base,
++  request: USAGE_CHART_REQUESTS_LINE_COLOR,
+ } as const;
+ 
+ const REALTIME_DURATION_UNITS = { d: 'd', h: 'h', m: 'm', s: 's', ms: 'ms' } as const;
+diff --git a/web/src/components/usage/RealtimeInsights.module.scss b/web/src/components/usage/RealtimeInsights.module.scss
+index 2c817d7..6673722 100644
+--- a/web/src/components/usage/RealtimeInsights.module.scss
++++ b/web/src/components/usage/RealtimeInsights.module.scss
+@@ -1,12 +1,13 @@
+-.summaryGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--keeper-section-gap, 16px); }
++// The window metrics form one hairline grid, like the Overview metrics; overflow clips the outer-edge dividers.
++.summaryGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: var(--keeper-hairline); overflow: hidden; }
+ .summaryGrid > .summaryCard { min-height: 0; display: flex; flex-direction: column; gap: 11px; min-width: 0; }
+-.summaryLabel { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-secondary); }
+-.window { font-size: 10px; padding: 2px 6px; border: 1px solid var(--border-color); border-radius: 5px; }
+-.summaryCard > strong { color: var(--text-primary); font-weight: 800; font-size: clamp(24px, 2.2vw, 32px); line-height: 1.2; font-variant-numeric: tabular-nums; }
++.summaryLabel { display: flex; justify-content: space-between; gap: 8px; font-size: var(--keeper-label-size); font-weight: var(--keeper-label-weight); color: var(--text-secondary); }
++.window { font-size: 11px; padding: 1px 8px; border: var(--keeper-hairline); border-radius: var(--keeper-control-radius); color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
++.summaryCard > strong { color: var(--text-primary); font-family: var(--font-mono); font-weight: var(--keeper-value-weight); font-size: clamp(24px, 2.2vw, 30px); line-height: 1.2; font-variant-numeric: tabular-nums; }
+ .summaryDetail { font-size: 11px; color: var(--text-secondary); line-height: 1.6; }
+ .diagnosticsGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--keeper-section-gap, 16px); grid-column: 1 / -1; }
+ .diagnosticsGrid > div { min-width: 0; }
+-.chartSurface { min-width: 0; padding: 14px; border: 1px solid var(--border-color); border-radius: var(--keeper-card-radius); background: var(--bg-secondary); }
++.chartSurface { min-width: 0; padding: 14px 0 0; }
+ .cacheChart { height: 100%; box-sizing: border-box; }
+ .chart { height: 245px; position: relative; }
+ .outcomeSummary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding-top: 12px; font-size: 11px; color: var(--text-secondary); }
+@@ -32,5 +33,3 @@
+ }
+ @media (max-width: 370px) { .mix { grid-template-columns: minmax(0, 1fr); } .doughnut { max-width: 185px; } .mixItem { grid-template-columns: minmax(0, 1fr) auto; } }
+ 
+-
+-@media (prefers-reduced-motion: reduce) { .summaryGrid > .summaryCard { transition: none; } .summaryGrid > .summaryCard:hover { transform: none; } }
+diff --git a/web/src/components/usage/RealtimeInsights.tsx b/web/src/components/usage/RealtimeInsights.tsx
+index b30a74f..8442aab 100644
+--- a/web/src/components/usage/RealtimeInsights.tsx
++++ b/web/src/components/usage/RealtimeInsights.tsx
+@@ -1,4 +1,4 @@
+-import { useMemo, type CSSProperties } from 'react';
++import { useMemo } from 'react';
+ import { useTranslation } from 'react-i18next';
+ import '@/lib/chartjs';
+ import { Chart, Doughnut } from './charts/UsageChart';
+@@ -6,13 +6,13 @@ import { Chart as ChartJS, type ChartData, type ChartOptions, type Plugin } from
+ import type { RealtimeCacheLevelPoint, RealtimeInsights, RealtimeWindowSummary } from '@/lib/types';
+ import { Card } from '@/components/ui/Card';
+ import { formatCompactNumber, formatUsd } from '@/utils/usage';
+-import { buildUsageChartTooltipStyle, getUsageChartTheme, toUsageChartGradientFill, USAGE_CHART_REALTIME_COLORS as REALTIME_COLORS, USAGE_CHART_TOKEN_COLORS as COLORS } from '@/utils/usage/chartConfig';
++import { buildUsageChartTooltipStyle, getUsageChartTheme, toUsageChartGradientFill, USAGE_CHART_REALTIME_COLORS as REALTIME_COLORS, USAGE_CHART_TOKEN_COLORS as COLORS, USAGE_CHART_FAILURE_COLOR } from '@/utils/usage/chartConfig';
+ import usageStyles from '@/pages/UsagePage.module.scss';
+ import styles from './RealtimeInsights.module.scss';
+ 
+-const FAILURE_COLOR = { base: '#b91c1c', light: '#ef4444' };
+-const CACHE_RATE_COLOR = '#14b8a6';
+-const FAILURE_RATE_COLOR = '#f97316';
++const FAILURE_COLOR = USAGE_CHART_FAILURE_COLOR;
++const CACHE_RATE_COLOR = COLORS.cost;
++const FAILURE_RATE_COLOR = USAGE_CHART_FAILURE_COLOR.light;
+ const ratio = (value: number, denominator: number) => denominator > 0 ? value / denominator * 100 : null;
+ const percent = (value: number | null, fractionDigits = 1) => value === null ? '—' : `${value.toFixed(fractionDigits)}%`;
+ type Translate = (key: string) => string;
+@@ -79,13 +79,13 @@ function mixedOptions(isDark: boolean, isMobile: boolean, axisTitle: string, rat
+ export function RealtimeWindowCards({ summary: s, window }: { summary: RealtimeWindowSummary; window: string }) {
+   const { t } = useTranslation();
+   const cards = [
+-    { label: 'requests', value: s.requests.toLocaleString(), color: COLORS.input.base },
+-    { label: 'tokens', value: formatCompactNumber(s.total_tokens), color: COLORS.reasoning.base },
+-    { label: 'cache_reach', value: percent(ratio(s.cached_requests, s.token_requests), 2), color: COLORS.cacheRead.base },
+-    { label: 'cost', value: s.cost === null ? '—' : formatUsd(s.cost), color: COLORS.output.base },
++    { label: 'requests', value: s.requests.toLocaleString() },
++    { label: 'tokens', value: formatCompactNumber(s.total_tokens) },
++    { label: 'cache_reach', value: percent(ratio(s.cached_requests, s.token_requests), 2) },
++    { label: 'cost', value: s.cost === null ? '—' : formatUsd(s.cost) },
+   ];
+   return <div className={styles.summaryGrid} data-realtime-summary>
+-    {cards.map(card => <div key={card.label} className={`${usageStyles.statCard} ${styles.summaryCard}`} style={{'--accent':card.color, '--accent-soft':`${card.color}18`, '--accent-border':`${card.color}55`} as CSSProperties}>
++    {cards.map(card => <div key={card.label} className={`${usageStyles.statCard} ${styles.summaryCard}`}>
+       <div className={styles.summaryLabel}><span>{t(`usage_stats.insights_${card.label}`)}</span><span className={styles.window}>{window}</span></div>
+       <strong>{card.value}</strong>
+     </div>)}
+diff --git a/web/src/components/usage/RealtimeTokenShareRibbons.tsx b/web/src/components/usage/RealtimeTokenShareRibbons.tsx
+index 026b5f8..c297902 100644
+--- a/web/src/components/usage/RealtimeTokenShareRibbons.tsx
++++ b/web/src/components/usage/RealtimeTokenShareRibbons.tsx
+@@ -2,9 +2,9 @@ import { useLayoutEffect, useRef, useState } from 'react';
+ import { useTranslation } from 'react-i18next';
+ import type { RealtimeUsageTopItem } from '@/lib/types';
+ import { formatCompactNumber, formatFixedTwoDecimals, formatUsd } from '@/utils/usage';
++import { USAGE_CHART_CATEGORY_COLORS as COLORS } from '@/utils/usage/chartConfig';
+ import styles from '@/pages/UsagePage.module.scss';
+ 
+-const COLORS = ['#4d8bdc', '#269c85', '#9671ce', '#d99637', '#d1698c', '#a5b0c0'];
+ const OTHER_KEY = '__realtime_others__';
+ 
+ interface RibbonGeometry {
+diff --git a/web/src/components/usage/RequestEventRequestCell.module.scss b/web/src/components/usage/RequestEventRequestCell.module.scss
+index a20c617..266c673 100644
+--- a/web/src/components/usage/RequestEventRequestCell.module.scss
++++ b/web/src/components/usage/RequestEventRequestCell.module.scss
+@@ -7,7 +7,7 @@
+ 
+ .streamIcon {
+   flex: 0 0 auto;
+-  color: #0891b2;
++  color: var(--keeper-accent);
+ }
+ 
+ :global([data-theme='dark']) .streamIcon {
+diff --git a/web/src/components/usage/RequestEventResultBadge.module.scss b/web/src/components/usage/RequestEventResultBadge.module.scss
+index cb40b4d..be47414 100644
+--- a/web/src/components/usage/RequestEventResultBadge.module.scss
++++ b/web/src/components/usage/RequestEventResultBadge.module.scss
+@@ -60,7 +60,7 @@
+   min-height: 22px;
+   padding: 3px 7px;
+   font-size: 9px;
+-  font-weight: 800;
++  font-weight: 600;
+ 
+   &[data-result-locale='zh'] {
+     width: auto;
+diff --git a/web/src/components/usage/ServiceHealthCard.tsx b/web/src/components/usage/ServiceHealthCard.tsx
+index 8dfb1ae..b2793f4 100644
+--- a/web/src/components/usage/ServiceHealthCard.tsx
++++ b/web/src/components/usage/ServiceHealthCard.tsx
+@@ -7,12 +7,13 @@ import {
+ } from './ActivityHeatmapGrid';
+ import styles from '@/pages/UsagePage.module.scss';
+ 
++// Red to green still reads as unhealthy to healthy, muted to sit beside the warm palette.
+ const HEALTH_LEVEL_COLORS = [
+-  '#ef4444',
+-  '#f97316',
+-  '#facc15',
+-  '#84cc16',
+-  '#22c55e',
++  '#c65746',
++  '#c9824f',
++  '#c9a54e',
++  '#98a860',
++  '#6fa37f',
+ ] as const;
+ 
+ export const parseTime = parseActivityTime;
 diff --git a/web/src/components/usage/StatCards.tsx b/web/src/components/usage/StatCards.tsx
 index 197661a..9340336 100644
 --- a/web/src/components/usage/StatCards.tsx
@@ -574,6 +893,1644 @@ index 197661a..9340336 100644
 +    </section>
    );
  }
+diff --git a/web/src/components/usage/TimeRangeControl.module.scss b/web/src/components/usage/TimeRangeControl.module.scss
+index 18001a8..a6ef252 100644
+--- a/web/src/components/usage/TimeRangeControl.module.scss
++++ b/web/src/components/usage/TimeRangeControl.module.scss
+@@ -5,7 +5,7 @@
+   position: relative;
+   flex: 0 0 auto;
+   min-width: 0;
+-  --range-slider-accent: #3b82f6;
++  --range-slider-accent: var(--keeper-accent);
+ }
+ 
+ .desktopShell,
+@@ -31,7 +31,7 @@
+ .shellLabel {
+   color: var(--text-secondary);
+   font-size: 10px;
+-  font-weight: 700;
++  font-weight: 600;
+   line-height: 1;
+   white-space: nowrap;
+ }
+@@ -49,7 +49,7 @@
+   cursor: pointer;
+   font: inherit;
+   font-size: 12px;
+-  font-weight: 700;
++  font-weight: 600;
+   transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+ }
+ 
+@@ -128,7 +128,7 @@
+   width: 368px;
+   padding: 16px;
+   border: 1px solid var(--floating-border);
+-  border-radius: 20px;
++  border-radius: var(--keeper-float-radius);
+   background: color-mix(in srgb, var(--floating-surface) 96%, transparent);
+   box-shadow: var(--floating-shadow);
+   backdrop-filter: blur(18px);
+@@ -146,7 +146,7 @@
+ .popoverHeader > span {
+   color: var(--text-secondary);
+   font-size: 11px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .popoverHeader > strong {
+@@ -155,7 +155,7 @@
+ }
+ 
+ .rangePanel {
+-  --range-slider-accent: #3b82f6;
++  --range-slider-accent: var(--keeper-accent);
+   --custom-calendar-range-bg: color-mix(in srgb, var(--primary-color) 18%, transparent);
+   --custom-calendar-selected-bg: var(--primary-active);
+   --custom-calendar-selected-text: var(--primary-contrast, #fff);
+@@ -194,7 +194,7 @@
+   cursor: pointer;
+   font: inherit;
+   font-size: 11px;
+-  font-weight: 700;
++  font-weight: 600;
+   white-space: nowrap;
+ }
+ 
+@@ -251,7 +251,7 @@
+   cursor: pointer;
+   font: inherit;
+   font-size: 10px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .customUnitButtonActive {
+@@ -276,7 +276,7 @@
+   min-height: 68px;
+   padding: 9px 10px;
+   border: 1px solid var(--border-color);
+-  border-radius: 13px;
++  border-radius: var(--keeper-card-radius);
+   color: var(--text-primary);
+   background: var(--bg-primary);
+   cursor: pointer;
+@@ -305,7 +305,7 @@
+   margin-bottom: 4px;
+   color: var(--text-secondary);
+   font-size: 8px;
+-  font-weight: 800;
++  font-weight: 600;
+   letter-spacing: 0.08em;
+   text-transform: uppercase;
+ }
+@@ -448,7 +448,7 @@
+   margin-bottom: 3px;
+   color: var(--text-secondary);
+   font-size: 8px;
+-  font-weight: 800;
++  font-weight: 600;
+   text-transform: uppercase;
+ }
+ 
+@@ -460,7 +460,7 @@
+ .customCalendar {
+   padding: 9px;
+   border: 1px solid var(--border-color);
+-  border-radius: 14px;
++  border-radius: var(--keeper-card-radius);
+   background: var(--bg-primary);
+ }
+ 
+@@ -498,7 +498,7 @@
+   height: 21px;
+   color: var(--text-secondary);
+   font-size: 8px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .customCalendarGrid > span,
+@@ -516,7 +516,7 @@
+   cursor: pointer;
+   font: inherit;
+   font-size: 9px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .customCalendarDay:hover:not(:disabled) {
+@@ -590,7 +590,7 @@
+   min-width: 0;
+   padding: 8px;
+   border: 1px solid var(--border-color);
+-  border-radius: 13px;
++  border-radius: var(--keeper-card-radius);
+   background: var(--bg-primary);
+ }
+ 
+@@ -599,7 +599,7 @@
+   padding: 0 3px 7px;
+   color: var(--text-secondary);
+   font-size: 8px;
+-  font-weight: 800;
++  font-weight: 600;
+   letter-spacing: 0.07em;
+   text-transform: uppercase;
+ }
+@@ -683,7 +683,7 @@
+   min-height: 142px;
+   padding: 15px 14px 11px;
+   border: 1px solid var(--border-color);
+-  border-radius: 17px;
++  border-radius: var(--keeper-card-radius);
+   background: color-mix(in srgb, var(--bg-secondary) 72%, transparent);
+ }
+ 
+@@ -704,7 +704,9 @@
+   align-items: baseline;
+   gap: 4px;
+   color: var(--text-primary);
++  font-family: var(--font-mono);
+   font-size: 26px;
++  font-weight: var(--keeper-value-weight);
+   font-variant-numeric: tabular-nums;
+ }
+ 
+@@ -743,11 +745,11 @@
+   overflow: hidden;
+   border-radius: inherit;
+   background:
+-    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.05) 46%, rgba(45, 22, 155, 0.16) 100%),
+-    linear-gradient(90deg, #244ccf 0%, #4056e8 22%, #8b58f0 48%, #b45df4 63%, #793feb 82%, #5c33dc 100%);
++    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 46%, rgba(80, 52, 18, 0.14) 100%),
++    linear-gradient(90deg, #8a5e27 0%, #b98a4a 45%, #d9b47e 100%);
+   box-shadow:
+     inset 0 1px 0 rgba(255, 255, 255, 0.30),
+-    inset 0 -1px 0 rgba(42, 24, 133, 0.22),
++    inset 0 -1px 0 rgba(80, 52, 18, 0.22),
+     0 5px 14px color-mix(in srgb, var(--range-slider-accent) 24%, transparent);
+ }
+ 
+@@ -763,7 +765,7 @@
+ .sliderFill::before {
+   inset: -55% -28%;
+   border-radius: 50%;
+-  background: radial-gradient(ellipse at center, rgba(241, 126, 255, 0.48) 0%, rgba(196, 96, 255, 0.24) 36%, transparent 70%);
++  background: radial-gradient(ellipse at center, rgba(244, 214, 160, 0.42) 0%, rgba(217, 180, 126, 0.2) 36%, transparent 70%);
+   opacity: 0.72;
+   animation: liquidGlowPrimary 8s ease-in-out infinite alternate;
+ }
+@@ -771,7 +773,7 @@
+ .sliderFill::after {
+   inset: -65% -34%;
+   border-radius: 50%;
+-  background: radial-gradient(ellipse at center, rgba(115, 181, 255, 0.32) 0%, rgba(92, 119, 255, 0.16) 40%, transparent 72%);
++  background: radial-gradient(ellipse at center, rgba(255, 240, 214, 0.28) 0%, rgba(185, 138, 74, 0.14) 40%, transparent 72%);
+   opacity: 0.64;
+   animation: liquidGlowSecondary 11s ease-in-out infinite alternate-reverse;
+ }
+@@ -785,7 +787,7 @@
+   height: var(--liquid-particle-size);
+   border-radius: 50%;
+   background: var(--liquid-particle-color);
+-  box-shadow: 0 0 4px rgba(247, 226, 255, 0.72);
++  box-shadow: 0 0 4px rgba(255, 240, 214, 0.72);
+   opacity: 0;
+   transform: translate3d(0, 4px, 0) scale(0.62);
+   animation-duration: var(--liquid-particle-duration);
+@@ -1006,7 +1008,7 @@
+   min-height: 142px;
+   padding: 16px;
+   border: 1px solid var(--border-color);
+-  border-radius: 17px;
++  border-radius: var(--keeper-card-radius);
+   background: color-mix(in srgb, var(--bg-secondary) 72%, transparent);
+ }
+ 
+@@ -1041,7 +1043,7 @@
+   margin-bottom: 14px;
+   color: var(--text-primary);
+   font-size: 14px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .mobileRangeModal {
+diff --git a/web/src/components/usage/UsageComparisonCharts.module.scss b/web/src/components/usage/UsageComparisonCharts.module.scss
+index 1220c04..930040a 100644
+--- a/web/src/components/usage/UsageComparisonCharts.module.scss
++++ b/web/src/components/usage/UsageComparisonCharts.module.scss
+@@ -3,7 +3,7 @@
+ .card :global(.keeper-card-actions) { max-width: 100%; min-width: 0; }
+ .dimensions { max-width: 100%; }
+ .total { display: flex; align-items: baseline; gap: 10px; font-variant-numeric: tabular-nums; }
+-.total strong { font-size: 20px; line-height: 1.3; font-weight: 600; color: var(--text-primary); }
++.total strong { font-family: var(--font-mono); font-size: 20px; line-height: 1.3; font-weight: var(--keeper-value-weight); color: var(--text-primary); }
+ .total span { font-size: 12px; font-weight: 400; color: var(--text-secondary); }
+ .chart { position: relative; height: 240px; min-width: 0; }
+ .empty { height: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-secondary); font-size: 12px; }
+@@ -21,7 +21,7 @@
+ .detailName { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: 12px; color: var(--text-secondary); }
+ .detailName i { background: var(--series-color); }
+ .detailName span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+-.detailValue { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; margin: 7px 0 0 16px; font-size: 14px; font-variant-numeric: tabular-nums; }
++.detailValue { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; margin: 7px 0 0 16px; font-family: var(--font-mono); font-size: 14px; font-variant-numeric: tabular-nums; }
+ .detailValue small { font-size: 11px; color: var(--text-secondary); }
+ .details button:focus-visible, .chart canvas:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 3px; }
+ @media (max-width: 600px) {
+diff --git a/web/src/components/usage/UsageComparisonCharts.tsx b/web/src/components/usage/UsageComparisonCharts.tsx
+index 35437cc..de70d74 100644
+--- a/web/src/components/usage/UsageComparisonCharts.tsx
++++ b/web/src/components/usage/UsageComparisonCharts.tsx
+@@ -8,14 +8,13 @@ import { Card } from '@/components/ui/Card';
+ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+ import { PortalTooltip, usePortalTooltip } from '@/components/ui/PortalTooltip';
+ import { formatCompactNumber, formatUsd } from '@/utils/usage';
+-import { buildUsageChartTooltipStyle, getUsageChartTheme } from '@/utils/usage/chartConfig';
++import { buildUsageChartTooltipStyle, getUsageChartTheme, USAGE_CHART_CATEGORY_COLORS as COLORS } from '@/utils/usage/chartConfig';
+ import { buildComparisonView, formatComparisonBucket, type ComparisonRow } from './usageComparisonData';
+ import styles from './UsageComparisonCharts.module.scss';
+ import usageStyles from '@/pages/UsagePage.module.scss';
+ 
+ const EMPTY: UsageComparisonItem[] = [];
+ const EMPTY_BUCKETS: string[] = [];
+-const COLORS = ['#cfe3fc', '#387ff5', '#234f91', '#8950ee', '#b69af5', '#94a3b8'];
+ type UsageDimension = 'models' | 'api_keys' | 'auth_files' | 'ai_providers';
+ const DIMENSIONS: readonly UsageDimension[] = ['models', 'api_keys', 'auth_files', 'ai_providers'];
+ const colorFor = (row: ComparisonRow, index: number) => COLORS[row.other ? 5 : index];
+diff --git a/web/src/components/usage/analysis/AnalysisPanel.module.scss b/web/src/components/usage/analysis/AnalysisPanel.module.scss
+index 777169b..0256344 100644
+--- a/web/src/components/usage/analysis/AnalysisPanel.module.scss
++++ b/web/src/components/usage/analysis/AnalysisPanel.module.scss
+@@ -17,16 +17,6 @@
+   flex-direction: column;
+ }
+ 
+-.heatmapCardDark .analysisChartSurface {
+-  background: var(--bg-secondary);
+-  border-color: var(--border-color);
+-}
+-
+-.heatmapCardLight .analysisChartSurface {
+-  background: color-mix(in srgb, var(--bg-secondary) 58%, #fff);
+-  border-color: var(--border-color);
+-}
+-
+ .cardHeader {
+   display: flex;
+   flex-direction: column;
+@@ -64,11 +54,9 @@
+   }
+ }
+ 
++// Charts sit straight on their card; the card's hairline is the only frame.
+ .analysisChartSurface {
+-  padding: 14px;
+-  background: var(--bg-secondary);
+-  border-radius: var(--keeper-card-radius);
+-  border: 1px solid var(--border-color);
++  padding: 0;
+   min-width: 0;
+ }
+ 
+@@ -125,7 +113,6 @@
+   gap: 12px;
+ 
+   .cardHeader { margin-bottom: 0; }
+-  .analysisChartSurface { padding: 12px; }
+   .emptyState { grid-row: 3 / -1; }
+ 
+   @include mobile {
+@@ -133,7 +120,6 @@
+     height: 640px;
+     grid-template-rows: 80px 38px auto minmax(0, 1fr);
+     gap: 10px;
+-    .analysisChartSurface { padding: 8px; }
+   }
+ }
+ 
+@@ -163,7 +149,7 @@
+   border-radius: 999px;
+   border: 1px solid var(--border-color);
+   font-size: 12px;
+-  font-weight: 750;
++  font-weight: 600;
+   color: var(--text-secondary);
+ }
+ 
+@@ -198,9 +184,9 @@
+   width: 100%;
+   min-width: 0;
+   padding: 12px;
+-  border: 1px solid var(--border-color);
+-  border-radius: $radius-lg;
+-  background: color-mix(in srgb, var(--bg-secondary) 72%, transparent);
++  border: var(--keeper-hairline);
++  border-radius: var(--keeper-card-radius);
++  background: transparent;
+   color: var(--text-primary);
+   font: inherit;
+   text-align: left;
+@@ -240,9 +226,9 @@
+ 
+ .rankingRank { color: var(--text-tertiary); font-size: 10px; text-align: center; font-variant-numeric: tabular-nums; }
+ .rankingColor { width: 9px; height: 9px; border-radius: 3px; background: var(--ranking-color); }
+-.rankingName { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 750; }
++.rankingName { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+ .rankingTokens, .rankingShare { font-variant-numeric: tabular-nums; white-space: nowrap; }
+-.rankingTokens { font-weight: 800; }
++.rankingTokens { font-weight: 600; }
+ .rankingShare { color: var(--text-secondary); text-align: right; font-size: 11px; }
+ 
+ .rankingTrack {
+@@ -367,10 +353,9 @@
+   }
+ 
+   dd {
++    @include keeper-value;
+     margin: 0;
+-    color: var(--text-primary);
+     font-size: 18px;
+-    font-weight: 800;
+     white-space: nowrap;
+   }
+ 
+@@ -428,7 +413,7 @@
+     min-width: 0;
+     overflow-wrap: anywhere;
+     font-size: 12px;
+-    font-weight: 900;
++    font-weight: 600;
+   }
+ }
+ 
+@@ -463,7 +448,7 @@
+   min-height: 34px;
+   padding: 0 12px;
+   font-size: 12px;
+-  font-weight: 800;
++  font-weight: 600;
+   cursor: pointer;
+   transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+ }
+@@ -536,14 +521,14 @@
+   padding: 10px 12px;
+   color: var(--text-secondary);
+   font-size: 11px;
+-  font-weight: 800;
++  font-weight: 600;
+ }
+ 
+ .heatmapCardDark {
+   .heatmapCorner,
+   .heatmapHeaderCell,
+   .heatmapRowLabel {
+-    color: color-mix(in srgb, var(--text-secondary) 86%, #d8b4fe);
++    color: var(--text-secondary);
+   }
+ }
+ 
+@@ -623,13 +608,13 @@
+   height: 16px;
+   flex: 0 0 auto;
+   border-radius: 999px;
+-  background: linear-gradient(180deg, #fb923c, #ef4444);
++  background: var(--keeper-accent);
+ }
+ 
+ .heatmapKeyLabel {
+   color: var(--text-primary);
+   font-size: 11px;
+-  font-weight: 800;
++  font-weight: 600;
+ }
+ 
+ .heatmapCell {
+@@ -671,7 +656,7 @@
+ 
+ .heatmapRowLabel:focus-visible,
+ .heatmapSummaryCell:focus-visible {
+-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--heatmap-focus-color, #d86a4a) 70%, transparent);
++  box-shadow: 0 0 0 2px color-mix(in srgb, var(--heatmap-focus-color, var(--keeper-accent)) 70%, transparent);
+ }
+ 
+ .heatmapTotalTokenValue,
+@@ -681,7 +666,7 @@
+   text-overflow: ellipsis;
+   white-space: nowrap;
+   font-size: 10px;
+-  font-weight: 900;
++  font-weight: 600;
+ }
+ 
+ .heatmapCardDark {
+@@ -708,7 +693,7 @@
+ }
+ 
+ .heatmapCell:focus-visible {
+-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--heatmap-focus-color, #d86a4a) 70%, transparent), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
++  box-shadow: 0 0 0 2px color-mix(in srgb, var(--heatmap-focus-color, var(--keeper-accent)) 70%, transparent), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+ }
+ 
+ .heatmapCellTokenValue {
+@@ -720,7 +705,7 @@
+   white-space: nowrap;
+   line-height: 1;
+   font-size: 10px;
+-  font-weight: 900;
++  font-weight: 600;
+ }
+ 
+ .heatmapLegend {
+@@ -732,19 +717,19 @@
+   padding-top: 28px;
+   color: var(--text-secondary);
+   font-size: 11px;
+-  font-weight: 800;
++  font-weight: 600;
+ }
+ 
+ .heatmapLegendRamp {
+   width: 120px;
+   height: 10px;
+   border-radius: 8px;
+-  background: linear-gradient(90deg, #fff7ed, #fed7aa, #fb923c, #ef4444);
++  background: linear-gradient(90deg, #f5f1e9, #e6d2ae, #c4985c, #9a6b2f);
+   box-shadow: inset 0 0 0 1px var(--border-color);
+ }
+ 
+ .heatmapCardDark .heatmapLegendRamp {
+-  background: linear-gradient(90deg, #3a2430, #7a2f3b, #ef4444);
++  background: linear-gradient(90deg, #26221d, #705838, #d9b47e);
+   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.10);
+ }
+ 
+@@ -775,7 +760,7 @@
+ 
+ .heatmapTooltipTitle {
+   color: var(--text-primary);
+-  font-weight: 900;
++  font-weight: 600;
+   margin-bottom: 4px;
+ }
+ 
+@@ -785,9 +770,9 @@
+   align-items: center;
+   justify-content: center;
+   border: 1px dashed var(--border-color);
+-  border-radius: 18px;
++  border-radius: var(--keeper-card-radius);
+   color: var(--text-secondary);
+   background: color-mix(in srgb, var(--bg-secondary) 70%, transparent);
+   font-size: 13px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+diff --git a/web/src/components/usage/analysis/AnalysisPanel.tsx b/web/src/components/usage/analysis/AnalysisPanel.tsx
+index bee6c0b..e43d22e 100644
+--- a/web/src/components/usage/analysis/AnalysisPanel.tsx
++++ b/web/src/components/usage/analysis/AnalysisPanel.tsx
+@@ -117,13 +117,7 @@ declare module 'chart.js' {
+   }
+ }
+ 
+-const TOP_MODEL_COLORS: GradientColor[] = [
+-  { base: '#db2777', light: '#f9a8d4' },
+-  { base: '#d97706', light: '#fcd34d' },
+-  { base: '#059669', light: '#6ee7b7' },
+-  { base: '#2563eb', light: '#93c5fd' },
+-  { base: '#dc2626', light: '#fca5a5' },
+-];
++const TOP_MODEL_COLORS: GradientColor[] = CHART_COLORS.slice(0, 5);
+ const TOP_MODELS_MIN_SEGMENT_PX = 4;
+ const TOP_MODELS_SCALE_HEADROOM_RATIO = 1.12;
+ const MODEL_EFFICIENCY_COLORS: ModelEfficiencyColor[] = [
+@@ -429,15 +423,15 @@ const getHeatmapCellColor = (intensity: number, isDark: boolean) => {
+   const stops: Array<{ at: number; color: [number, number, number] }> = [
+     ...(isDark
+       ? [
+-        { at: 0, color: [58, 36, 48] },
+-        { at: 0.46, color: [122, 47, 59] },
+-        { at: 1, color: [239, 68, 68] },
++        { at: 0, color: [38, 34, 29] },
++        { at: 0.46, color: [112, 88, 56] },
++        { at: 1, color: [217, 180, 126] },
+       ] satisfies Array<{ at: number; color: [number, number, number] }>
+       : [
+-        { at: 0, color: [255, 247, 237] },
+-        { at: 0.34, color: [254, 215, 170] },
+-        { at: 0.67, color: [251, 146, 60] },
+-        { at: 1, color: [239, 68, 68] },
++        { at: 0, color: [245, 241, 233] },
++        { at: 0.34, color: [230, 210, 174] },
++        { at: 0.67, color: [196, 152, 92] },
++        { at: 1, color: [154, 107, 47] },
+       ] satisfies Array<{ at: number; color: [number, number, number] }>),
+   ];
+   const upperIndex = stops.findIndex((stop) => clampedIntensity <= stop.at);
+diff --git a/web/src/components/usage/analysis/analysisRanking.tsx b/web/src/components/usage/analysis/analysisRanking.tsx
+index 843b082..d731155 100644
+--- a/web/src/components/usage/analysis/analysisRanking.tsx
++++ b/web/src/components/usage/analysis/analysisRanking.tsx
+@@ -30,7 +30,8 @@ export function getAnalysisRankingColor(identity: string, index: number, palette
+       return Math.round(value * 255).toString(16).padStart(2, '0');
+     }).join('')}`;
+   };
+-  return { base: hex(0.68, 0.44), light: hex(0.78, 0.7) };
++  // Hashed hues past the palette stay as muted as the palette itself.
++  return { base: hex(0.28, 0.5), light: hex(0.3, 0.68) };
+ }
+ 
+ export function useAnalysisHighlight(scope: string) {
+diff --git a/web/src/components/usage/credentials/CodexQuotaHistoryPanel.module.scss b/web/src/components/usage/credentials/CodexQuotaHistoryPanel.module.scss
+index ca759bc..bebd786 100644
+--- a/web/src/components/usage/credentials/CodexQuotaHistoryPanel.module.scss
++++ b/web/src/components/usage/credentials/CodexQuotaHistoryPanel.module.scss
+@@ -29,7 +29,7 @@
+   color: var(--text-secondary);
+   font: inherit;
+   font-size: 11px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1;
+   white-space: nowrap;
+   cursor: pointer;
+@@ -120,28 +120,28 @@
+   margin: 0;
+   white-space: nowrap;
+ 
+-  &[data-status='ok'] { --quota-status-color: #16a34a; }
+-  &[data-status='warning'] { --quota-status-color: #d97706; }
+-  &[data-status='danger'] { --quota-status-color: #dc2626; }
++  &[data-status='ok'] { --quota-status-color: var(--success-color); }
++  &[data-status='warning'] { --quota-status-color: var(--quota-medium-color); }
++  &[data-status='danger'] { --quota-status-color: var(--error-color); }
+ 
+   dt {
+     color: var(--text-secondary);
+     font-size: 10px;
+-    font-weight: 700;
++    font-weight: 600;
+   }
+ 
+   dd {
+     margin: 0;
+     color: var(--quota-status-color);
+     font-size: 16px;
+-    font-weight: 800;
++    font-weight: 600;
+     font-variant-numeric: tabular-nums;
+     line-height: 1.1;
+ 
+     span {
+       margin-left: 1px;
+       font-size: 11px;
+-      font-weight: 700;
++      font-weight: 600;
+     }
+   }
+ }
+@@ -184,8 +184,8 @@
+   }
+ }
+ 
+-.directDot { background: #2563eb; }
+-.crossDot { background: #d97706; }
++.directDot { background: #b98a4a; }
++.crossDot { background: #6b7f99; }
+ 
+ .remainingLine {
+   width: 14px !important;
+@@ -197,7 +197,7 @@
+ .costLine {
+   width: 14px !important;
+   height: 0 !important;
+-  border-top: 2px dashed var(--quota-cost-line-color, #ff5a40);
++  border-top: 2px dashed var(--quota-cost-line-color, #c08a6e);
+   border-radius: 0 !important;
+ }
+ 
+@@ -235,7 +235,7 @@
+   dt {
+     color: var(--text-secondary);
+     font-size: 10px;
+-    font-weight: 800;
++    font-weight: 600;
+     text-align: center;
+     white-space: nowrap;
+   }
+@@ -250,7 +250,7 @@
+     color: var(--text-primary);
+     font-size: 11px;
+     font-variant-numeric: tabular-nums;
+-    font-weight: 700;
++    font-weight: 600;
+   }
+ }
+ 
+@@ -338,7 +338,7 @@
+   > span {
+     color: var(--text-secondary);
+     font-size: 10px;
+-    font-weight: 800;
++    font-weight: 600;
+     text-transform: uppercase;
+   }
+ 
+@@ -382,7 +382,7 @@
+   background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+   color: var(--text-primary);
+   font-size: 9px;
+-  font-weight: 700;
++  font-weight: 600;
+   white-space: nowrap;
+ }
+ 
+@@ -408,7 +408,7 @@
+   color: var(--text-secondary);
+   font: inherit;
+   font-size: 10px;
+-  font-weight: 700;
++  font-weight: 600;
+   cursor: pointer;
+ 
+   &:hover { color: var(--text-primary); }
+@@ -541,7 +541,7 @@
+   border-radius: $radius-full;
+   font-size: 9px;
+   font-style: normal;
+-  font-weight: 800;
++  font-weight: 600;
+   white-space: nowrap;
+ }
+ 
+@@ -568,7 +568,7 @@
+   background: var(--bg-secondary);
+   color: var(--text-secondary);
+   font-size: 9px;
+-  font-weight: 800;
++  font-weight: 600;
+   text-transform: uppercase;
+ }
+ 
+@@ -614,17 +614,17 @@
+   padding: 2px 6px;
+   border-radius: $radius-full;
+   font-size: 9px;
+-  font-weight: 800;
++  font-weight: 600;
+ }
+ 
+ .directBadge {
+-  background: color-mix(in srgb, #3b82f6 12%, var(--bg-primary));
+-  color: #3b82f6;
++  background: color-mix(in srgb, var(--keeper-accent) 12%, var(--bg-primary));
++  color: var(--keeper-accent);
+ }
+ 
+ .crossBadge {
+-  background: color-mix(in srgb, #f59e0b 13%, var(--bg-primary));
+-  color: #d97706;
++  background: color-mix(in srgb, #6b7f99 14%, var(--bg-primary));
++  color: #8397b2;
+ }
+ 
+ .emptyState,
+@@ -655,7 +655,7 @@
+     border: 0;
+     background: transparent;
+     color: inherit;
+-    font-weight: 800;
++    font-weight: 600;
+     cursor: pointer;
+   }
+ }
+diff --git a/web/src/components/usage/credentials/CodexQuotaHistoryPanel.tsx b/web/src/components/usage/credentials/CodexQuotaHistoryPanel.tsx
+index fdfe286..3310188 100644
+--- a/web/src/components/usage/credentials/CodexQuotaHistoryPanel.tsx
++++ b/web/src/components/usage/credentials/CodexQuotaHistoryPanel.tsx
+@@ -15,7 +15,7 @@ import { IconCheck, IconChevronDown, IconTrash2 } from '@/components/ui/icons'
+ import type { CodexQuotaHistoryCycle, CodexQuotaHistoryResponse, CodexQuotaHistoryTransition, CodexQuotaHistoryWindow } from '@/lib/types'
+ import { useThemeStore } from '@/stores'
+ import { formatCompactNumber, formatUsd } from '@/utils/usage'
+-import { buildUsageChartTooltipStyle, getUsageChartTheme, toUsageChartGradientFill, USAGE_CHART_REQUESTS_LINE_COLOR, type UsageChartGradientColor } from '@/utils/usage/chartConfig'
++import { buildUsageChartTooltipStyle, getUsageChartTheme, toUsageChartGradientFill, USAGE_CHART_REQUESTS_LINE_COLOR, USAGE_CHART_TOKEN_COLORS, type UsageChartGradientColor } from '@/utils/usage/chartConfig'
+ import { quotaRemainingStatus } from './credentialViewModels'
+ import styles from './CodexQuotaHistoryPanel.module.scss'
+ 
+@@ -47,8 +47,8 @@ interface QuotaCycleSummary {
+ type QuotaSummaryKind = 'used' | 'full-estimate' | 'median' | 'estimated-unused'
+ 
+ const QUOTA_EFFICIENCY_BAR_COLORS = {
+-  direct: { base: '#2563eb', light: '#93c5fd' },
+-  averaged: { base: '#d97706', light: '#fde68a' },
++  direct: USAGE_CHART_TOKEN_COLORS.input,
++  averaged: USAGE_CHART_TOKEN_COLORS.cacheRead,
+ } satisfies Record<'direct' | 'averaged', UsageChartGradientColor>
+ 
+ const QUOTA_REMAINING_LINE_COLORS = {
+diff --git a/web/src/components/usage/credentials/CredentialDetailDrawer.module.scss b/web/src/components/usage/credentials/CredentialDetailDrawer.module.scss
+index 9d634b5..588c242 100644
+--- a/web/src/components/usage/credentials/CredentialDetailDrawer.module.scss
++++ b/web/src/components/usage/credentials/CredentialDetailDrawer.module.scss
+@@ -44,7 +44,7 @@
+   strong {
+     color: var(--text-primary);
+     font-size: 15px;
+-    font-weight: 800;
++    font-weight: 600;
+   }
+ 
+   span {
+@@ -73,7 +73,7 @@
+   border: 1px solid var(--border-color);
+   border-radius: $radius-full;
+   font-size: 10px;
+-  font-weight: 800;
++  font-weight: 600;
+ }
+ 
+ .statusEnabled {
+@@ -121,7 +121,7 @@
+   color: var(--text-secondary);
+   font: inherit;
+   font-size: 12px;
+-  font-weight: 750;
++  font-weight: 600;
+   cursor: pointer;
+ 
+   &[aria-selected='true'] {
+@@ -206,14 +206,15 @@
+   > small {
+     color: var(--text-secondary);
+     font-size: 10px;
+-    font-weight: 700;
++    font-weight: 600;
+   }
+ 
+   strong {
+     margin-top: 7px;
+     overflow: hidden;
++    font-family: var(--font-mono);
+     font-size: 20px;
+-    font-weight: 850;
++    font-weight: var(--keeper-value-weight);
+     font-variant-numeric: tabular-nums;
+     text-overflow: ellipsis;
+     white-space: nowrap;
+@@ -247,7 +248,7 @@
+     margin: 0 0 13px;
+     color: var(--text-primary);
+     font-size: 12px;
+-    font-weight: 800;
++    font-weight: 600;
+   }
+ }
+ 
+@@ -275,7 +276,7 @@
+     margin: 0;
+     overflow-wrap: anywhere;
+     color: var(--text-primary);
+-    font-weight: 750;
++    font-weight: 600;
+     text-align: right;
+   }
+ }
+diff --git a/web/src/components/usage/credentials/CredentialErrorEventsList.module.scss b/web/src/components/usage/credentials/CredentialErrorEventsList.module.scss
+index ef7d07e..2b3122e 100644
+--- a/web/src/components/usage/credentials/CredentialErrorEventsList.module.scss
++++ b/web/src/components/usage/credentials/CredentialErrorEventsList.module.scss
+@@ -50,7 +50,7 @@
+     color: var(--text-secondary);
+     font-size: 10px;
+     font-variant-numeric: tabular-nums;
+-    font-weight: 700;
++    font-weight: 600;
+     white-space: nowrap;
+   }
+ }
+@@ -70,7 +70,7 @@
+     border-radius: $radius-full;
+     color: var(--text-secondary);
+     font-size: 9px;
+-    font-weight: 800;
++    font-weight: 600;
+   }
+ }
+ 
+@@ -93,7 +93,7 @@
+   strong {
+     color: var(--text-primary);
+     font-size: 12px;
+-    font-weight: 800;
++    font-weight: 600;
+   }
+ }
+ 
+@@ -105,7 +105,7 @@
+   // 与 Session Management 的 User-Agent 共用次级信息面板层级，保证各主题下都能从卡片中分离。
+   background: var(--bg-tertiary);
+   color: var(--text-primary);
+-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
++  font-family: var(--font-mono);
+   font-size: 10px;
+   line-height: 1.55;
+   overflow-wrap: anywhere;
+@@ -131,7 +131,7 @@
+   dd {
+     margin: 0;
+     color: var(--text-secondary);
+-    font-weight: 700;
++    font-weight: 600;
+     overflow-wrap: anywhere;
+   }
+ }
+@@ -163,7 +163,7 @@
+   background: var(--bg-primary);
+   color: var(--text-primary);
+   font: inherit;
+-  font-weight: 750;
++  font-weight: 600;
+   cursor: pointer;
+ }
+ 
+diff --git a/web/src/components/usage/credentials/CredentialRequestEventsList.module.scss b/web/src/components/usage/credentials/CredentialRequestEventsList.module.scss
+index 21a792e..ca292bf 100644
+--- a/web/src/components/usage/credentials/CredentialRequestEventsList.module.scss
++++ b/web/src/components/usage/credentials/CredentialRequestEventsList.module.scss
+@@ -40,7 +40,7 @@
+     background: color-mix(in srgb, var(--bg-secondary) 88%, var(--bg-primary));
+     color: var(--text-secondary);
+     font-size: 10px;
+-    font-weight: 800;
++    font-weight: 600;
+     white-space: nowrap;
+   }
+ 
+@@ -91,7 +91,7 @@
+   strong {
+     color: var(--text-primary);
+     font-size: 11px;
+-    font-weight: 750;
++    font-weight: 600;
+   }
+ 
+   small {
+@@ -115,7 +115,7 @@
+     overflow: hidden;
+     color: var(--text-primary);
+     font-size: 11px;
+-    font-weight: 750;
++    font-weight: 600;
+     text-overflow: ellipsis;
+     white-space: nowrap;
+   }
+@@ -133,12 +133,12 @@
+ }
+ 
+ .responseModel {
+-  color: #d97706 !important;
++  color: var(--keeper-accent) !important;
+ }
+ 
+ .responseModelArrow,
+ .responseModelLabel {
+-  color: #d97706;
++  color: var(--keeper-accent);
+ }
+ 
+ .subDataLabel {
+@@ -218,7 +218,7 @@
+   max-width: none;
+   overflow: visible;
+   font-size: 10px;
+-  font-weight: 700;
++  font-weight: 600;
+   line-height: 1.25;
+   white-space: nowrap;
+ }
+@@ -239,23 +239,23 @@
+ }
+ 
+ .requestEventsTokenMetricInput {
+-  color: #0284c7;
++  color: var(--keeper-series-amber);
+ }
+ 
+ .requestEventsTokenMetricOutput {
+-  color: #16a34a;
++  color: var(--keeper-series-sage);
+ }
+ 
+ .requestEventsTokenMetricReasoning {
+-  color: #8b5cf6;
++  color: var(--keeper-series-mauve);
+ }
+ 
+ .requestEventsCacheMetricRead {
+-  color: #d97706;
++  color: var(--keeper-series-slate);
+ }
+ 
+ .requestEventsCacheMetricWrite {
+-  color: #db2777;
++  color: var(--keeper-series-clay);
+ }
+ 
+ .requestEventsCacheMetric {
+@@ -270,7 +270,7 @@
+   color: var(--text-primary);
+   text-overflow: ellipsis;
+   font-size: 12px;
+-  font-weight: 750;
++  font-weight: 600;
+   line-height: 1.35;
+   white-space: nowrap;
+ }
+@@ -322,7 +322,7 @@
+     margin: 0 0 9px;
+     color: var(--text-secondary);
+     font-size: 9px;
+-    font-weight: 750;
++    font-weight: 600;
+     letter-spacing: 0.035em;
+   }
+ }
+@@ -406,7 +406,7 @@
+   background: var(--bg-primary);
+   color: var(--text-primary);
+   font: inherit;
+-  font-weight: 750;
++  font-weight: 600;
+   cursor: pointer;
+ 
+   &:hover {
+diff --git a/web/src/components/usage/credentials/CredentialSections.module.scss b/web/src/components/usage/credentials/CredentialSections.module.scss
+index 4c85e0b..115088f 100644
+--- a/web/src/components/usage/credentials/CredentialSections.module.scss
++++ b/web/src/components/usage/credentials/CredentialSections.module.scss
+@@ -125,7 +125,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+     color: var(--text-secondary);
+     font: inherit;
+     font-size: 11px;
+-    font-weight: 800;
++    font-weight: 600;
+     line-height: 1;
+     padding: 0 10px;
+     cursor: pointer;
+@@ -180,7 +180,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   color: var(--text-primary);
+   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+   font-size: 11px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1;
+   white-space: nowrap;
+   cursor: pointer;
+@@ -195,8 +195,8 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   }
+ 
+   input:checked + .credentialActiveOnlyTrack {
+-    border-color: color-mix(in srgb, #38bdf8 68%, var(--border-color));
+-    background: linear-gradient(135deg, #2563eb 0%, #38bdf8 58%, #67e8f9 100%);
++    border-color: var(--keeper-accent);
++    background: var(--keeper-accent);
+   }
+ 
+   input:checked + .credentialActiveOnlyTrack .credentialActiveOnlyThumb {
+@@ -204,7 +204,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   }
+ 
+   input:focus-visible + .credentialActiveOnlyTrack {
+-    outline: 2px solid #38bdf8;
++    outline: 2px solid var(--keeper-accent);
+     outline-offset: 2px;
+   }
+ 
+@@ -229,8 +229,8 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   height: 24px;
+   overflow: hidden;
+   border-radius: 999px;
+-  border: 1px solid color-mix(in srgb, var(--border-color) 76%, #dbeafe);
+-  background: color-mix(in srgb, #dbeafe 34%, var(--bg-primary));
++  border: var(--keeper-hairline);
++  background: var(--bg-tertiary);
+   transition: border-color 0.18s ease, background 0.18s ease;
+ }
+ 
+@@ -241,7 +241,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   width: 20px;
+   height: 20px;
+   border-radius: 50%;
+-  background: linear-gradient(145deg, #fff, color-mix(in srgb, var(--bg-primary) 86%, #dbeafe));
++  background: #fff;
+   box-shadow:
+     inset 0 1px 0 rgba(255, 255, 255, 0.95),
+     0 4px 10px rgba(15, 23, 42, 0.22);
+@@ -255,7 +255,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   flex: 0 0 auto;
+   color: var(--text-secondary);
+   font-size: 11px;
+-  font-weight: 800;
++  font-weight: 600;
+   white-space: nowrap;
+ }
+ 
+@@ -281,7 +281,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+     color: var(--text-secondary);
+     font: inherit;
+     font-size: 11px;
+-    font-weight: 800;
++    font-weight: 600;
+     line-height: 1;
+     padding: 0 9px;
+     cursor: pointer;
+@@ -344,7 +344,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   gap: 10px;
+   color: var(--text-secondary);
+   font-size: 10px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1.15;
+   font-variant-numeric: tabular-nums;
+   color: var(--text-tertiary);
+@@ -388,15 +388,15 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+ }
+ 
+ .credentialHealthCellSuccess {
+-  background: #22c55e;
++  background: var(--success-color);
+ }
+ 
+ .credentialHealthCellWarning {
+-  background: #facc15;
++  background: var(--quota-medium-color);
+ }
+ 
+ .credentialHealthCellFailure {
+-  background: #ef4444;
++  background: var(--error-color);
+ }
+ 
+ .credentialHealthCellEmpty {
+@@ -413,7 +413,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   gap: 8px;
+   min-width: 132px;
+   padding: 10px 12px 9px;
+-  border-radius: 14px;
++  border-radius: var(--keeper-float-radius);
+   border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+   background: color-mix(in srgb, var(--bg-primary) 96%, var(--bg-secondary));
+   box-shadow: 0 16px 34px rgba(15, 23, 42, 0.17);
+@@ -543,7 +543,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+ .credentialHealthMetaCacheValue {
+   flex: 0 0 auto;
+   font-size: 11px;
+-  font-weight: 750;
++  font-weight: 600;
+   font-variant-numeric: tabular-nums;
+ }
+ 
+@@ -577,7 +577,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+ }
+ 
+ .credentialHealthMetaDegraded .credentialHealthMetaStatus {
+-  color: #ca8a04;
++  color: var(--quota-medium-color);
+ }
+ 
+ .credentialHealthMetaUnhealthy .credentialHealthMetaStatus {
+@@ -609,7 +609,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+   font: inherit;
+   font-size: 12px;
+-  font-weight: 700;
++  font-weight: 600;
+   cursor: pointer;
+   transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+ 
+@@ -770,7 +770,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+     color: var(--text-secondary);
+     font: inherit;
+     font-size: 12px;
+-    font-weight: 800;
++    font-weight: 600;
+     overflow: hidden;
+     padding: 0 8px;
+     text-overflow: ellipsis;
+@@ -804,7 +804,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   max-width: 100%;
+   color: var(--text-secondary);
+   font-size: 12px;
+-  font-weight: 800;
++  font-weight: 600;
+   white-space: nowrap;
+ 
+   input {
+@@ -866,7 +866,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   color: #fff;
+   font: inherit;
+   font-size: 12px;
+-  font-weight: 800;
++  font-weight: 600;
+   cursor: pointer;
+ 
+   &:disabled {
+@@ -903,11 +903,11 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+ .credentialInspectionResultsTitle {
+   color: var(--text-secondary);
+   font-size: 12px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .credentialInspectionMetric strong {
+-  color: var(--text-primary);
++  @include keeper-value;
+   font-size: 28px;
+   line-height: 1;
+ }
+@@ -933,7 +933,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   display: block;
+   height: 100%;
+   border-radius: inherit;
+-  background: linear-gradient(90deg, #15803d, #22c55e);
++  background: linear-gradient(90deg, #15803d, var(--success-color));
+   transition: width 0.2s ease;
+ }
+ 
+@@ -947,12 +947,12 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   font-size: 12px;
+ 
+   span {
+-    font-weight: 700;
++    font-weight: 600;
+   }
+ 
+   strong {
+     color: var(--text-primary);
+-    font-weight: 800;
++    font-weight: 600;
+     text-align: right;
+   }
+ }
+@@ -982,7 +982,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   span {
+     color: var(--text-secondary);
+     font-size: 12px;
+-    font-weight: 800;
++    font-weight: 600;
+   }
+ 
+   strong {
+@@ -993,7 +993,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   small {
+     color: var(--text-tertiary);
+     font-size: 12px;
+-    font-weight: 700;
++    font-weight: 600;
+   }
+ }
+ 
+@@ -1100,7 +1100,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   color: var(--text-secondary);
+   font: inherit;
+   font-size: 12px;
+-  font-weight: 800;
++  font-weight: 600;
+   padding: 0 10px;
+   cursor: pointer;
+   transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease;
+@@ -1138,7 +1138,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   gap: 7px;
+   color: var(--text-secondary);
+   font-size: 12px;
+-  font-weight: 800;
++  font-weight: 600;
+ }
+ 
+ .credentialInspectionPageSizeSelect {
+@@ -1152,7 +1152,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   gap: 8px;
+   color: var(--text-secondary);
+   font-size: 12px;
+-  font-weight: 800;
++  font-weight: 600;
+ 
+   button {
+     min-height: 30px;
+@@ -1162,7 +1162,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+     color: var(--text-secondary);
+     font: inherit;
+     font-size: 12px;
+-    font-weight: 800;
++    font-weight: 600;
+     padding: 0 10px;
+     cursor: pointer;
+ 
+@@ -1237,7 +1237,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   padding: 4px 8px;
+   border-radius: 999px;
+   font-size: 12px;
+-  font-weight: 800;
++  font-weight: 600;
+ }
+ 
+ .credentialInspectionStatusNormal {
+@@ -1279,7 +1279,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+     margin: 0;
+     color: var(--text-primary);
+     font-size: 14px;
+-    font-weight: 700;
++    font-weight: 600;
+     line-height: 1.5;
+   }
+ }
+@@ -1304,7 +1304,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   > span {
+     color: var(--text-secondary);
+     font-size: 12px;
+-    font-weight: 800;
++    font-weight: 600;
+   }
+ }
+ 
+@@ -1322,7 +1322,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+     color: var(--text-secondary);
+     font: inherit;
+     font-size: 12px;
+-    font-weight: 800;
++    font-weight: 600;
+     padding: 0 10px;
+     cursor: pointer;
+ 
+@@ -1373,7 +1373,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+     overflow: hidden;
+     color: var(--text-primary);
+     font-size: 12px;
+-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
++    font-family: var(--font-mono);
+     text-overflow: ellipsis;
+     white-space: nowrap;
+   }
+@@ -1449,7 +1449,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+ .credentialProviderFilterLabel {
+   color: inherit;
+   font-size: 12px;
+-  font-weight: 800;
++  font-weight: 600;
+   white-space: nowrap;
+ }
+ 
+@@ -1464,7 +1464,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   background: color-mix(in srgb, var(--text-primary) 9%, var(--bg-secondary));
+   color: color-mix(in srgb, var(--text-primary) 82%, var(--text-secondary));
+   font-size: 11px;
+-  font-weight: 900;
++  font-weight: 600;
+   font-variant-numeric: tabular-nums;
+ }
+ 
+@@ -1613,7 +1613,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   white-space: normal;
+   color: var(--text-primary);
+   font-size: 13px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1.34;
+ }
+ 
+@@ -1698,7 +1698,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   justify-content: center;
+   opacity: 0;
+   font-size: 15px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1;
+   transform: translateX(2px);
+   transition: opacity 0.16s ease-out, transform 0.16s ease-out;
+@@ -1773,7 +1773,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   color: var(--text-primary);
+   font: inherit;
+   font-size: 12px;
+-  font-weight: 750;
++  font-weight: 600;
+   line-height: 1;
+   padding: 0 8px;
+ 
+@@ -1829,7 +1829,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   white-space: normal;
+   color: var(--text-tertiary);
+   font-size: 12px;
+-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
++  font-family: var(--font-mono);
+ }
+ 
+ .credentialBadges,
+@@ -1849,7 +1849,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   background: var(--bg-tertiary);
+   color: var(--text-secondary);
+   font-size: 10px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1.4;
+ }
+ 
+@@ -1858,21 +1858,21 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+ }
+ 
+ .credentialBadgeSuccess {
+-  border-color: color-mix(in srgb, #16a34a 38%, var(--border-color));
+-  background: color-mix(in srgb, #16a34a 10%, var(--bg-primary));
++  border-color: color-mix(in srgb, var(--success-color) 38%, var(--border-color));
++  background: color-mix(in srgb, var(--success-color) 10%, var(--bg-primary));
+   color: #15803d;
+ }
+ 
+ .credentialBadgeWarning {
+-  border-color: color-mix(in srgb, #d97706 38%, var(--border-color));
+-  background: color-mix(in srgb, #d97706 10%, var(--bg-primary));
+-  color: #b45309;
++  border-color: color-mix(in srgb, var(--quota-medium-color) 38%, var(--border-color));
++  background: color-mix(in srgb, var(--quota-medium-color) 10%, var(--bg-primary));
++  color: var(--quota-medium-color);
+ }
+ 
+ .credentialBadgeDanger {
+-  border-color: color-mix(in srgb, #dc2626 38%, var(--border-color));
+-  background: color-mix(in srgb, #dc2626 10%, var(--bg-primary));
+-  color: #b91c1c;
++  border-color: color-mix(in srgb, var(--error-color) 38%, var(--border-color));
++  background: color-mix(in srgb, var(--error-color) 10%, var(--bg-primary));
++  color: var(--error-color);
+ }
+ 
+ .credentialPriorityBadge {
+@@ -1887,14 +1887,12 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   min-height: 18px;
+   padding: 2px 7px;
+   border-radius: $radius-full;
+-  border: 1px solid color-mix(in srgb, #7c3aed 38%, var(--border-color));
+-  background: linear-gradient(135deg, color-mix(in srgb, #f5f3ff 88%, var(--bg-primary)), color-mix(in srgb, #c4b5fd 36%, var(--bg-primary)));
+-  color: #5b21b6;
+-  box-shadow:
+-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+-    0 1px 3px rgba(91, 33, 182, 0.12);
++  border: 1px solid color-mix(in srgb, var(--keeper-accent) 38%, var(--border-color));
++  background: var(--keeper-accent-soft);
++  color: var(--keeper-accent);
++  box-shadow: none;
+   font-size: 10px;
+-  font-weight: 900;
++  font-weight: 600;
+   letter-spacing: 0.035em;
+   line-height: 1.3;
+   font-variant-numeric: tabular-nums;
+@@ -1917,8 +1915,8 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+ 
+   &:hover,
+   &:focus-visible {
+-    border-color: #7c3aed;
+-    box-shadow: 0 0 0 2px color-mix(in srgb, #7c3aed 18%, transparent);
++    border-color: var(--keeper-accent);
++    box-shadow: 0 0 0 2px color-mix(in srgb, var(--keeper-accent) 18%, transparent);
+   }
+ }
+ 
+@@ -1960,7 +1958,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   font-size: 12px;
+   font-variant-numeric: tabular-nums;
+ 
+-  &:focus-visible { outline: 2px solid #7c3aed; outline-offset: 1px; }
++  &:focus-visible { outline: 2px solid var(--keeper-accent); outline-offset: 1px; }
+ }
+ 
+ .credentialPriorityAction {
+@@ -1978,7 +1976,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   cursor: pointer;
+ 
+   &:disabled { cursor: default; opacity: 0.6; }
+-  &:focus-visible { outline: 2px solid #7c3aed; outline-offset: 1px; }
++  &:focus-visible { outline: 2px solid var(--keeper-accent); outline-offset: 1px; }
+ }
+ 
+ .credentialPriorityScope,
+@@ -1989,7 +1987,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+ }
+ 
+ .credentialPriorityScope { color: var(--text-secondary); }
+-.credentialPriorityError { color: var(--danger-color, #dc2626); }
++.credentialPriorityError { color: var(--danger-color, var(--error-color)); }
+ 
+ .credentialKimiSiteBadge,
+ .credentialRemainingDaysBadge,
+@@ -2006,7 +2004,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   background: var(--bg-primary);
+   color: var(--text-secondary);
+   font-size: 10px;
+-  font-weight: 900;
++  font-weight: 600;
+   letter-spacing: 0.02em;
+   line-height: 1.3;
+   box-shadow:
+@@ -2056,12 +2054,12 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   --credential-plan-corona-duration: 13s;
+   --credential-plan-corona-opacity: 0.52;
+   --credential-plan-ray-opacity: 46%;
+-  border-color: color-mix(in srgb, #16a34a 68%, #075536);
++  border-color: color-mix(in srgb, var(--success-color) 68%, #075536);
+ }
+ 
+ .credentialRemainingDaysBadge {
+   gap: 5px;
+-  border-color: color-mix(in srgb, #10b981 42%, var(--border-color));
++  border-color: color-mix(in srgb, var(--success-color) 42%, var(--border-color));
+   background:
+     radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 42%),
+     linear-gradient(135deg, color-mix(in srgb, #ecfdf5 92%, var(--bg-primary)), color-mix(in srgb, #6ee7b7 34%, var(--bg-primary)));
+@@ -2359,7 +2357,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+ .credentialMetricValueCell {
+   color: var(--text-primary);
+   font-size: 11px;
+-  font-weight: 750;
++  font-weight: 600;
+   font-variant-numeric: tabular-nums;
+   line-height: 1.2;
+   min-width: 0;
+@@ -2384,15 +2382,15 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+ }
+ 
+ .credentialMetricValueSuccess {
+-  color: #16a34a;
++  color: var(--success-color);
+ }
+ 
+ .credentialMetricValueWarning {
+-  color: #d97706;
++  color: var(--quota-medium-color);
+ }
+ 
+ .credentialMetricValueDanger {
+-  color: #dc2626;
++  color: var(--error-color);
+ }
+ 
+ .credentialMetricValueNeutral {
+@@ -2530,7 +2528,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   border-radius: 999px;
+   background: color-mix(in srgb, var(--primary-color) 14%, transparent);
+   color: var(--primary-active);
+-  font-weight: 700;
++  font-weight: 600;
+   font-variant-numeric: tabular-nums;
+ }
+ 
+@@ -2546,7 +2544,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   margin: 0;
+   color: var(--text-secondary);
+   font-size: 11px;
+-  font-weight: 700;
++  font-weight: 600;
+   line-height: 1.35;
+ }
+ 
+@@ -2585,7 +2583,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   strong {
+     min-width: 0;
+     color: var(--text-primary);
+-    font-weight: 700;
++    font-weight: 600;
+     text-align: right;
+     overflow-wrap: anywhere;
+   }
+@@ -2987,7 +2985,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   align-items: center;
+   gap: 5px;
+   color: var(--text-primary);
+-  font-weight: 700;
++  font-weight: 600;
+   white-space: nowrap;
+ }
+ 
+@@ -3021,15 +3019,15 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+ }
+ 
+ .credentialQuotaFillOk {
+-  background: linear-gradient(90deg, #15803d, #22c55e);
++  background: linear-gradient(90deg, #15803d, var(--success-color));
+ }
+ 
+ .credentialQuotaFillWarning {
+-  background: linear-gradient(90deg, #ca8a04, #facc15);
++  background: var(--quota-medium-color);
+ }
+ 
+ .credentialQuotaFillDanger {
+-  background: linear-gradient(90deg, #b91c1c, #ef4444);
++  background: linear-gradient(90deg, var(--error-color), var(--error-color));
+ }
+ 
+ .credentialQuotaFillUnknown {
+@@ -3062,7 +3060,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   border: 1px solid color-mix(in srgb, var(--primary-color) 28%, var(--border-color));
+   background: color-mix(in srgb, var(--primary-color) 8%, var(--bg-primary));
+   color: var(--primary-color);
+-  font-weight: 800;
++  font-weight: 600;
+ }
+ 
+ .credentialQuotaStateError {
+@@ -3082,7 +3080,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   gap: 5px;
+   color: var(--failure-badge-text);
+   font-size: 12px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .credentialQuotaErrorCode {
+@@ -3096,7 +3094,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   background: var(--failure-badge-bg);
+   color: var(--failure-badge-text);
+   font-size: 11px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1;
+ }
+ 
+@@ -3155,7 +3153,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+     background: var(--bg-secondary);
+     color: var(--text-primary);
+     font: inherit;
+-    font-weight: 800;
++    font-weight: 600;
+     padding: 6px 10px;
+     cursor: pointer;
+ 
+@@ -3174,7 +3172,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+ .credentialPaginationPage {
+   min-width: 44px;
+   text-align: center;
+-  font-weight: 800;
++  font-weight: 600;
+ }
+ 
+ .credentialPageSizeControl {
+@@ -3183,7 +3181,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   gap: 8px;
+   color: var(--text-secondary);
+   font-size: 11px;
+-  font-weight: 800;
++  font-weight: 600;
+ }
+ 
+ .credentialPaginationSelect {
+@@ -3198,7 +3196,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+     color: var(--text-primary);
+     box-shadow: none;
+     font: inherit;
+-    font-weight: 800;
++    font-weight: 600;
+     cursor: pointer;
+   }
+ }
+@@ -3220,7 +3218,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   pointer-events: none;
+   padding: 0 37px 0 10px;
+   font: inherit;
+-  font-weight: 800;
++  font-weight: 600;
+   white-space: nowrap;
+ 
+   > span {
+@@ -3442,10 +3440,10 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+   }
+ 
+   .credentialPriorityBadge {
+-    border-color: color-mix(in srgb, #c4b5fd 48%, var(--border-color));
+-    background: linear-gradient(135deg, color-mix(in srgb, #4c1d95 32%, var(--bg-primary)), color-mix(in srgb, #7c3aed 24%, var(--bg-primary)));
+-    color: #ddd6fe;
+-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 1px 5px rgba(124, 58, 237, 0.2);
++    border-color: color-mix(in srgb, var(--keeper-accent) 40%, var(--border-color));
++    background: var(--keeper-accent-soft);
++    color: var(--keeper-accent);
++    box-shadow: none;
+   }
+ 
+   .credentialPlanBadgeFree {
+@@ -3514,7 +3512,7 @@ $credential-name-column-width: $credential-name-content-width + $credential-prov
+     border-color: color-mix(in srgb, #86efac 48%, var(--border-color));
+     background:
+       radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 42%),
+-      linear-gradient(135deg, color-mix(in srgb, #064e3b 34%, var(--bg-primary)), color-mix(in srgb, #10b981 22%, var(--bg-primary)));
++      linear-gradient(135deg, color-mix(in srgb, #064e3b 34%, var(--bg-primary)), color-mix(in srgb, var(--success-color) 22%, var(--bg-primary)));
+     color: #bbf7d0;
+   }
+ }
 diff --git a/web/src/components/usage/hooks/test/useSparklines.test.ts b/web/src/components/usage/hooks/test/useSparklines.test.ts
 index 0544ff7..2b2a259 100644
 --- a/web/src/components/usage/hooks/test/useSparklines.test.ts
@@ -905,6 +2862,201 @@ index eb59d03..614fe7d 100644
 +    costSparkline: buildSparkline(series.cost),
 +  }), [buildSparkline, series]);
  }
+diff --git a/web/src/components/usage/model-speed/ModelSpeedChart.module.scss b/web/src/components/usage/model-speed/ModelSpeedChart.module.scss
+index 3f6c028..77ffccf 100644
+--- a/web/src/components/usage/model-speed/ModelSpeedChart.module.scss
++++ b/web/src/components/usage/model-speed/ModelSpeedChart.module.scss
+@@ -70,7 +70,7 @@
+   overflow-wrap: anywhere;
+ }
+ 
+-.tooltipTitle { font-weight: 700; }
++.tooltipTitle { font-weight: 600; }
+ 
+ .tooltipRows {
+   display: flex;
+@@ -83,7 +83,7 @@
+ }
+ 
+ .tooltipDot { width: 8px; height: 8px; margin-top: 3px; border-radius: 50%; }
+-.tooltipValue { font-weight: 800; }
++.tooltipValue { font-weight: 600; }
+ .tooltipSecondary { font-size: 11px; }
+ .tooltipRowHighlighted {
+   margin-inline: -6px;
+diff --git a/web/src/components/usage/pricing/PricingRecalculationModal.module.scss b/web/src/components/usage/pricing/PricingRecalculationModal.module.scss
+index 2c86c63..d695d48 100644
+--- a/web/src/components/usage/pricing/PricingRecalculationModal.module.scss
++++ b/web/src/components/usage/pricing/PricingRecalculationModal.module.scss
+@@ -103,7 +103,7 @@
+   gap: 10px;
+   margin-top: 12px;
+   padding: 12px 14px;
+-  border-radius: 16px;
++  border-radius: var(--keeper-card-radius);
+   background: var(--bg-secondary);
+ }
+ 
+@@ -202,7 +202,7 @@
+ .connection {
+   margin: 12px 0 0;
+   padding: 12px;
+-  border-radius: 14px;
++  border-radius: var(--keeper-card-radius);
+ }
+ 
+ .success {
+diff --git a/web/src/components/usage/pricing/PricingRuleCounts.module.scss b/web/src/components/usage/pricing/PricingRuleCounts.module.scss
+index 8c38a30..e8e40ba 100644
+--- a/web/src/components/usage/pricing/PricingRuleCounts.module.scss
++++ b/web/src/components/usage/pricing/PricingRuleCounts.module.scss
+@@ -1,9 +1,5 @@
+ .counts { color: var(--text-secondary); }
+-.branches { color: #2563eb; font-weight: 600; }
+-.conditions { color: #7c3aed; font-weight: 600; }
++.branches { color: var(--keeper-series-slate); font-weight: 600; }
++.conditions { color: var(--keeper-series-mauve); font-weight: 600; }
+ .zero { color: inherit; font-weight: inherit; }
+ 
+-:global([data-theme='dark']) {
+-  .branches { color: #60a5fa; }
+-  .conditions { color: #a78bfa; }
+-}
+diff --git a/web/src/components/usage/pricing/PricingSettings.module.scss b/web/src/components/usage/pricing/PricingSettings.module.scss
+index b124217..726a6b0 100644
+--- a/web/src/components/usage/pricing/PricingSettings.module.scss
++++ b/web/src/components/usage/pricing/PricingSettings.module.scss
+@@ -9,7 +9,7 @@
+   min-width: 0;
+   padding: 20px;
+   border: 1px solid var(--border-color);
+-  border-radius: 24px;
++  border-radius: var(--keeper-card-radius);
+   background: var(--bg-primary);
+   color: var(--text-primary);
+ 
+@@ -35,7 +35,7 @@
+ .listHeader h2 {
+   margin: 0;
+   font-size: 18px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .headerActions {
+@@ -56,7 +56,7 @@
+   flex-wrap: wrap;
+   margin-top: 16px;
+   padding: 10px 12px;
+-  border-radius: 14px;
++  border-radius: var(--keeper-card-radius);
+   background: color-mix(in srgb, var(--primary-color) 8%, var(--bg-primary));
+   font-size: 12px;
+ }
+@@ -85,9 +85,9 @@
+   gap: 12px;
+   min-width: 0;
+   padding: 12px;
+-  border: 1px solid var(--border-color);
+-  border-radius: 20px;
+-  background: var(--bg-secondary);
++  border: var(--keeper-hairline);
++  border-radius: var(--keeper-card-radius);
++  background: transparent;
+ }
+ 
+ .modelName,
+@@ -144,7 +144,7 @@
+ .listError {
+   margin: 12px 0 0;
+   padding: 12px;
+-  border-radius: 14px;
++  border-radius: var(--keeper-card-radius);
+   font-size: 12px;
+ }
+ 
+@@ -215,7 +215,7 @@
+   min-width: 0;
+   padding: 12px;
+   border: 1px solid var(--border-color);
+-  border-radius: 18px;
++  border-radius: var(--keeper-card-radius);
+   background: var(--bg-secondary);
+ }
+ 
+@@ -379,7 +379,7 @@
+   margin-bottom: 10px;
+   color: var(--text-primary);
+   font-size: 13px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .daysField {
+@@ -443,7 +443,7 @@
+ .sectionHeading h3 {
+   margin: 0;
+   font-size: 13px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .sectionHeading > span {
+@@ -541,7 +541,7 @@
+ }
+ 
+ .conditionSummary strong {
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .conditionSummary span {
+@@ -570,20 +570,20 @@
+   min-width: 0;
+   padding: 12px;
+   border: 1px solid var(--border-color);
+-  border-radius: 18px;
++  border-radius: var(--keeper-card-radius);
+   background: var(--bg-secondary);
+ }
+ 
+ .historyNotice {
+   padding: 10px 12px;
+-  border-radius: 12px;
++  border-radius: var(--keeper-card-radius);
+   background: var(--bg-primary);
+ }
+ 
+ .requestError {
+   margin: 0;
+   padding: 12px;
+-  border-radius: 14px;
++  border-radius: var(--keeper-card-radius);
+   background: var(--bg-error-light);
+   color: var(--danger-color);
+   font-size: 12px;
+diff --git a/web/src/components/usage/pricing/PricingSyncModal.module.scss b/web/src/components/usage/pricing/PricingSyncModal.module.scss
+index 170521d..aa064d4 100644
+--- a/web/src/components/usage/pricing/PricingSyncModal.module.scss
++++ b/web/src/components/usage/pricing/PricingSyncModal.module.scss
+@@ -80,7 +80,7 @@
+   min-width: 0;
+   padding: 14px;
+   border: 1px solid var(--border-color);
+-  border-radius: 20px;
++  border-radius: var(--keeper-card-radius);
+   background: var(--bg-secondary);
+ }
+ 
+@@ -169,7 +169,7 @@
+ .error {
+   margin: 0;
+   padding: 11px 12px;
+-  border-radius: 12px;
++  border-radius: var(--keeper-card-radius);
+   background: var(--bg-error-light);
+   color: var(--danger-color);
+   font-size: 12px;
 diff --git a/web/src/components/usage/test/DailyAverageCard.test.tsx b/web/src/components/usage/test/DailyAverageCard.test.tsx
 index f0faf1c..1ae09cf 100644
 --- a/web/src/components/usage/test/DailyAverageCard.test.tsx
@@ -976,6 +3128,19 @@ index 3c2d1bb..2d9f2ae 100644
 +    expect(findSeriesPeak(buckets, values)).toEqual(expected);
 +  });
 +});
+diff --git a/web/src/features/key-viewer/KeyViewerShell.module.scss b/web/src/features/key-viewer/KeyViewerShell.module.scss
+index 2f7f4ab..02a587c 100644
+--- a/web/src/features/key-viewer/KeyViewerShell.module.scss
++++ b/web/src/features/key-viewer/KeyViewerShell.module.scss
+@@ -79,7 +79,7 @@
+   background: color-mix(in srgb, var(--danger-color) 14%, var(--bg-primary));
+   color: inherit;
+   font: inherit;
+-  font-weight: 700;
++  font-weight: 600;
+   cursor: pointer;
+ 
+   &:focus-visible {
 diff --git a/web/src/i18n/index.ts b/web/src/i18n/index.ts
 index 50e7d59..f917a51 100644
 --- a/web/src/i18n/index.ts
@@ -1069,6 +3234,99 @@ index 50e7d59..f917a51 100644
          total_requests: '請求總數',
          success_requests: '成功',
          failed_requests: '失敗',
+diff --git a/web/src/index.css b/web/src/index.css
+index e8023e0..e2a5bc0 100644
+--- a/web/src/index.css
++++ b/web/src/index.css
+@@ -1,36 +1,5 @@
++/* Palette tokens live in styles/themes.scss; redefining them here would override every theme. */
+ :root {
+-  --bg-secondary: #faf9f5;
+-  --bg-primary: #f0eee8;
+-  --bg-tertiary: #e9e6df;
+-  --bg-hover: var(--bg-tertiary);
+-  --bg-quinary: #f6f4ee;
+-  --bg-error-light: rgba(198, 87, 70, 0.1);
+-  --floating-surface: #fffdf9;
+-  --floating-border: #d8d3ca;
+-  --floating-shadow: 0 12px 26px rgba(0, 0, 0, 0.14);
+-
+-  --text-primary: #2d2a26;
+-  --text-secondary: #6d6760;
+-  --text-tertiary: #a29c95;
+-  --text-quaternary: #c0bab3;
+-
+-  --border-color: #e3e1db;
+-  --border-primary: #d5d2cb;
+-  --border-hover: #cecac4;
+-
+-  --primary-color: #8b8680;
+-  --primary-hover: #7f7a74;
+-  --primary-active: #726d67;
+-  --primary-contrast: #ffffff;
+-
+-  --success-color: #10b981;
+-  --warning-color: #c65746;
+-  --error-color: #c65746;
+-  --danger-color: var(--error-color);
+-
+-  --shadow: 0 1px 2px 0 rgb(0 0 0 / 0.08);
+-  --shadow-lg: 0 10px 18px -3px rgb(0 0 0 / 0.1);
+-
+   color-scheme: light;
+   font-family: 'SF Pro Text', 'Segoe UI', sans-serif;
+   color: var(--text-primary);
+@@ -42,38 +11,6 @@
+ }
+ 
+ [data-theme='dark'] {
+-  --bg-secondary: #151412;
+-  --bg-primary: #1d1b18;
+-  --bg-tertiary: #262320;
+-  --bg-hover: #2e2a26;
+-  --bg-quinary: #191714;
+-  --bg-error-light: rgba(198, 87, 70, 0.18);
+-  --floating-surface: #2a2723;
+-  --floating-border: #4a443d;
+-  --floating-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
+-
+-  --text-primary: #f6f4f1;
+-  --text-secondary: #c9c3bb;
+-  --text-tertiary: #9c958d;
+-  --text-quaternary: #6f6962;
+-
+-  --border-color: #3a3530;
+-  --border-primary: #4a453f;
+-  --border-hover: #5a544d;
+-
+-  --primary-color: #8b8680;
+-  --primary-hover: #9a948e;
+-  --primary-active: #a6a099;
+-  --primary-contrast: #ffffff;
+-
+-  --success-color: #10b981;
+-  --warning-color: #c65746;
+-  --error-color: #c65746;
+-  --danger-color: var(--error-color);
+-
+-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3);
+-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3);
+-
+   color-scheme: dark;
+ }
+ 
+diff --git a/web/src/main.tsx b/web/src/main.tsx
+index 46f49e6..f09d343 100644
+--- a/web/src/main.tsx
++++ b/web/src/main.tsx
+@@ -4,6 +4,7 @@ import { I18nextProvider } from 'react-i18next';
+ import { StartupGate } from './StartupGate';
+ import i18n from './i18n';
+ import faviconUrl from './assets/keeper-icon.svg';
++import '@fontsource-variable/geist-mono';
+ import './styles/reset.scss';
+ import './styles/variables.scss';
+ import './styles/themes.scss';
 diff --git a/web/src/pages/KeyAnalysisPage.tsx b/web/src/pages/KeyAnalysisPage.tsx
 index 6773610..c99a616 100644
 --- a/web/src/pages/KeyAnalysisPage.tsx
@@ -1104,11 +3362,195 @@ index 444b383..2f0b495 100644
        onRefresh={() => void handleManualRefresh()}
        refreshing={manualRefreshLoading}
        refreshDisabled={refreshDisabled}
+diff --git a/web/src/pages/LoginPage.module.scss b/web/src/pages/LoginPage.module.scss
+index d615e5d..2183ba1 100644
+--- a/web/src/pages/LoginPage.module.scss
++++ b/web/src/pages/LoginPage.module.scss
+@@ -8,10 +8,7 @@
+   align-items: center;
+   justify-content: center;
+   padding: 32px 20px;
+-  background:
+-    linear-gradient(115deg, rgba(17, 24, 39, 0.08) 0 1px, transparent 1px 100%) 0 0 / 28px 28px,
+-    radial-gradient(900px 480px at 12% 0%, rgba($primary-color, 0.16), transparent 58%),
+-    var(--bg-secondary);
++  background: var(--bg-secondary);
+ }
+ 
+ .frame {
+@@ -59,7 +56,7 @@
+   color: var(--text-secondary);
+   font: inherit;
+   font-size: 12px;
+-  font-weight: 700;
++  font-weight: 600;
+   padding: 6px 11px;
+   line-height: 18px;
+   border-radius: 999px;
+@@ -77,9 +74,8 @@
+ }
+ 
+ .themePillActive {
+-  background: var(--bg-primary);
++  background: var(--bg-hover);
+   color: var(--text-primary);
+-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+ }
+ 
+ .brandBlock {
+@@ -105,7 +101,7 @@
+   background: transparent;
+   color: var(--text-primary);
+   font-size: 20px;
+-  font-weight: 900;
++  font-weight: 600;
+   letter-spacing: 0.12em;
+   text-transform: uppercase;
+ }
+@@ -138,12 +134,10 @@
+   display: flex;
+   flex-direction: column;
+   padding: 28px;
+-  border-radius: 28px;
+-  background:
+-    linear-gradient(180deg, color-mix(in srgb, var(--bg-primary) 96%, rgba($primary-color, 0.08)), color-mix(in srgb, var(--bg-primary) 88%, transparent)),
+-    var(--bg-primary);
+-  box-shadow: var(--floating-shadow);
+-  border: 1px solid color-mix(in srgb, var(--border-color) 84%, rgba($primary-color, 0.28));
++  border-radius: var(--keeper-card-radius);
++  background: var(--bg-primary);
++  box-shadow: none;
++  border: var(--keeper-hairline);
+ 
+   @include mobile {
+     padding: 20px;
+@@ -159,18 +153,16 @@
+ 
+ .cardKicker {
+   color: var(--text-muted);
+-  font-size: 11px;
+-  font-weight: 900;
+-  letter-spacing: 0.14em;
+-  text-transform: uppercase;
++  font-size: var(--keeper-label-size);
++  font-weight: var(--keeper-label-weight);
+ }
+ 
+ .cardTitle {
+   margin: 0;
+   color: var(--text-primary);
+   font-size: 24px;
++  font-weight: 600;
+   line-height: 1.1;
+-  letter-spacing: -0.03em;
+ }
+ 
+ .tabs {
+@@ -192,7 +184,7 @@
+   color: var(--text-secondary);
+   font: inherit;
+   font-size: 13px;
+-  font-weight: 800;
++  font-weight: 600;
+   cursor: pointer;
+   transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+ 
+@@ -207,10 +199,9 @@
+ }
+ 
+ .tabActive {
+-  border: 1px solid color-mix(in srgb, var(--primary-color) 48%, var(--border-color));
+-  background: color-mix(in srgb, var(--primary-color) 18%, var(--bg-primary));
++  border: var(--keeper-hairline);
++  background: var(--bg-hover);
+   color: var(--text-primary);
+-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16), inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 18%, transparent);
+ }
+ 
+ .form {
+diff --git a/web/src/pages/StartupPage.module.scss b/web/src/pages/StartupPage.module.scss
+index 32667cc..0fdebad 100644
+--- a/web/src/pages/StartupPage.module.scss
++++ b/web/src/pages/StartupPage.module.scss
+@@ -8,15 +8,15 @@
+ 
+ .frame { width: min(960px, 100%); }
+ .header { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+-.brand { color: var(--text-primary); font-size: 20px; font-weight: 800; }
++.brand { color: var(--text-primary); font-size: 20px; font-weight: 600; }
+ .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+ .themes { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--border-color); border-radius: 999px; background: var(--bg-primary); }
+ .themeButton { min-height: 32px; border: 0; border-radius: 999px; padding: 6px 10px; background: transparent; color: var(--text-secondary); font: inherit; font-size: 12px; cursor: pointer; }
+ .themeButton[aria-pressed='true'] { color: var(--text-primary); background: var(--bg-secondary); }
+ .themeButton:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
+-.card { width: min(620px, 100%); box-sizing: border-box; margin: clamp(48px, 11vh, 120px) auto 0; padding: clamp(24px, 5vw, 44px); border: 1px solid var(--border-color); border-radius: 28px; background: var(--bg-primary); box-shadow: var(--floating-shadow); }
+-.eyebrow { display: block; color: var(--primary-color); font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+-.phase { display: inline-flex; align-items: center; gap: 9px; margin-top: 18px; color: var(--text-secondary); font-size: 13px; font-weight: 700; }
++.card { width: min(620px, 100%); box-sizing: border-box; margin: clamp(48px, 11vh, 120px) auto 0; padding: clamp(24px, 5vw, 44px); border: var(--keeper-hairline); border-radius: var(--keeper-card-radius); background: var(--bg-primary); box-shadow: none; }
++.eyebrow { display: block; color: var(--primary-color); font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
++.phase { display: inline-flex; align-items: center; gap: 9px; margin-top: 18px; color: var(--text-secondary); font-size: 13px; font-weight: 600; }
+ .indicator { width: 9px; height: 9px; border-radius: 50%; background: var(--primary-color); }
+ .phase[data-phase='failed'] .indicator { background: var(--failure-badge-text, #c74646); }
+ .card h1 { margin: 12px 0 0; color: var(--text-primary); font-size: clamp(26px, 5vw, 38px); line-height: 1.2; }
 diff --git a/web/src/pages/UsagePage.module.scss b/web/src/pages/UsagePage.module.scss
-index 5211380..a43f3a4 100644
+index 5211380..4ee313f 100644
 --- a/web/src/pages/UsagePage.module.scss
 +++ b/web/src/pages/UsagePage.module.scss
-@@ -891,278 +891,121 @@
+@@ -69,7 +69,7 @@
+   background: transparent;
+   color: var(--text-primary);
+   font-size: 20px;
+-  font-weight: 900;
++  font-weight: 600;
+   letter-spacing: 0.12em;
+   text-transform: uppercase;
+   white-space: nowrap;
+@@ -408,7 +408,7 @@
+   border-radius: 999px;
+   background: transparent;
+   font-size: 12px;
+-  font-weight: 700;
++  font-weight: 600;
+   white-space: nowrap;
+   transition: background-color 0.15s ease, color 0.15s ease;
+ }
+@@ -570,7 +570,7 @@
+   font-size: 10px;
+   line-height: 1;
+   color: var(--text-secondary);
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .apiKeySelectControl {
+@@ -591,7 +591,7 @@
+     background: var(--bg-primary);
+     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+     font-size: 12px;
+-    font-weight: 700;
++    font-weight: 600;
+   }
+ }
+ 
+@@ -833,7 +833,7 @@
+   gap: 10px;
+   max-width: min(360px, calc(100vw - 40px));
+   padding: 12px 14px;
+-  border-radius: 16px;
++  border-radius: var(--keeper-float-radius);
+   border: 1px solid var(--border-color);
+   background: color-mix(in srgb, var(--bg-primary) 92%, transparent);
+   backdrop-filter: blur(16px);
+@@ -874,7 +874,7 @@
+   color: var(--text-secondary);
+   font: inherit;
+   font-size: 12px;
+-  font-weight: 700;
++  font-weight: 600;
+   cursor: pointer;
+   padding: 4px 6px;
+   border-radius: 999px;
+@@ -891,142 +891,19 @@
  }
  
  // Stats Layout
@@ -1117,23 +3559,16 @@ index 5211380..a43f3a4 100644
    display: flex;
    flex-direction: column;
 -  gap: 14px;
- }
- 
+-}
+-
 -.primaryStatsRow {
 -  display: flex;
 -  align-items: stretch;
 -  gap: 14px;
 -  width: 100%;
 -  min-height: 176px;
-+.statsGrid {
-+  display: grid;
-+  grid-template-columns: repeat(3, minmax(0, 1fr));
-+  border: 1px solid var(--border-color);
-+  border-top: 0;
-+  // Clips each cell's divider where it would land on the grid's outer edge.
-+  overflow: hidden;
- 
-   @include tablet {
+-
+-  @include tablet {
 -    overflow-x: auto;
 -    scroll-snap-type: x proximity;
 -    scrollbar-width: none;
@@ -1141,25 +3576,20 @@ index 5211380..a43f3a4 100644
 -    &::-webkit-scrollbar {
 -      display: none;
 -    }
-+    grid-template-columns: repeat(2, minmax(0, 1fr));
-   }
- 
-   @include mobile {
+-  }
+-
+-  @include mobile {
 -    flex-direction: column;
 -    min-height: 168px;
 -    overflow: visible;
 -    scroll-snap-type: none;
-+    grid-template-columns: minmax(0, 1fr);
-+    border-inline: 0;
-   }
- }
- 
+-  }
+-}
+-
 -.dailyAverageSlot {
-+.statCell {
-   display: flex;
+-  display: flex;
 -  flex: 0 1 0;
-+  flex-direction: column;
-   min-width: 0;
+-  min-width: 0;
 -  margin-right: -14px;
 -  opacity: 0;
 -  overflow: hidden;
@@ -1184,12 +3614,8 @@ index 5211380..a43f3a4 100644
 -    flex: 0 0 0;
 -    scroll-snap-align: start;
 -  }
-+  padding: 30px 32px 26px;
-+  box-shadow:
-+    1px 0 0 var(--border-color),
-+    0 1px 0 var(--border-color);
- 
-   @include mobile {
+-
+-  @include mobile {
 -    flex: 0 0 auto;
 -    width: 100%;
 -    max-height: 0;
@@ -1197,10 +3623,9 @@ index 5211380..a43f3a4 100644
 -    margin-bottom: -14px;
 -    scroll-snap-align: none;
 -    transform: translateY(-6px) scale(0.98);
-+    padding: 22px 4px 20px;
-   }
- }
- 
+-  }
+-}
+-
 -.primaryStatsRowExpanded {
 -  .dailyAverageSlot {
 -    flex-grow: 0.72;
@@ -1210,33 +3635,15 @@ index 5211380..a43f3a4 100644
 -    pointer-events: auto;
 -    transform: translateX(0) scale(1);
 -  }
-+.statCellLabel {
-+  color: var(--text-secondary);
-+  font-size: 15px;
-+  font-weight: 500;
-+  line-height: 1.3;
-+}
- 
+-
 -  @include tablet {
 -    .dailyAverageSlot {
 -      flex-basis: calc(50% - 7px);
 -      flex-grow: 0;
 -    }
 -  }
-+.statCellValue {
-+  margin-top: 10px;
-+  color: var(--text-primary);
-+  font-family:
-+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-+    monospace;
-+  font-size: 36px;
-+  font-weight: 500;
-+  line-height: 1.15;
-+  letter-spacing: 0;
-+  font-variant-numeric: tabular-nums;
-+  overflow-wrap: anywhere;
- 
-   @include mobile {
+-
+-  @include mobile {
 -    .dailyAverageSlot {
 -      flex-basis: auto;
 -      flex-grow: 0;
@@ -1244,10 +3651,9 @@ index 5211380..a43f3a4 100644
 -      margin-bottom: 0;
 -      transform: translateY(0) scale(1);
 -    }
-+    font-size: 30px;
-   }
- }
- 
+-  }
+-}
+-
 -@media (prefers-reduced-motion: reduce) {
 -  .dailyAverageSlot {
 -    transition: none;
@@ -1257,11 +3663,6 @@ index 5211380..a43f3a4 100644
 -  .primaryStatsRowExpanded .dailyAverageSlot {
 -    transform: none;
 -  }
-+.statCellMeta {
-+  margin: 8px 0 0;
-+  color: var(--text-secondary);
-+  font-size: 14px;
-+  line-height: 1.45;
  }
  
 -.primaryStatSlot {
@@ -1284,31 +3685,26 @@ index 5211380..a43f3a4 100644
 -    width: 100%;
 -    scroll-snap-align: none;
 -  }
-+.statPartialCost {
-+  color: var(--warning-color);
- }
- 
+-}
+-
 -.secondaryStatsGrid {
--  display: grid;
++.statsGrid {
+   display: grid;
 -  gap: 14px;
 -  grid-template-columns: repeat(4, minmax(0, 1fr));
--
--  @include tablet {
--    grid-template-columns: repeat(2, minmax(0, 1fr));
--  }
-+// A compact trend under the numbers, not a chart: about 60% of the cell, wide and short.
-+.statCellTrend {
-+  width: 60%;
-+  min-width: 180px;
-+  max-width: 360px;
-+  aspect-ratio: 11 / 2;
-+  margin-top: auto;
-+  padding-top: 28px;
-+  box-sizing: content-box;
++  grid-template-columns: repeat(3, minmax(0, 1fr));
++  border: 1px solid var(--border-color);
++  border-top: 0;
++  // Clips each cell's divider where it would land on the grid's outer edge.
++  overflow: hidden;
+ 
+   @include tablet {
+     grid-template-columns: repeat(2, minmax(0, 1fr));
+@@ -1034,388 +911,112 @@
  
    @include mobile {
--    grid-template-columns: minmax(0, 1fr);
-+    padding-top: 18px;
+     grid-template-columns: minmax(0, 1fr);
++    border-inline: 0;
    }
  }
  
@@ -1335,13 +3731,10 @@ index 5211380..a43f3a4 100644
 -  @include desktop {
 -    padding-inline: 22px;
 -  }
-+.sparkline {
-+  width: 100%;
-+  height: 100% !important;
- }
- 
+-}
+-
 -.dailyAverageCardHeader {
-+.dailyAverageRow {
++.statCell {
    display: flex;
 -  align-items: center;
 -  justify-content: space-between;
@@ -1366,13 +3759,7 @@ index 5211380..a43f3a4 100644
 -  border-radius: $radius-full;
 -  border: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
 -  background: color-mix(in srgb, var(--bg-secondary) 86%, transparent);
-+  flex-wrap: wrap;
-+  align-items: baseline;
-+  gap: 8px 40px;
-+  padding: 18px 32px;
-+  border-bottom: 1px solid var(--border-color);
-+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
-   color: var(--text-secondary);
+-  color: var(--text-secondary);
 -  font-size: 10px;
 -  font-weight: 700;
 -  line-height: 1.2;
@@ -1394,18 +3781,20 @@ index 5211380..a43f3a4 100644
 -  grid-template-columns: 28px minmax(0, 1fr) auto;
 -  align-items: center;
 -  gap: 10px;
--  min-width: 0;
++  flex-direction: column;
+   min-width: 0;
 -  min-height: 0;
 -  padding: 7px 0;
 -  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
-+  font-size: 15px;
-+  font-variant-numeric: tabular-nums;
++  padding: 30px 32px 26px;
++  box-shadow:
++    1px 0 0 var(--border-color),
++    0 1px 0 var(--border-color);
  
 -  &:last-child {
 -    border-bottom: 0;
 +  @include mobile {
-+    gap: 6px 20px;
-+    padding: 16px 4px;
++    padding: 22px 4px 20px;
    }
  }
  
@@ -1435,16 +3824,25 @@ index 5211380..a43f3a4 100644
 -  overflow: hidden;
 -  text-overflow: ellipsis;
 -  white-space: nowrap;
--}
--
++.statCellLabel {
++  color: var(--text-secondary);
++  font-size: 15px;
++  font-weight: 500;
++  line-height: 1.3;
+ }
+ 
 -.dailyAverageMetricValue {
-+.dailyAverageTitle {
++.statCellValue {
++  margin-top: 10px;
    color: var(--text-primary);
 -  font-size: 20px;
 -  font-weight: 800;
--  line-height: 1.15;
++  font-family: var(--font-mono);
++  font-size: 36px;
++  font-weight: 500;
+   line-height: 1.15;
 -  font-variant-numeric: tabular-nums;
--  letter-spacing: 0;
+   letter-spacing: 0;
 -  overflow: hidden;
 -  text-overflow: ellipsis;
 -  white-space: nowrap;
@@ -1454,14 +3852,101 @@ index 5211380..a43f3a4 100644
 -  color: var(--text-tertiary);
 -  font-size: 9px;
 -  line-height: 1.2;
-+  font-weight: 700;
- }
+-}
+-
+-.statCard {
+-  --accent: var(--primary-color);
+-  --accent-soft: rgba($primary-color, 0.18);
+-  --accent-border: rgba($primary-color, 0.35);
+-  --stat-card-strip-corner-offset: 12px;
+-  --stat-card-strip-fade-end: calc(100% - clamp(18px, 4%, 32px));
+-  --stat-card-accent-strip: linear-gradient(
+-    90deg,
+-    transparent 0%,
+-    var(--accent) var(--stat-card-strip-corner-offset),
+-    color-mix(in srgb, var(--accent) 68%, transparent) 42%,
+-    transparent var(--stat-card-strip-fade-end)
+-  );
+-
+-  position: relative;
+-  padding: 18px;
+-  background:
+-    radial-gradient(120% 140% at 12% 0%, var(--accent-soft) 0%, rgba(0, 0, 0, 0) 62%),
+-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)), var(--bg-primary);
+-  // 顶部七张统计卡的 24px 圆角试用项；需要退回时只恢复这一处。
+-  border-radius: var(--keeper-card-radius);
+-  border: 1px solid var(--border-color);
+-  display: flex;
+-  flex-direction: column;
+-  gap: 10px;
+-  min-height: 176px;
+-  box-shadow: var(--shadow-lg);
+-  transition:
+-    transform $transition-fast,
+-    box-shadow $transition-fast,
+-    border-color $transition-fast;
+-  overflow: hidden;
+-
+-  &::before {
+-    content: '';
+-    position: absolute;
+-    inset: -1px;
+-    border-radius: calc(var(--keeper-card-radius) + 1px);
+-    padding: 4px;
+-    background: var(--stat-card-accent-strip);
+-    opacity: 0.95;
+-    pointer-events: none;
+-    clip-path: inset(0 calc(100% - 56px) calc(100% - var(--keeper-card-radius)) 0);
+-    -webkit-mask:
+-      linear-gradient(#000 0 0) content-box,
+-      linear-gradient(#000 0 0);
+-    mask:
+-      linear-gradient(#000 0 0) content-box,
+-      linear-gradient(#000 0 0);
+-    -webkit-mask-composite: xor;
+-    mask-composite: exclude;
+-  }
+-
+-  // 左侧以固定像素错峰接入圆角；右侧以比例和像素下限适配不同卡片宽度。
+-  &::after {
+-    content: '';
+-    position: absolute;
+-    inset: 0 0 auto;
+-    height: 3px;
+-    background: var(--stat-card-accent-strip);
+-    opacity: 0.95;
+-    pointer-events: none;
+-    -webkit-mask:
+-      linear-gradient(90deg, #000 0%, #000 calc(var(--stat-card-strip-fade-end) - clamp(70px, 12%, 100px)), transparent var(--stat-card-strip-fade-end)) 0 0 / 100% 17% no-repeat,
+-      linear-gradient(90deg, transparent 0%, transparent 12px, #000 32px, #000 calc(var(--stat-card-strip-fade-end) - clamp(82px, 14%, 112px)), transparent calc(var(--stat-card-strip-fade-end) - clamp(6px, 1%, 10px))) 0 20% / 100% 17% no-repeat,
+-      linear-gradient(90deg, transparent 0%, transparent 16px, #000 38px, #000 calc(var(--stat-card-strip-fade-end) - clamp(94px, 16%, 126px)), transparent calc(var(--stat-card-strip-fade-end) - clamp(12px, 2%, 18px))) 0 40% / 100% 17% no-repeat,
+-      linear-gradient(90deg, transparent 0%, transparent 20px, #000 44px, #000 calc(var(--stat-card-strip-fade-end) - clamp(106px, 18%, 144px)), transparent calc(var(--stat-card-strip-fade-end) - clamp(18px, 3%, 26px))) 0 60% / 100% 17% no-repeat,
+-      linear-gradient(90deg, transparent 0%, transparent 24px, #000 50px, #000 calc(var(--stat-card-strip-fade-end) - clamp(118px, 21%, 162px)), transparent calc(var(--stat-card-strip-fade-end) - clamp(24px, 4%, 34px))) 0 80% / 100% 17% no-repeat,
+-      linear-gradient(90deg, transparent 0%, transparent 28px, #000 56px, #000 calc(var(--stat-card-strip-fade-end) - clamp(130px, 24%, 180px)), transparent calc(var(--stat-card-strip-fade-end) - clamp(30px, 5%, 42px))) 0 100% / 100% 17% no-repeat;
+-    mask:
+-      linear-gradient(90deg, #000 0%, #000 calc(var(--stat-card-strip-fade-end) - clamp(70px, 12%, 100px)), transparent var(--stat-card-strip-fade-end)) 0 0 / 100% 17% no-repeat,
+-      linear-gradient(90deg, transparent 0%, transparent 12px, #000 32px, #000 calc(var(--stat-card-strip-fade-end) - clamp(82px, 14%, 112px)), transparent calc(var(--stat-card-strip-fade-end) - clamp(6px, 1%, 10px))) 0 20% / 100% 17% no-repeat,
+-      linear-gradient(90deg, transparent 0%, transparent 16px, #000 38px, #000 calc(var(--stat-card-strip-fade-end) - clamp(94px, 16%, 126px)), transparent calc(var(--stat-card-strip-fade-end) - clamp(12px, 2%, 18px))) 0 40% / 100% 17% no-repeat,
+-      linear-gradient(90deg, transparent 0%, transparent 20px, #000 44px, #000 calc(var(--stat-card-strip-fade-end) - clamp(106px, 18%, 144px)), transparent calc(var(--stat-card-strip-fade-end) - clamp(18px, 3%, 26px))) 0 60% / 100% 17% no-repeat,
+-      linear-gradient(90deg, transparent 0%, transparent 24px, #000 50px, #000 calc(var(--stat-card-strip-fade-end) - clamp(118px, 21%, 162px)), transparent calc(var(--stat-card-strip-fade-end) - clamp(24px, 4%, 34px))) 0 80% / 100% 17% no-repeat,
+-      linear-gradient(90deg, transparent 0%, transparent 28px, #000 56px, #000 calc(var(--stat-card-strip-fade-end) - clamp(130px, 24%, 180px)), transparent calc(var(--stat-card-strip-fade-end) - clamp(30px, 5%, 42px))) 0 100% / 100% 17% no-repeat;
+-    -webkit-mask-composite: source-over, source-over, source-over, source-over, source-over;
+-    mask-composite: add, add, add, add, add;
+-  }
+-
+-  &:hover {
+-    transform: translateY(-2px);
+-    border-color: var(--accent-border);
+-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+-  }
++  font-variant-numeric: tabular-nums;
++  overflow-wrap: anywhere;
  
- .statCard {
-@@ -1256,168 +1099,6 @@
-   }
- }
- 
+   @include mobile {
+-    min-height: 168px;
+-  }
+-}
+-
 -.primaryStatSlot {
 -  .statValue {
 -    font-size: 32px;
@@ -1473,22 +3958,30 @@ index 5211380..a43f3a4 100644
 -    .statValue {
 -      font-size: 28px;
 -    }
--  }
--}
--
++    font-size: 30px;
+   }
+ }
+ 
 -.statCardHeader {
 -  display: flex;
 -  justify-content: space-between;
 -  align-items: flex-start;
 -  gap: 12px;
--}
--
++.statCellMeta {
++  margin: 8px 0 0;
++  color: var(--text-secondary);
++  font-size: 14px;
++  line-height: 1.45;
+ }
+ 
 -.statLabelGroup {
 -  display: flex;
 -  flex-direction: column;
 -  gap: 1px;
--}
--
++.statPartialCost {
++  color: var(--warning-color);
+ }
+ 
 -.statIconBadge {
 -  width: 34px;
 -  height: 34px;
@@ -1501,12 +3994,23 @@ index 5211380..a43f3a4 100644
 -  border: 1px solid rgba(255, 255, 255, 0.08);
 -  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
 -  flex-shrink: 0;
--
++// A compact trend under the numbers, not a chart: about 60% of the cell, wide and short.
++.statCellTrend {
++  width: 60%;
++  min-width: 180px;
++  max-width: 360px;
++  aspect-ratio: 11 / 2;
++  margin-top: auto;
++  padding-top: 28px;
++  box-sizing: content-box;
+ 
 -  svg {
 -    display: block;
--  }
--}
--
++  @include mobile {
++    padding-top: 18px;
+   }
+ }
+ 
 -.statHeader {
 -  display: flex;
 -  align-items: center;
@@ -1535,28 +4039,51 @@ index 5211380..a43f3a4 100644
 -.statValueRow {
 -  display: flex;
 -  gap: $spacing-lg;
--}
--
++.sparkline {
++  width: 100%;
++  height: 100% !important;
+ }
+ 
 -.statValueSmall {
--  display: flex;
++.dailyAverageRow {
+   display: flex;
 -  flex-direction: column;
 -  gap: 2px;
 -}
 -
 -.statValueLabel {
 -  font-size: 12px;
--  color: var(--text-secondary);
--}
--
++  flex-wrap: wrap;
++  align-items: baseline;
++  gap: 8px 40px;
++  padding: 18px 32px;
++  border-bottom: 1px solid var(--border-color);
++  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
+   color: var(--text-secondary);
++  font-size: 15px;
++  font-variant-numeric: tabular-nums;
++
++  @include mobile {
++    gap: 6px 20px;
++    padding: 16px 4px;
++  }
+ }
+ 
 -.statValueNum {
 -  font-size: 20px;
 -  font-weight: 700;
--  color: var(--text-primary);
--}
--
++.dailyAverageTitle {
+   color: var(--text-primary);
++  font-weight: 600;
+ }
+ 
 -.statMeta {
--  display: flex;
--  flex-direction: column;
++.statCard {
++  // A metric cell of the same flat, hairline grid as the Overview metrics (used by RealtimeInsights).
++  padding: 22px 24px 20px;
++  background: transparent;
+   display: flex;
+   flex-direction: column;
 -  gap: 4px;
 -  font-size: 12px;
 -}
@@ -1622,11 +4149,695 @@ index 5211380..a43f3a4 100644
 -.statHint {
 -  color: var(--text-tertiary);
 -  font-style: italic;
--}
--
++  gap: 10px;
++  min-height: 0;
++  box-shadow:
++    1px 0 0 var(--border-color),
++    0 1px 0 var(--border-color);
+ }
+ 
  // API List (80%比例)
- .apiSortBar {
-   display: flex;
+@@ -1616,11 +1217,12 @@
+     border-bottom: 1px solid var(--border-color);
+   }
+ 
++  // Column heads are quiet labels, like the Overview's metric labels.
+   th {
+-    font-size: 10px;
+-    font-weight: 600;
+-    color: var(--text-tertiary);
+-    background-color: var(--bg-secondary);
++    font-size: 11px;
++    font-weight: var(--keeper-label-weight);
++    color: var(--text-secondary);
++    background-color: var(--bg-primary);
+     white-space: nowrap;
+   }
+ 
+@@ -1635,6 +1237,7 @@
+ 
+   td {
+     color: var(--text-primary);
++    font-variant-numeric: tabular-nums;
+   }
+ 
+   tbody tr:hover {
+@@ -1674,7 +1277,7 @@
+   padding: 1px 7px;
+   border-radius: $radius-full;
+   font-size: 10px;
+-  font-weight: 700;
++  font-weight: 600;
+   line-height: 1.4;
+   letter-spacing: 0.01em;
+   color: var(--text-secondary);
+@@ -1689,7 +1292,7 @@
+   padding: 1px 7px;
+   border-radius: $radius-full;
+   font-size: 10px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1.4;
+   letter-spacing: 0.01em;
+   color: var(--danger-badge-text, #991b1b);
+@@ -1767,10 +1370,8 @@
+   gap: 14px;
+   padding: 14px;
+   border: 1px solid color-mix(in srgb, var(--border-color) 86%, transparent);
+-  border-radius: 20px;
+-  background:
+-    radial-gradient(360px 120px at 0% 0%, rgba($primary-color, 0.08), transparent 62%),
+-    color-mix(in srgb, var(--bg-secondary) 72%, transparent);
++  border-radius: var(--keeper-card-radius);
++  background: transparent;
+ }
+ 
+ .apiKeySettingsSummary {
+@@ -1795,7 +1396,7 @@
+   overflow: hidden;
+   color: var(--text-primary);
+   font-size: 13px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1.25;
+   word-break: break-all;
+   -webkit-box-orient: vertical;
+@@ -1874,7 +1475,7 @@
+   padding-left: 10px;
+   color: var(--text-secondary);
+   font-size: 10px;
+-  font-weight: 700;
++  font-weight: 600;
+   line-height: 1;
+ }
+ 
+@@ -1940,7 +1541,7 @@
+   gap: 12px 16px;
+   padding: 14px;
+   border: 1px solid color-mix(in srgb, var(--border-color) 86%, transparent);
+-  border-radius: 20px;
++  border-radius: var(--keeper-card-radius);
+   background: color-mix(in srgb, var(--bg-secondary) 76%, transparent);
+ }
+ 
+@@ -1982,7 +1583,7 @@
+ .sessionSettingsDetailLabel {
+   color: var(--text-tertiary);
+   font-size: 10px;
+-  font-weight: 700;
++  font-weight: 600;
+   line-height: 1.2;
+ }
+ 
+@@ -2004,7 +1605,7 @@
+   border-radius: 999px;
+   color: var(--text-secondary);
+   font-size: 10px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1;
+ }
+ 
+@@ -2015,7 +1616,7 @@
+   padding: 3px;
+   color: var(--text-secondary);
+   font-size: 11px;
+-  font-weight: 700;
++  font-weight: 600;
+   line-height: 1;
+   white-space: nowrap;
+ }
+@@ -2104,7 +1705,7 @@
+   color: var(--text-primary);
+   font: inherit;
+   font-size: 12px;
+-  font-weight: 750;
++  font-weight: 600;
+   line-height: 1;
+ 
+   &:focus {
+@@ -2156,7 +1757,7 @@
+   overflow: hidden;
+   color: var(--text-primary);
+   font-size: 13px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1.25;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+@@ -2171,7 +1772,7 @@
+   min-width: 0;
+   padding: 9px 10px;
+   border: 1px solid var(--border-color);
+-  border-radius: 16px;
++  border-radius: var(--keeper-card-radius);
+   background: var(--bg-tertiary);
+   font-size: 11px;
+   line-height: 1.5;
+@@ -2181,7 +1782,7 @@
+ 
+ .sessionSettingsClientLabel {
+   color: var(--text-tertiary);
+-  font-weight: 700;
++  font-weight: 600;
+   white-space: nowrap;
+ }
+ 
+@@ -2199,19 +1800,19 @@
+   padding: 2px 6px;
+   border-radius: $radius-full;
+   font-size: 9px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1;
+   white-space: nowrap;
+ }
+ 
+ .sessionSettingsSourceStandard {
+-  background: color-mix(in srgb, #3b82f6 12%, var(--bg-primary));
+-  color: #3b82f6;
++  background: color-mix(in srgb, var(--keeper-series-amber) 12%, var(--bg-primary));
++  color: var(--keeper-series-amber);
+ }
+ 
+ .sessionSettingsSourceEmbed {
+-  background: color-mix(in srgb, #f59e0b 13%, var(--bg-primary));
+-  color: #d97706;
++  background: color-mix(in srgb, var(--keeper-series-slate) 14%, var(--bg-primary));
++  color: var(--keeper-series-slate);
+   padding-inline: 4px;
+ }
+ 
+@@ -2472,7 +2073,7 @@
+   overflow: hidden;
+   color: var(--text-primary);
+   font-size: 13px;
+-  font-weight: 700;
++  font-weight: 600;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+ }
+@@ -2493,8 +2094,8 @@
+   }
+ 
+   input:checked + .requestEventsColumnVisibilityTrack {
+-    border-color: color-mix(in srgb, #38bdf8 68%, var(--border-color));
+-    background: linear-gradient(135deg, #2563eb 0%, #38bdf8 58%, #67e8f9 100%);
++    border-color: var(--keeper-accent);
++    background: var(--keeper-accent);
+   }
+ 
+   input:checked + .requestEventsColumnVisibilityTrack .requestEventsColumnVisibilityThumb {
+@@ -2502,7 +2103,7 @@
+   }
+ 
+   input:focus-visible + .requestEventsColumnVisibilityTrack {
+-    outline: 2px solid #38bdf8;
++    outline: 2px solid var(--keeper-accent);
+     outline-offset: 2px;
+   }
+ }
+@@ -2520,9 +2121,9 @@
+   width: 42px;
+   height: 24px;
+   overflow: hidden;
+-  border: 1px solid color-mix(in srgb, var(--border-color) 76%, #dbeafe);
++  border: var(--keeper-hairline);
+   border-radius: 999px;
+-  background: color-mix(in srgb, #dbeafe 34%, var(--bg-primary));
++  background: var(--bg-tertiary);
+   transition: border-color 0.18s ease, background 0.18s ease;
+ }
+ 
+@@ -2533,7 +2134,7 @@
+   width: 20px;
+   height: 20px;
+   border-radius: 50%;
+-  background: linear-gradient(145deg, #fff, color-mix(in srgb, var(--bg-primary) 86%, #dbeafe));
++  background: #fff;
+   box-shadow:
+     inset 0 1px 0 rgba(255, 255, 255, 0.95),
+     0 4px 10px rgba(15, 23, 42, 0.22);
+@@ -2607,7 +2208,7 @@
+ .requestEventsFilterLabel {
+   font-size: 10px;
+   color: var(--text-tertiary);
+-  font-weight: 700;
++  font-weight: 600;
+   letter-spacing: 0.02em;
+ }
+ 
+@@ -2671,7 +2272,7 @@
+ .requestEventsPaginationLabel {
+   color: var(--text-tertiary);
+   font-size: 11px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .requestEventsPaginationLoaded,
+@@ -2682,13 +2283,13 @@
+ .requestEventsPaginationLoaded {
+   color: var(--text-primary);
+   font-size: 12px;
+-  font-weight: 800;
++  font-weight: 600;
+ }
+ 
+ .requestEventsPaginationTotal {
+   color: var(--text-secondary);
+   font-size: 12px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .requestEventsPageSizeControl {
+@@ -2697,7 +2298,7 @@
+   gap: 8px;
+   color: var(--text-secondary);
+   font-size: 12px;
+-  font-weight: 800;
++  font-weight: 600;
+ 
+   select {
+     height: 32px;
+@@ -2707,7 +2308,7 @@
+     background: var(--bg-secondary);
+     color: var(--text-primary);
+     font: inherit;
+-    font-weight: 800;
++    font-weight: 600;
+     cursor: pointer;
+   }
+ }
+@@ -2783,7 +2384,7 @@
+ .requestEventsStackedPrimary,
+ .requestEventsPrimaryCell {
+   color: var(--text-primary);
+-  font-weight: 700;
++  font-weight: 500;
+   line-height: 1.35;
+ }
+ 
+@@ -2791,14 +2392,14 @@
+   margin-top: 3px;
+   color: var(--text-tertiary);
+   font-size: 10px;
+-  font-weight: 600;
++  font-weight: 400;
+   line-height: 1.25;
+ }
+ 
+ .requestEventsStackedResponse {
+   display: block;
+   margin-top: 3px;
+-  color: #d97706;
++  color: var(--keeper-accent);
+   font-size: 10px;
+   font-weight: 650;
+   line-height: 1.25;
+@@ -2835,7 +2436,7 @@
+   max-width: none;
+   overflow: visible;
+   font-size: 10px;
+-  font-weight: 700;
++  font-weight: 600;
+   line-height: 1.25;
+   white-space: nowrap;
+ }
+@@ -2856,23 +2457,23 @@
+ }
+ 
+ .requestEventsTokenMetricInput {
+-  color: #0284c7;
++  color: var(--keeper-series-amber);
+ }
+ 
+ .requestEventsTokenMetricOutput {
+-  color: #16a34a;
++  color: var(--keeper-series-sage);
+ }
+ 
+ .requestEventsTokenMetricReasoning {
+-  color: #8b5cf6;
++  color: var(--keeper-series-mauve);
+ }
+ 
+ .requestEventsCacheMetricRead {
+-  color: #d97706;
++  color: var(--keeper-series-slate);
+ }
+ 
+ .requestEventsCacheMetricWrite {
+-  color: #db2777;
++  color: var(--keeper-series-clay);
+ }
+ 
+ .requestEventsCacheMetric {
+@@ -2886,7 +2487,7 @@
+   overflow: hidden;
+   text-overflow: ellipsis;
+   font-size: 12px;
+-  font-weight: 750;
++  font-weight: 600;
+   line-height: 1.35;
+   white-space: nowrap;
+ }
+@@ -2910,9 +2511,7 @@
+ 
+ .requestEventsSourceCell,
+ .requestEventsAPIKeyCell {
+-  font-family:
+-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+-    monospace;
++  font-family: var(--font-mono);
+   font-size: 11px;
+   word-break: break-all;
+ }
+@@ -3046,7 +2645,7 @@
+   color: var(--text-primary);
+   font: inherit;
+   font-size: 12px;
+-  font-weight: 750;
++  font-weight: 600;
+   text-align: left;
+   cursor: pointer;
+   user-select: none;
+@@ -3164,9 +2763,7 @@
+   margin: 0;
+   padding: 0 12px;
+   color: var(--text-primary);
+-  font-family:
+-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+-    monospace;
++  font-family: var(--font-mono);
+   font-size: 11px;
+   line-height: 1.55;
+   white-space: pre-wrap;
+@@ -3201,7 +2798,7 @@
+   margin: 0;
+   color: var(--text-primary);
+   font-size: 17px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1.2;
+   letter-spacing: 0;
+ }
+@@ -3254,7 +2851,7 @@
+   color: var(--text-secondary);
+   font: inherit;
+   font-size: 12px;
+-  font-weight: 700;
++  font-weight: 600;
+   line-height: 1;
+   min-width: 44px;
+   padding: 8px 11px;
+@@ -3310,7 +2907,7 @@
+   margin: 0;
+   color: var(--text-primary);
+   font-size: 17px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1.2;
+   letter-spacing: 0;
+ }
+@@ -3332,7 +2929,7 @@
+   color: var(--text-secondary);
+   font: inherit;
+   font-size: 12px;
+-  font-weight: 700;
++  font-weight: 600;
+   line-height: 1;
+   min-width: 44px;
+   padding: 8px 11px;
+@@ -3377,7 +2974,7 @@
+   background: var(--bg-primary);
+   color: var(--text-secondary);
+   font-size: 13px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ .overviewRealtimeCard {
+@@ -3457,7 +3054,7 @@
+   background: var(--bg-secondary);
+   color: var(--text-secondary);
+   font-size: 11px;
+-  font-weight: 700;
++  font-weight: 600;
+   line-height: 1;
+   font-variant-numeric: tabular-nums;
+   white-space: nowrap;
+@@ -3489,16 +3086,16 @@
+ .overviewRealtimePairedMetricTokenLabel,
+ .overviewRealtimePairedMetricRequestLabel {
+   font-size: 9px;
+-  font-weight: 850;
++  font-weight: 600;
+   letter-spacing: 0.025em;
+ }
+ 
+ .overviewRealtimePairedMetricTokenLabel {
+-  color: #3b82f6;
++  color: var(--keeper-series-amber);
+ }
+ 
+ .overviewRealtimePairedMetricRequestLabel {
+-  color: #f97316;
++  color: var(--keeper-series-clay);
+ }
+ 
+ .overviewRealtimePairedMetricDivider {
+@@ -3507,15 +3104,15 @@
+ 
+ .overviewRealtimePairedMetricValue {
+   color: var(--text-primary);
+-  font-weight: 800;
++  font-weight: 600;
+ }
+ 
+ .overviewRealtimePairedMetricValueUp {
+-  color: #16a34a;
++  color: var(--success-color);
+ }
+ 
+ .overviewRealtimePairedMetricValueDown {
+-  color: #dc2626;
++  color: var(--error-color);
+ }
+ 
+ .overviewRealtimePairedMetricValueFlat {
+@@ -3533,7 +3130,7 @@
+   background: var(--bg-secondary);
+   color: var(--text-secondary);
+   font-size: 11px;
+-  font-weight: 700;
++  font-weight: 600;
+   line-height: 1;
+   font-variant-numeric: tabular-nums;
+ }
+@@ -3547,11 +3144,11 @@
+ }
+ 
+ .overviewRealtimeMetricUp .overviewRealtimeMetricValue {
+-  color: #16a34a;
++  color: var(--success-color);
+ }
+ 
+ .overviewRealtimeMetricDown .overviewRealtimeMetricValue {
+-  color: #dc2626;
++  color: var(--error-color);
+ }
+ 
+ .overviewRealtimeMetricFlat .overviewRealtimeMetricValue {
+@@ -3594,7 +3191,7 @@
+     background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
+     color: var(--text-tertiary);
+     font-size: 12px;
+-    font-weight: 750;
++    font-weight: 600;
+     line-height: 1.2;
+     text-align: center;
+     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+@@ -3618,7 +3215,7 @@
+   color: var(--text-secondary);
+   font: inherit;
+   font-size: 11px;
+-  font-weight: 700;
++  font-weight: 600;
+   line-height: 1;
+   padding: 7px 9px;
+   border-radius: 999px;
+@@ -3679,7 +3276,7 @@
+ .overviewRealtimeRibbonTotal {
+   fill: var(--text-secondary);
+   font-size: 12px;
+-  font-weight: 750;
++  font-weight: 600;
+ }
+ 
+ .overviewRealtimeRibbonFlow {
+@@ -3727,7 +3324,7 @@
+   min-width: 0;
+   color: var(--text-primary);
+   font-size: 13px;
+-  font-weight: 750;
++  font-weight: 600;
+   line-height: 1.5;
+   overflow-wrap: anywhere;
+ }
+@@ -3735,7 +3332,7 @@
+ .overviewRealtimeRibbonShare {
+   color: var(--text-primary);
+   font-size: 13px;
+-  font-weight: 800;
++  font-weight: 600;
+   line-height: 1.5;
+   text-align: right;
+   white-space: nowrap;
+@@ -3780,7 +3377,7 @@
+   min-width: 0;
+   color: var(--text-primary);
+   font-size: 13px;
+-  font-weight: 750;
++  font-weight: 600;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+@@ -3789,7 +3386,7 @@
+ .overviewRealtimeUsageShare {
+   color: var(--text-secondary);
+   font-size: 12px;
+-  font-weight: 800;
++  font-weight: 600;
+   font-variant-numeric: tabular-nums;
+ }
+ 
+@@ -3806,7 +3403,7 @@
+   inset: 0 auto 0 0;
+   min-width: 3px;
+   border-radius: inherit;
+-  background: linear-gradient(90deg, #3b82f6, #14b8a6);
++  background: var(--keeper-accent);
+ }
+ 
+ .overviewRealtimeUsageMeta {
+@@ -3814,7 +3411,7 @@
+   flex-wrap: wrap;
+   color: var(--text-tertiary);
+   font-size: 11px;
+-  font-weight: 700;
++  font-weight: 600;
+   font-variant-numeric: tabular-nums;
+ }
+ 
+@@ -3844,7 +3441,7 @@
+   place-items: center;
+   color: var(--text-tertiary);
+   font-size: 12px;
+-  font-weight: 700;
++  font-weight: 600;
+ }
+ 
+ // Overview Activity cards share one fixed 7×52 grid and only vary metric semantics.
+@@ -3859,20 +3456,20 @@
+ }
+ 
+ .tokenActivityCard {
+-  --token-activity-level-1: #dbeafe;
+-  --token-activity-level-2: #93c5fd;
+-  --token-activity-level-3: #60a5fa;
+-  --token-activity-level-4: #3b82f6;
+-  --token-activity-level-5: #1d4ed8;
++  // More tokens, more amber: each level steps further from the page surface.
++  --token-activity-level-1: #ecdcc0;
++  --token-activity-level-2: #dcbf8e;
++  --token-activity-level-3: #c89f62;
++  --token-activity-level-4: #b0833f;
++  --token-activity-level-5: #8a5e27;
+ }
+ 
+ :global([data-theme='dark']) .tokenActivityCard {
+-  // 两种主题都用浅→深表示 Token 量增加；暗色背景下收窄亮度范围以保留辨识度。
+-  --token-activity-level-1: #60a5fa;
+-  --token-activity-level-2: #3b82f6;
+-  --token-activity-level-3: #2563eb;
+-  --token-activity-level-4: #1d4ed8;
+-  --token-activity-level-5: #1e40af;
++  --token-activity-level-1: #4a3c29;
++  --token-activity-level-2: #6e5838;
++  --token-activity-level-3: #977a4d;
++  --token-activity-level-4: #bb9963;
++  --token-activity-level-5: #e0bd86;
+ }
+ 
+ .activityCardHeader {
+@@ -3892,23 +3489,19 @@
+ }
+ 
+ .activitySummaryLabel {
+-  color: var(--text-tertiary);
+-  font-size: 10px;
+-  font-weight: 700;
++  @include keeper-label;
++  font-size: 12px;
+   line-height: 1.1;
+ }
+ 
+ .activitySummaryValue {
+-  color: var(--text-primary);
++  @include keeper-value;
+   font-size: 22px;
+-  font-weight: 800;
+   line-height: 1.05;
+-  letter-spacing: -0.025em;
+-  font-variant-numeric: tabular-nums;
+ }
+ 
+ .tokenActivitySummaryValue {
+-  color: #3b82f6;
++  color: var(--text-primary);
+ }
+ 
+ .activitySummaryDetails {
+@@ -3942,11 +3535,11 @@
+ }
+ 
+ .healthCountDotSuccess {
+-  background: #22c55e;
++  background: var(--success-color);
+ }
+ 
+ .healthCountDotFailure {
+-  background: #ef4444;
++  background: var(--error-color);
+ }
+ 
+ 
+@@ -4109,18 +3702,18 @@
+ 
+   strong {
+     color: var(--text-primary);
+-    font-weight: 700;
++    font-weight: 600;
+   }
+ }
+ 
+ .healthTooltipSuccess {
+-  color: var(--success-color, #22c55e);
+-  font-weight: 700;
++  color: var(--success-color);
++  font-weight: 600;
+ }
+ 
+ .healthTooltipFailure {
+-  color: var(--danger-color, #ef4444);
+-  font-weight: 700;
++  color: var(--danger-color, var(--error-color));
++  font-weight: 600;
+ }
+ 
+ .healthTooltipRate {
 diff --git a/web/src/pages/UsagePage.tsx b/web/src/pages/UsagePage.tsx
 index 533919e..8138e02 100644
 --- a/web/src/pages/UsagePage.tsx
@@ -1682,7 +4893,7 @@ index 533919e..8138e02 100644
                onRefresh={() => void handleManualRefresh().catch(() => {})}
                refreshing={manualRefreshLoading}
 diff --git a/web/src/pages/test/UsagePage.styles.test.ts b/web/src/pages/test/UsagePage.styles.test.ts
-index 9487656..ed969e9 100644
+index 9487656..745269d 100644
 --- a/web/src/pages/test/UsagePage.styles.test.ts
 +++ b/web/src/pages/test/UsagePage.styles.test.ts
 @@ -109,34 +109,11 @@ describe('UsagePage responsive layout and accessibility', () => {
@@ -1725,11 +4936,493 @@ index 9487656..ed969e9 100644
    })
  
    it('reflows Activity and realtime grids for narrow screens', () => {
+@@ -147,13 +124,17 @@ describe('UsagePage responsive layout and accessibility', () => {
+     expect(styleRuleBlock(usagePageStyles, '.overviewRealtimeCardFull')).toContain('grid-column: 1 / -1;')
+   })
+ 
+-  it.each(['.tokenActivityCard', ":global([data-theme='dark']) .tokenActivityCard"])(
+-    'keeps heatmap levels distinguishable in %s', (selector) => {
++  // Each level moves further from the page: darker on the light surface, brighter on the dark one.
++  it.each([
++    ['.tokenActivityCard', -1],
++    [":global([data-theme='dark']) .tokenActivityCard", 1],
++  ] as const)(
++    'keeps heatmap levels distinguishable in %s', (selector, direction) => {
+       const rule = styleRuleBlock(usagePageStyles, selector)
+       const luminance = [1, 2, 3, 4, 5].map((level) =>
+         relativeLuminance(cssHexVariable(rule, `--token-activity-level-${level}`)))
+       for (let index = 1; index < luminance.length; index += 1) {
+-        expect(luminance[index - 1]).toBeGreaterThan(luminance[index])
++        expect(Math.sign(luminance[index] - luminance[index - 1])).toBe(direction)
+       }
+     },
+   )
+diff --git a/web/src/styles/components.scss b/web/src/styles/components.scss
+index 311a475..64f570f 100644
+--- a/web/src/styles/components.scss
++++ b/web/src/styles/components.scss
+@@ -85,7 +85,7 @@
+   border-radius: 999px;
+   padding: 7px 12px;
+   font-size: 12px;
+-  font-weight: 700;
++  font-weight: 600;
+   transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease,
+     box-shadow 0.15s ease, opacity 0.15s ease;
+ 
+@@ -109,22 +109,8 @@
+     flex: 0 0 auto;
+   }
+ 
+-  &.btn-primary {
+-    box-shadow: 0 8px 20px rgba($primary-color, 0.18);
+-  }
+-
+-  &.btn-secondary,
+-  &.btn-ghost {
+-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+-  }
+-
+-  &.btn-danger {
+-    box-shadow: none;
+-  }
+-
+-  &:hover:not(:disabled) {
+-    transform: translateY(-1px);
+-  }
++  // Flat like the rest of the system: no drop shadow, no hover lift.
++  box-shadow: none;
+ }
+ 
+ .btn-action.btn.btn-sm {
+@@ -152,7 +138,7 @@
+   border: 0;
+   background: var(--bg-primary);
+   color: var(--text-primary);
+-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
++  box-shadow: none;
+   transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease,
+     transform 0.2s ease;
+ 
+@@ -168,10 +154,8 @@
+   }
+ 
+   &:hover:not(:disabled) {
+-    background: var(--bg-primary);
++    background: var(--bg-hover);
+     color: var(--text-primary);
+-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+-    transform: translateY(-1px);
+   }
+ 
+   &:active:not(:disabled) {
+@@ -278,7 +262,7 @@ textarea {
+   background-color: var(--bg-primary);
+   border: 1px solid var(--border-color);
+   border-radius: var(--keeper-card-radius);
+-  box-shadow: var(--shadow-lg);
++  box-shadow: none;
+ }
+ 
+ .card {
+@@ -621,7 +605,7 @@ textarea {
+ 
+ .modal {
+   background: var(--bg-primary);
+-  border-radius: var(--keeper-card-radius);
++  border-radius: var(--keeper-float-radius);
+   border: 1px solid var(--border-color);
+   box-shadow: $shadow-lg;
+   max-width: 100%;
+@@ -826,7 +810,7 @@ textarea {
+ 
+   .modal {
+     max-height: calc(100vh - #{$spacing-md * 2});
+-    border-radius: var(--keeper-card-radius);
++    border-radius: var(--keeper-float-radius);
+   }
+ 
+   .modal-drawer {
+@@ -916,7 +900,7 @@ textarea {
+   }
+ 
+   .empty-title {
+-    font-weight: 700;
++    font-weight: 600;
+     color: var(--text-primary);
+   }
+ 
+@@ -972,14 +956,13 @@ textarea {
+   }
+ 
+   .item-title {
+-    font-weight: 700;
++    font-weight: 600;
+     color: var(--text-primary);
+   }
+ 
+   .item-subtitle {
+     color: var(--text-secondary);
+-    font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+-      monospace;
++    font-family: var(--font-mono);
+     word-break: break-all;
+   }
+ 
+@@ -1036,7 +1019,7 @@ textarea {
+ 
+   .table-header {
+     background: var(--bg-secondary);
+-    font-weight: 700;
++    font-weight: 600;
+     color: var(--text-primary);
+   }
+ 
+@@ -1074,7 +1057,7 @@ textarea {
+   }
+ 
+   .stat-value {
+-    font-weight: 800;
++    font-weight: 600;
+     color: var(--text-primary);
+     font-size: 18px;
+   }
+@@ -1088,7 +1071,7 @@ textarea {
+   max-height: 520px;
+   overflow: auto;
+   white-space: pre-wrap;
+-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
++  font-family: var(--font-mono);
+   color: var(--text-primary);
+ }
+ 
+diff --git a/web/src/styles/layout.scss b/web/src/styles/layout.scss
+index 7c38ab0..2ab07cf 100644
+--- a/web/src/styles/layout.scss
++++ b/web/src/styles/layout.scss
+@@ -106,7 +106,7 @@
+     display: flex;
+     align-items: center;
+     gap: $spacing-xs;
+-    font-weight: 800;
++    font-weight: 600;
+     font-size: 18px;
+     color: var(--text-primary);
+     margin-right: $spacing-md;
+diff --git a/web/src/styles/menu.scss b/web/src/styles/menu.scss
+index ed7efed..71a05af 100644
+--- a/web/src/styles/menu.scss
++++ b/web/src/styles/menu.scss
+@@ -5,7 +5,7 @@
+   gap: 2px;
+   padding: 6px;
+   border: 1px solid var(--border-color);
+-  border-radius: 24px;
++  border-radius: var(--keeper-float-radius);
+   background: var(--bg-primary);
+   box-shadow: var(--shadow-lg);
+ }
+diff --git a/web/src/styles/mixins.scss b/web/src/styles/mixins.scss
+index a3504af..ce5eb9f 100644
+--- a/web/src/styles/mixins.scss
++++ b/web/src/styles/mixins.scss
+@@ -62,6 +62,37 @@
+   }
+ }
+ 
++// Design-system roles (tokens in themes.scss). A label names a value; a value is a monospace numeral;
++// meta is the quiet prose under it; a surface is a flat panel bounded by hairlines.
++@mixin keeper-label {
++  color: var(--text-secondary);
++  font-size: var(--keeper-label-size);
++  font-weight: var(--keeper-label-weight);
++  letter-spacing: 0;
++  text-transform: none;
++}
++
++@mixin keeper-value {
++  color: var(--text-primary);
++  font-family: var(--font-mono);
++  font-weight: var(--keeper-value-weight);
++  font-variant-numeric: tabular-nums;
++  letter-spacing: 0;
++}
++
++@mixin keeper-meta {
++  color: var(--text-secondary);
++  font-size: var(--keeper-meta-size);
++  font-weight: 400;
++}
++
++@mixin keeper-surface {
++  background: var(--bg-primary);
++  border: var(--keeper-hairline);
++  border-radius: var(--keeper-card-radius);
++  box-shadow: none;
++}
++
+ // 卡片标题旁的计数标签共用同一套尺寸与换行规则。
+ @mixin card-count-badge {
+   display: inline-flex;
+@@ -70,9 +101,10 @@
+   align-items: center;
+   padding: 3px 9px;
+   border-radius: $radius-full;
+-  border: 1px solid color-mix(in srgb, var(--primary-color) 28%, var(--border-color));
+-  background: color-mix(in srgb, var(--primary-color) 8%, var(--bg-primary));
+-  color: color-mix(in srgb, var(--text-primary) 80%, var(--primary-color));
++  border: var(--keeper-hairline);
++  background: transparent;
++  color: var(--text-secondary);
+   font-size: 11px;
+-  font-weight: 800;
++  font-weight: 500;
++  font-variant-numeric: tabular-nums;
+ }
+diff --git a/web/src/styles/themes.scss b/web/src/styles/themes.scss
+index f6389b3..d7fd8d1 100644
+--- a/web/src/styles/themes.scss
++++ b/web/src/styles/themes.scss
+@@ -2,16 +2,38 @@
+  * 主题样式
+  */
+ 
++@use './variables.scss' as *;
++
+ // 浅色主题（默认）
+ :root {
++  // Design system, set by the Overview: flat surfaces split by hairlines (no rounded floating cards),
++  // pill-shaped controls, monospace numerals, quiet sentence-case labels and one amber accent for data marks.
++  --font-mono: #{$font-mono};
++  --keeper-hairline: 1px solid var(--border-color);
++  --keeper-control-radius: 999px;
++  // Floating layers (modals, menus, popovers) lift off the flat page, so they keep a small radius.
++  --keeper-float-radius: 12px;
++  --keeper-label-size: 13px;
++  --keeper-label-weight: 500;
++  --keeper-meta-size: 12px;
++  --keeper-value-weight: 500;
++  --keeper-accent: #9a6b2f;
++  --keeper-accent-soft: rgba(154, 107, 47, 0.1);
++  // Muted series hues for text and marks that tell categories apart (mirrors chartConfig.ts).
++  --keeper-series-amber: #9a6b2f;
++  --keeper-series-sage: #557a5f;
++  --keeper-series-slate: #56698a;
++  --keeper-series-clay: #9a5e4b;
++  --keeper-series-mauve: #77668a;
++
+   // Keeper 全局视觉基础：普通页面、embed 与 Portal Modal 共用。
+-  --keeper-card-radius: 24px;
++  --keeper-card-radius: 0px;
+   --keeper-card-padding: 20px;
+   --keeper-card-header-padding-x: 22px;
+   --keeper-card-header-padding-top: 20px;
+   --keeper-card-header-padding-bottom: 16px;
+-  --keeper-card-title-size: 18px;
+-  --keeper-card-title-weight: 700;
++  --keeper-card-title-size: 16px;
++  --keeper-card-title-weight: 600;
+   --keeper-card-title-line-height: 1.2;
+   --keeper-card-title-track-height: 32px;
+   --keeper-card-subtitle-size: 12px;
+@@ -27,7 +49,7 @@
+ 
+   // 极简暖灰：浅色模式
+   --bg-secondary: #faf9f5; // 页面背景（纸感）
+-  --bg-primary: #f0eee8; // 容器/卡片背景
++  --bg-primary: #f5f3ee; // 容器/卡片背景
+   --bg-tertiary: #e9e6df; // hover/次级背景
+   --bg-hover: var(--bg-tertiary);
+   --bg-quinary: #f6f4ee;
+@@ -52,8 +74,8 @@
+   --primary-active: #726d67;
+   --primary-contrast: #ffffff;
+ 
+-  --success-color: #10b981;
+-  --quota-medium-color: #e0aa14;
++  --success-color: #3f8a5a;
++  --quota-medium-color: #b8862b;
+   --warning-color: #c65746; // 错误/警告色
+   --error-color: #c65746;
+   --danger-color: var(--error-color);
+@@ -63,9 +85,9 @@
+   --warning-border: rgba(198, 87, 70, 0.35);
+   --warning-text: var(--warning-color);
+ 
+-  --success-badge-bg: #d1fae5;
+-  --success-badge-text: #065f46;
+-  --success-badge-border: #6ee7b7;
++  --success-badge-bg: rgba(63, 138, 90, 0.12);
++  --success-badge-text: #2f6b45;
++  --success-badge-border: rgba(63, 138, 90, 0.35);
+ 
+   --failure-badge-bg: rgba(198, 87, 70, 0.14);
+   --failure-badge-text: #8a3a30;
+@@ -118,8 +140,8 @@
+   --primary-active: #726d67;
+   --primary-contrast: #ffffff;
+ 
+-  --success-color: #10b981;
+-  --quota-medium-color: #e0aa14;
++  --success-color: #3f8a5a;
++  --quota-medium-color: #b8862b;
+   --warning-color: #c65746;
+   --error-color: #c65746;
+   --danger-color: var(--error-color);
+@@ -129,9 +151,9 @@
+   --warning-border: rgba(198, 87, 70, 0.35);
+   --warning-text: var(--warning-color);
+ 
+-  --success-badge-bg: #d1fae5;
+-  --success-badge-text: #065f46;
+-  --success-badge-border: #6ee7b7;
++  --success-badge-bg: rgba(63, 138, 90, 0.12);
++  --success-badge-text: #2f6b45;
++  --success-badge-border: rgba(63, 138, 90, 0.35);
+ 
+   --failure-badge-bg: rgba(198, 87, 70, 0.14);
+   --failure-badge-text: #8a3a30;
+@@ -149,10 +171,17 @@
+ 
+ // 深色主题（#191919）
+ [data-theme='dark'] {
++  --keeper-accent: #d9b47e;
++  --keeper-accent-soft: rgba(217, 180, 126, 0.12);
++  --keeper-series-amber: #d9b47e;
++  --keeper-series-sage: #97b39f;
++  --keeper-series-slate: #93a5bd;
++  --keeper-series-clay: #c79a8a;
++  --keeper-series-mauve: #ab9dba;
+   --keeper-menu-selected-bg: var(--bg-hover);
+   // 极简暖灰：深色模式（提升对比度与层级）
+   --bg-secondary: #151412; // 页面背景
+-  --bg-primary: #1d1b18; // 容器/卡片背景
++  --bg-primary: #191816; // 容器/卡片背景
+   --bg-tertiary: #262320; // hover/次级背景
+   --bg-hover: #2e2a26;
+   --bg-quinary: #191714;
+@@ -177,8 +206,8 @@
+   --primary-active: #a6a099;
+   --primary-contrast: #ffffff;
+ 
+-  --success-color: #10b981;
+-  --quota-medium-color: #ffd862;
++  --success-color: #7fb08c;
++  --quota-medium-color: #d9b47e;
+   --warning-color: #c65746;
+   --error-color: #c65746;
+   --danger-color: var(--error-color);
+@@ -188,9 +217,9 @@
+   --warning-border: rgba(198, 87, 70, 0.45);
+   --warning-text: #f1b0a6;
+ 
+-  --success-badge-bg: rgba(6, 78, 59, 0.3);
+-  --success-badge-text: #6ee7b7;
+-  --success-badge-border: #059669;
++  --success-badge-bg: rgba(127, 176, 140, 0.12);
++  --success-badge-text: #a9cdb3;
++  --success-badge-border: rgba(127, 176, 140, 0.4);
+ 
+   --failure-badge-bg: rgba(198, 87, 70, 0.24);
+   --failure-badge-text: #f1b0a6;
+diff --git a/web/src/styles/variables.scss b/web/src/styles/variables.scss
+index ec7e53a..f5dca39 100644
+--- a/web/src/styles/variables.scss
++++ b/web/src/styles/variables.scss
+@@ -4,7 +4,7 @@
+ 
+ // 颜色
+ $primary-color: #8b8680;
+-$success-color: #10b981;
++$success-color: #5f9e72;
+ $warning-color: #c65746;
+ $error-color: #c65746;
+ $info-color: #8b8680;
+@@ -59,4 +59,5 @@ $z-notification: 3000;
+ $font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+   'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+ 
+-$font-mono: 'Courier New', Courier, monospace;
++// The one monospace stack: numerals, code and identifiers. Exposed to modules as var(--font-mono).
++$font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
 diff --git a/web/src/utils/usage/chartConfig.ts b/web/src/utils/usage/chartConfig.ts
-index c9d675d..475c3bd 100644
+index c9d675d..9f524dc 100644
 --- a/web/src/utils/usage/chartConfig.ts
 +++ b/web/src/utils/usage/chartConfig.ts
-@@ -98,9 +98,14 @@ export const buildUsageChartTooltipStyle = (chartTheme: UsageChartTheme) => ({
+@@ -5,38 +5,50 @@
+ 
+ import type { ChartOptions } from 'chart.js';
+ 
+-export const USAGE_CHART_REQUESTS_LINE_COLOR = '#ff5a40';
+-
+ export interface UsageChartGradientColor {
+   base: string;
+   light: string;
+ }
+ 
+-export const USAGE_CHART_COMPOSITION_COLORS: UsageChartGradientColor[] = [
+-  { base: '#1d4ed8', light: '#60a5fa' },
+-  { base: '#ca8a04', light: '#facc15' },
+-  { base: '#15803d', light: '#22c55e' },
+-  { base: '#7e22ce', light: '#c084fc' },
+-  { base: '#b91c1c', light: '#ef4444' },
+-  { base: '#0891b2', light: '#67e8f9' },
+-];
++// One amber accent marks single-series data (matches --keeper-accent). Where colour tells series apart,
++// muted warm-neutral hues follow it, so multi-series charts stay in the same family as the accent.
++export const USAGE_CHART_ACCENT = { dark: '#d9b47e', light: '#9a6b2f' } as const;
++const AMBER = { base: '#b98a4a', light: '#d9b47e' };
++const SAGE = { base: '#6f8f78', light: '#97b39f' };
++const SLATE = { base: '#6b7f99', light: '#93a5bd' };
++const CLAY = { base: '#a8705e', light: '#c79a8a' };
++const MAUVE = { base: '#8a7a9a', light: '#ab9dba' };
++const TEAL = { base: '#6a9294', light: '#93b4b5' };
++/** The "others" / remainder bucket of a categorical chart. */
++export const USAGE_CHART_NEUTRAL_COLOR = '#8b8680';
++
++export const USAGE_CHART_REQUESTS_LINE_COLOR = '#c08a6e';
++/** Failures keep their semantic red, muted to sit beside the warm palette (matches --error-color). */
++export const USAGE_CHART_FAILURE_COLOR: UsageChartGradientColor = { base: '#a8483a', light: '#c65746' };
++
++export const USAGE_CHART_COMPOSITION_COLORS: UsageChartGradientColor[] = [AMBER, SAGE, SLATE, MAUVE, CLAY, TEAL];
++/** Flat fills for ranked categories: the top five, then the neutral "others" bucket at index 5. */
++export const USAGE_CHART_CATEGORY_COLORS = [AMBER, SAGE, SLATE, MAUVE, CLAY].map((color) => color.base).concat(USAGE_CHART_NEUTRAL_COLOR);
++export const USAGE_CHART_LATENCY_COLORS = {
++  light: { pointFill: 'rgba(154, 107, 47, 0.5)', p95TTFT: SLATE.base, p95Latency: CLAY.base },
++  dark: { pointFill: 'rgba(217, 180, 126, 0.55)', p95TTFT: SLATE.light, p95Latency: CLAY.light },
++} as const;
+ export const USAGE_CHART_TOKEN_COLORS = {
+-  input: { base: '#2563eb', light: '#93c5fd' },
+-  output: { base: '#16a34a', light: '#86efac' },
+-  cacheRead: { base: '#d97706', light: '#fde68a' },
+-  cacheWrite: { base: '#e11d48', light: '#fda4af' },
+-  reasoning: { base: '#8b5cf6', light: '#d8b4fe' },
++  input: AMBER,
++  output: SAGE,
++  cacheRead: SLATE,
++  cacheWrite: CLAY,
++  reasoning: MAUVE,
+   requests: USAGE_CHART_REQUESTS_LINE_COLOR,
+-  cost: '#14b8a6',
++  cost: TEAL.base,
+ };
+ 
+-// Realtime 的新增结果图表使用更饱和的渐变；Analysis 的 Token Usage Over Time
+-// 与既有通用图表继续使用上面的旧色板，避免新增图表的视觉调整相互影响。
++// Realtime charts share the token palette so a token type keeps its colour across tabs.
+ export const USAGE_CHART_REALTIME_COLORS = {
+-  input: { base: '#2563eb', light: '#60a5fa' },
+-  output: { base: '#16a34a', light: '#22c55e' },
+-  cacheRead: { base: '#d97706', light: '#f59e0b' },
+-  cacheWrite: { base: '#e11d48', light: '#fb7185' },
++  input: AMBER,
++  output: SAGE,
++  cacheRead: SLATE,
++  cacheWrite: CLAY,
+ } as const;
+ 
+ // 共用 Analysis 柱形图的纵向渐变，保证不同业务图表的柱体质感一致。
+@@ -98,9 +110,14 @@ export const buildUsageChartTooltipStyle = (chartTheme: UsageChartTheme) => ({
  export const sparklineOptions: ChartOptions<'line'> = {
    responsive: true,
    maintainAspectRatio: false,
