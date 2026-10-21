@@ -3,10 +3,14 @@ kind: IngressRoute
 metadata:
   name: nextcloud
   namespace: nextcloud
+  # Mesh-only since PHP2Shell (CVE-2026-109618/9): served by the private
+  # Traefik, see argocd/traefik-internal/README.md.
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [nextcloud]
   routes:
-    - match: Host(`cloud.mia.cx`) || Host(`nextcloud.yggdrasil.mia.cx`)
+    - match: Host(`cloud.mia.cx`)
       kind: Rule
       middlewares:
         - name: nextcloud-dav-redirect
@@ -18,7 +22,20 @@ spec:
       services:
         - name: nextcloud
           port: 8080
-  tls: {}
+  tls:
+    secretName: nextcloud-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: nextcloud-tls
+  namespace: nextcloud
+spec:
+  secretName: nextcloud-tls
+  dnsNames: [cloud.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware

@@ -33,3 +33,7 @@ spec:
           port: 10004
         - protocol: TCP
           port: 10005
+        - protocol: TCP
+          port: 10006
+        - protocol: TCP
+          port: 10007

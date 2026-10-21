@@ -22,6 +22,8 @@ providers:
       - open-wearables
       - oddreads
       - cliproxyapi
+      - nextcloud
+      - pelican
     allowCrossNamespace: false
   kubernetesIngress:
     enabled: false
@@ -57,6 +59,16 @@ ports:
     protocol: TCP
   cpa-usage:
     port: 10005
+    expose:
+      default: false
+    protocol: TCP
+  nextcloud:
+    port: 10006
+    expose:
+      default: false
+    protocol: TCP
+  pelican:
+    port: 10007
     expose:
       default: false
     protocol: TCP

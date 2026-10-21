@@ -42,6 +42,8 @@ Each private service gets its own enforceable network destination:
 | oddreads       | 10003           | 10.43.0.130 | res-oddreads       | svc-oddreads       | slop.mia.cx      |
 | cliproxyapi    | 10004           | 10.43.0.131 | res-cliproxyapi    | svc-cliproxyapi    | cpa.mia.cx       |
 | cpa-usage      | 10005           | 10.43.0.132 | res-cpa-usage      | svc-cliproxyapi    | cpa-usage.mia.cx |
+| nextcloud      | 10006           | 10.43.0.133 | res-nextcloud      | svc-nextcloud      | cloud.mia.cx     |
+| pelican        | 10007           | 10.43.0.134 | res-pelican        | svc-pelican        | panel.mia.cx     |
 
 ## Adding a service
 
