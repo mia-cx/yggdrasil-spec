@@ -23,5 +23,6 @@ private destinations. Credentials and OAuth state stay outside Git.
 
 PR #61 is merged. ArgoCD owns the healthy CPA and customised Keeper workloads,
 persistent Longhorn volumes, private routes and dedicated `svc-cliproxyapi`
-permission. NetBird policy and DNS activation await the first permission-holding
-sign-in, which creates the JWT-issued group.
+permission. Its JWT-issued NetBird group grants TCP 443 to both destinations;
+private DNS maps `cpa.mia.cx` and `cpa-usage.mia.cx` to their dedicated Services.
+Mia's provider sign-ins and a real usage request remain to validate.

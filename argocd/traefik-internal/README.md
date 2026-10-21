@@ -67,6 +67,15 @@ Created through the Management API on 2026-09-27; not in this repo.
 - DNS zone `canary.mia.cx`: distribution group `svc-canary`, search domain
   off, apex A record `canary.mia.cx` → `10.43.0.128`.
 
+Added through the Management API on 2026-10-21 after Hecate sign-in created
+the JWT-issued `svc-cliproxyapi` group:
+
+- Policies `cliproxyapi` and `cpa-usage`: source `svc-cliproxyapi`, respective
+  destinations `res-cliproxyapi` and `res-cpa-usage`, unidirectional TCP 443.
+- DNS zones `cpa.mia.cx` and `cpa-usage.mia.cx`: distribution group
+  `svc-cliproxyapi`, search domain off, apex A records pointing at
+  `10.43.0.131` and `10.43.0.132`, respectively.
+
 NetBird 0.79.0 doesn't push DNS zone or record changes to connected peers.
 The server logs `failed to get network map data ... context canceled`, and
 peers keep their old DNS settings until they reconnect
