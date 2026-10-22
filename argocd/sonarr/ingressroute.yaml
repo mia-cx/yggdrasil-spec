@@ -3,15 +3,31 @@ kind: IngressRoute
 metadata:
   name: sonarr
   namespace: media
+  # Mesh-only: served by the private Traefik, see
+  # argocd/traefik-internal/README.md.
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [sonarr]
   routes:
     - match: Host(`sonarr.yggdrasil.mia.cx`)
       kind: Rule
       middlewares:
         - name: authentik
-          namespace: kube-system
       services:
         - name: sonarr
           port: 8989
-  tls: {}
+  tls:
+    secretName: sonarr-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sonarr-tls
+  namespace: media
+spec:
+  secretName: sonarr-tls
+  dnsNames: [sonarr.yggdrasil.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer

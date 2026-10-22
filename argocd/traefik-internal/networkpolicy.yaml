@@ -1,7 +1,7 @@
 # The private Traefik accepts only mesh-routed traffic: the operator's routing
 # pods masquerade, so mesh flows arrive from routing-pod IPs. Anything not
-# through NetBird (LAN, pod-to-pod, NodePort) is refused at the pod. Each new
-# private service adds its entrypoint port to the list below.
+# through NetBird (LAN, pod-to-pod, NodePort) is refused at the pod. The range
+# covers every private entrypoint port; widen it when a service is added.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -25,19 +25,4 @@ spec:
       ports:
         - protocol: TCP
           port: 10001
-        - protocol: TCP
-          port: 10002
-        - protocol: TCP
-          port: 10003
-        - protocol: TCP
-          port: 10004
-        - protocol: TCP
-          port: 10005
-        - protocol: TCP
-          port: 10006
-        - protocol: TCP
-          port: 10007
-        - protocol: TCP
-          port: 10008
-        - protocol: TCP
-          port: 10010
+          endPort: 10026

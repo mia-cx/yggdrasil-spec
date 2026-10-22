@@ -1,0 +1,22 @@
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-argocd
+  namespace: traefik-internal
+spec:
+  name: res-argocd
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: argocd
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: argocd
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-argocd

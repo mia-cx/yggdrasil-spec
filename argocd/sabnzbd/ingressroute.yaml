@@ -3,15 +3,31 @@ kind: IngressRoute
 metadata:
   name: sabnzbd
   namespace: media
+  # Mesh-only: served by the private Traefik, see
+  # argocd/traefik-internal/README.md.
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [sabnzbd]
   routes:
     - match: Host(`sabnzbd.yggdrasil.mia.cx`)
       kind: Rule
       middlewares:
         - name: authentik
-          namespace: kube-system
       services:
         - name: sabnzbd
           port: 8080
-  tls: {}
+  tls:
+    secretName: sabnzbd-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sabnzbd-tls
+  namespace: media
+spec:
+  secretName: sabnzbd-tls
+  dnsNames: [sabnzbd.yggdrasil.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer

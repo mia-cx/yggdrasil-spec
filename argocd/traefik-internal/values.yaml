@@ -26,6 +26,13 @@ providers:
       - pelican
       - immich
       - media
+      - argocd
+      - hermes
+      - ms365-mcp
+      - email-oauth2-proxy
+      - speedtest
+      - vaultwarden
+      - defriend
     allowCrossNamespace: false
   kubernetesIngress:
     enabled: false
@@ -87,6 +94,101 @@ ports:
         writeTimeout: 0
   tunarr:
     port: 10010
+    expose:
+      default: false
+    protocol: TCP
+  argocd:
+    port: 10009
+    expose:
+      default: false
+    protocol: TCP
+  jellyfin:
+    port: 10011
+    expose:
+      default: false
+    protocol: TCP
+    # Streams and offline downloads outlast Traefik's 60-second default.
+    transport:
+      respondingTimeouts:
+        readTimeout: 0
+        writeTimeout: 0
+  seerr:
+    port: 10012
+    expose:
+      default: false
+    protocol: TCP
+  prowlarr:
+    port: 10013
+    expose:
+      default: false
+    protocol: TCP
+  sonarr:
+    port: 10014
+    expose:
+      default: false
+    protocol: TCP
+  radarr:
+    port: 10015
+    expose:
+      default: false
+    protocol: TCP
+  lidarr:
+    port: 10016
+    expose:
+      default: false
+    protocol: TCP
+  readarr:
+    port: 10017
+    expose:
+      default: false
+    protocol: TCP
+  sabnzbd:
+    port: 10018
+    expose:
+      default: false
+    protocol: TCP
+  qbittorrent:
+    port: 10019
+    expose:
+      default: false
+    protocol: TCP
+  hermes:
+    port: 10020
+    expose:
+      default: false
+    protocol: TCP
+  ms365-mcp:
+    port: 10021
+    expose:
+      default: false
+    protocol: TCP
+  smtproxy:
+    port: 10022
+    expose:
+      default: false
+    protocol: TCP
+  wings:
+    port: 10023
+    expose:
+      default: false
+    protocol: TCP
+    # Console WebSockets and file transfers stay open for long periods.
+    transport:
+      respondingTimeouts:
+        readTimeout: 0
+        writeTimeout: 0
+  speedtest:
+    port: 10024
+    expose:
+      default: false
+    protocol: TCP
+  vaultwarden:
+    port: 10025
+    expose:
+      default: false
+    protocol: TCP
+  defriend:
+    port: 10026
     expose:
       default: false
     protocol: TCP

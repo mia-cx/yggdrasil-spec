@@ -31,17 +31,52 @@ ports:
     port: 8080
     protocol: TCP
 ---
+# Browsers reach Wings (console WebSockets, file transfers) over the mesh,
+# through the private Traefik; see argocd/traefik-internal/README.md.
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: wings-hermes-olympus-1
   namespace: pelican
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [wings]
   routes:
     - match: Host(`hermes-olympus-1.yggdrasil.mia.cx`)
       kind: Rule
       services:
         - name: wings-hermes-olympus-1
           port: 8080
+  tls:
+    secretName: wings-hermes-olympus-1-tls
+---
+# The panel pod calls Wings' API by the same name, which in-cluster DNS
+# answers with the public Traefik VIP. That Traefik keeps the route for pod
+# IPs alone; it preserves client IPs (externalTrafficPolicy: Local).
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: wings-hermes-olympus-1-panel
+  namespace: pelican
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`hermes-olympus-1.yggdrasil.mia.cx`) && ClientIP(`10.42.0.0/16`)
+      kind: Rule
+      services:
+        - name: wings-hermes-olympus-1
+          port: 8080
   tls: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wings-hermes-olympus-1-tls
+  namespace: pelican
+spec:
+  secretName: wings-hermes-olympus-1-tls
+  dnsNames: [hermes-olympus-1.yggdrasil.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer

@@ -1,15 +1,31 @@
-## No auth middleware — Vaultwarden handles its own auth via native SSO + master password
+## No auth middleware — Vaultwarden handles its own auth via native SSO + master password.
+## Mesh-only: served by the private Traefik, see argocd/traefik-internal/README.md.
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: vaultwarden
   namespace: vaultwarden
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [vaultwarden]
   routes:
     - match: Host(`warden.mia.cx`) || Host(`vaultwarden.yggdrasil.mia.cx`)
       kind: Rule
       services:
         - name: vaultwarden
           port: 80
-  tls: {}
+  tls:
+    secretName: vaultwarden-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vaultwarden-tls
+  namespace: vaultwarden
+spec:
+  secretName: vaultwarden-tls
+  dnsNames: [warden.mia.cx, vaultwarden.yggdrasil.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer

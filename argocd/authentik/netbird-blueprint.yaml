@@ -40,6 +40,9 @@ data:
       - {model: authentik_core.group, id: svc-cliproxyapi, identifiers: {name: svc-cliproxyapi}, attrs: {is_superuser: false}}
       - {model: authentik_core.group, id: svc-nextcloud, identifiers: {name: svc-nextcloud}, attrs: {is_superuser: false}}
       - {model: authentik_core.group, id: svc-immich, identifiers: {name: svc-immich}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-vaultwarden, identifiers: {name: svc-vaultwarden}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-speedtest, identifiers: {name: svc-speedtest}, attrs: {is_superuser: false}}
+      - {model: authentik_core.group, id: svc-defriend, identifiers: {name: svc-defriend}, attrs: {is_superuser: false}}
       # Permission to enroll a personal device; the NetBird application is
       # bound to it below.
       - {model: authentik_core.group, id: netbird-enroll, identifiers: {name: netbird-enroll}, attrs: {is_superuser: false}}
@@ -74,6 +77,9 @@ data:
             - !KeyOf svc-cliproxyapi
             - !KeyOf svc-nextcloud
             - !KeyOf svc-immich
+            - !KeyOf svc-vaultwarden
+            - !KeyOf svc-speedtest
+            - !KeyOf svc-defriend
             - !KeyOf netbird-enroll
       - model: authentik_core.group
         identifiers: {name: role-family}

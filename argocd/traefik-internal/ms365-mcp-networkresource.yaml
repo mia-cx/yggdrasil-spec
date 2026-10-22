@@ -1,0 +1,22 @@
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-ms365-mcp
+  namespace: traefik-internal
+spec:
+  name: res-ms365-mcp
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: ms365-mcp
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: ms365-mcp
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-ms365-mcp

@@ -127,7 +127,7 @@ TV peers have no owning user, so the job sets their group membership directly an
 
 Enforcement is the [per-service network cutoff](#per-service-network-destinations) below: removing a permission cuts NetBird access to that one service within the hourly sync. Before cutover, test old credentials, reconnects, stale group claims, and unaffected users on each private service; include shared TVs where relevant. Record removal and enforcement times; expose failed or delayed enforcement instead of reporting success.
 
-Public Immich, Nextcloud, and Vaultwarden are [out of scope](https://github.com/mia-cx/yggdrasil-spec/issues/13#issuecomment-5848330338). They stay reachable without NetBird, and their sign-in, sessions, and revocation are Hecate matters with no NetBird dependency. The bound and sync job cover NetBird access only. Existing production access stays in place until NetBird stability sign-off and that service's approved cutover.
+Immich, Nextcloud, and Vaultwarden were [out of scope](https://github.com/mia-cx/yggdrasil-spec/issues/13#issuecomment-5848330338) as public services. Since 2026-10-22 they are mesh-only like everything else, so the per-service cutoff below covers them too. Only Hecate, NetBird, and the exceptions in [What stays public](https://github.com/mia-cx/yggdrasil-spec/blob/main/argocd/traefik-internal/README.md#what-stays-public) remain reachable without NetBird.
 
 ### Per-service network destinations
 
@@ -155,7 +155,7 @@ Record permission-removal and enforcement times. Validate every routing peer and
 
 Shared TVs follow the [owner-linked permission rule](#shared-appliance-permissions). Removing an owner's Jellyfin grant also revokes that grant from their TVs. This cuts off Jellyfin for everyone using those TVs; individual viewer revocation inside an otherwise authorized TV is not required by this plan.
 
-Public Immich, Nextcloud, and Vaultwarden stay outside the NetBird plan; their sign-in, sessions, and revocation remain Hecate matters. The hourly sync job propagates removals without waiting for login. This network cutoff does not require the previously proposed Jellyfin account/token automation.
+The hourly sync job propagates removals without waiting for login. This network cutoff does not require the previously proposed Jellyfin account/token automation.
 
 ### Revocation source checks
 

@@ -1,0 +1,22 @@
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-prowlarr
+  namespace: traefik-internal
+spec:
+  name: res-prowlarr
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: prowlarr
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: prowlarr
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-prowlarr

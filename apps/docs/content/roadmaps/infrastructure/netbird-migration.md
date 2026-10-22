@@ -42,6 +42,8 @@ Run for 14 days. Self-recovering glitches are acceptable; log and fix anything n
 
 ## Cutover order
 
+On 2026-10-22 Mia moved every remaining service to the mesh in one decision, ahead of pilot sign-off; [What stays public](https://github.com/mia-cx/yggdrasil-spec/blob/main/argocd/traefik-internal/README.md#what-stays-public) lists the exceptions. The order below is kept for the record.
+
 Mia approves each group as one decision, per the [order and rollback decision](https://github.com/mia-cx/yggdrasil-spec/issues/14#issuecomment-5848465635):
 
 1. Prowlarr as canary, then Sonarr, Radarr, Lidarr, Readarr, SABnzbd, qBittorrent, Tunarr.
@@ -72,7 +74,7 @@ Acceptance, after cutover:
 - Permitted users work on mesh at home and away, including native apps.
 - Off mesh: the Janus page. Direct LAN IP, NodePort, pod IP, and other Traefik listeners refuse.
 - Removing a test account's permission ends access within 24 hours; other services and users stay unaffected.
-- Unrelated public services (Immich, Nextcloud, Vaultwarden, OpenSpeedTest, Hecate, NetBird) and their certificates stay unchanged.
+- Unrelated services and their certificates stay unchanged.
 
 Jellyfin adds native playback on phones and Apple TV, owner-cascade to TVs, and proof that another household's playback continues.
 

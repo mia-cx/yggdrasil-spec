@@ -1,0 +1,22 @@
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-readarr
+  namespace: traefik-internal
+spec:
+  name: res-readarr
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: readarr
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: readarr
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-readarr

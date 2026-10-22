@@ -1,0 +1,22 @@
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-vaultwarden
+  namespace: traefik-internal
+spec:
+  name: res-vaultwarden
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: vaultwarden
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: vaultwarden
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-vaultwarden
