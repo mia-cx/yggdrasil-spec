@@ -3,15 +3,31 @@ kind: IngressRoute
 metadata:
   name: radarr
   namespace: media
+  # Mesh-only: served by the private Traefik, see
+  # argocd/traefik-internal/README.md.
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [radarr]
   routes:
     - match: Host(`radarr.yggdrasil.mia.cx`)
       kind: Rule
       middlewares:
         - name: authentik
-          namespace: kube-system
       services:
         - name: radarr
           port: 7878
-  tls: {}
+  tls:
+    secretName: radarr-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: radarr-tls
+  namespace: media
+spec:
+  secretName: radarr-tls
+  dnsNames: [radarr.yggdrasil.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer

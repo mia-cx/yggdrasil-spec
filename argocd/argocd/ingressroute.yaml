@@ -1,18 +1,33 @@
-## ArgoCD dashboard — internal only, protected by Authentik forward-auth
+## ArgoCD dashboard — mesh-only, protected by Authentik forward-auth.
+## Served by the private Traefik, see argocd/traefik-internal/README.md.
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: argocd
   namespace: argocd
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [argocd]
   routes:
     - match: Host(`argocd.yggdrasil.mia.cx`)
       kind: Rule
       middlewares:
         - name: authentik
-          namespace: kube-system
       services:
         - name: argocd-server
           port: 80
-  tls: {}
+  tls:
+    secretName: argocd-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: argocd-tls
+  namespace: argocd
+spec:
+  secretName: argocd-tls
+  dnsNames: [argocd.yggdrasil.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer

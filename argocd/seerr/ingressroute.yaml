@@ -3,12 +3,29 @@ kind: IngressRoute
 metadata:
   name: seerr
   namespace: media
+  # Mesh-only: served by the private Traefik, see
+  # argocd/traefik-internal/README.md.
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [seerr]
   routes:
     - match: Host(`seerr.mia.cx`) || Host(`seerr.yggdrasil.mia.cx`)
       kind: Rule
       services:
         - name: seerr
           port: 5055
-  tls: {}
+  tls:
+    secretName: seerr-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: seerr-tls
+  namespace: media
+spec:
+  secretName: seerr-tls
+  dnsNames: [seerr.mia.cx, seerr.yggdrasil.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer

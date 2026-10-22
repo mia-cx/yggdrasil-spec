@@ -36,12 +36,29 @@ kind: IngressRoute
 metadata:
   name: defriend-oauth-callback
   namespace: defriend
+  # Mesh-only: served by the private Traefik, see
+  # argocd/traefik-internal/README.md.
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [defriend]
   routes:
     - match: Host(`defriend.mia.cx`) && (Path(`/install`) || Path(`/callback`))
       kind: Rule
       services:
         - name: defriend-oauth-callback
           port: 8787
-  tls: {}
+  tls:
+    secretName: defriend-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: defriend-tls
+  namespace: defriend
+spec:
+  secretName: defriend-tls
+  dnsNames: [defriend.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer

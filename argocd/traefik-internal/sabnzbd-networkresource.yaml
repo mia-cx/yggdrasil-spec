@@ -1,0 +1,22 @@
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-sabnzbd
+  namespace: traefik-internal
+spec:
+  name: res-sabnzbd
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: sabnzbd
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: sabnzbd
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-sabnzbd

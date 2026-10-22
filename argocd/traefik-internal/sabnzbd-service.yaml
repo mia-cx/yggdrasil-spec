@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sabnzbd
+  namespace: traefik-internal
+spec:
+  type: ClusterIP
+  clusterIP: 10.43.0.145
+  ports:
+    - name: https
+      port: 443
+      targetPort: sabnzbd
+  selector:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik-internal-traefik-internal

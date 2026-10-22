@@ -1,15 +1,31 @@
-## Public service — no Authentik middleware.
+## Mesh-only, no Authentik middleware: served by the private Traefik, see
+## argocd/traefik-internal/README.md.
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: openspeedtest
   namespace: speedtest
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [speedtest]
   routes:
     - match: Host(`speedtest.mia.cx`)
       kind: Rule
       services:
         - name: openspeedtest
           port: 3000
-  tls: {}
+  tls:
+    secretName: speedtest-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: speedtest-tls
+  namespace: speedtest
+spec:
+  secretName: speedtest-tls
+  dnsNames: [speedtest.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer

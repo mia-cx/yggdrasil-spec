@@ -1,0 +1,22 @@
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-defriend
+  namespace: traefik-internal
+spec:
+  name: res-defriend
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: defriend
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: defriend
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-defriend

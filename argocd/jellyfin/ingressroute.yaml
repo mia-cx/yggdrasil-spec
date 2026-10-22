@@ -3,12 +3,29 @@ kind: IngressRoute
 metadata:
   name: jellyfin
   namespace: media
+  # Mesh-only: served by the private Traefik, see
+  # argocd/traefik-internal/README.md.
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [jellyfin]
   routes:
     - match: Host(`jellyfin.mia.cx`) || Host(`jellyfin.yggdrasil.mia.cx`)
       kind: Rule
       services:
         - name: jellyfin
           port: 8096
-  tls: {}
+  tls:
+    secretName: jellyfin-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: jellyfin-tls
+  namespace: media
+spec:
+  secretName: jellyfin-tls
+  dnsNames: [jellyfin.mia.cx, jellyfin.yggdrasil.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer

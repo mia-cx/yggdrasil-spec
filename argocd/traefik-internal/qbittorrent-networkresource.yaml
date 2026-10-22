@@ -1,0 +1,22 @@
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-qbittorrent
+  namespace: traefik-internal
+spec:
+  name: res-qbittorrent
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: qbittorrent
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: qbittorrent
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-qbittorrent

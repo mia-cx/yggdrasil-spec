@@ -3,15 +3,31 @@ kind: IngressRoute
 metadata:
   name: prowlarr
   namespace: media
+  # Mesh-only: served by the private Traefik, see
+  # argocd/traefik-internal/README.md.
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [prowlarr]
   routes:
     - match: Host(`prowlarr.yggdrasil.mia.cx`)
       kind: Rule
       middlewares:
         - name: authentik
-          namespace: kube-system
       services:
         - name: prowlarr
           port: 9696
-  tls: {}
+  tls:
+    secretName: prowlarr-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: prowlarr-tls
+  namespace: media
+spec:
+  secretName: prowlarr-tls
+  dnsNames: [prowlarr.yggdrasil.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer

@@ -1,5 +1,22 @@
 ## Hermes Dashboard — selector-less Service + EndpointSlice to route Traefik to hephaestus
 ## The dashboard process runs on athena-hephaestus as a systemd user service.
+## All routes here are mesh-only, served by the private Traefik (see
+## argocd/traefik-internal/README.md). The OAuth callbacks are browser
+## redirects, so they work from any mesh device. The Microsoft Graph webhook
+## (hermes-msgraph-webhook) is server-delivered and stays public; it is
+## managed outside this repo.
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: hermes-tls
+  namespace: hermes
+spec:
+  secretName: hermes-tls
+  dnsNames: [hermes.mia.cx, hermes.yggdrasil.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer
 ---
 apiVersion: v1
 kind: Service
@@ -35,15 +52,18 @@ kind: IngressRoute
 metadata:
   name: hermes-dashboard
   namespace: hermes
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [hermes]
   routes:
     - match: Host(`hermes.yggdrasil.mia.cx`) || Host(`hermes.mia.cx`)
       kind: Rule
       services:
         - name: hermes-dashboard
           port: 9119
-  tls: {}
+  tls:
+    secretName: hermes-tls
 ---
 ## Hermes MCP OAuth callback — stable public HTTPS redirect endpoint for ms365 MCP login.
 ## Entra redirect URI: https://hermes.mia.cx/mcp-oauth/ms365/callback
@@ -82,15 +102,18 @@ kind: IngressRoute
 metadata:
   name: hermes-mcp-oauth-callback
   namespace: hermes
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [hermes]
   routes:
     - match: (Host(`hermes.mia.cx`) || Host(`hermes.yggdrasil.mia.cx`)) && Path(`/mcp-oauth/ms365/callback`)
       kind: Rule
       services:
         - name: hermes-mcp-oauth-callback
           port: 18765
-  tls: {}
+  tls:
+    secretName: hermes-tls
 ---
 ## Cloudflare API MCP OAuth callback.
 ## Redirect URI: https://hermes.mia.cx/mcp-oauth/cloudflare-api/callback
@@ -129,12 +152,15 @@ kind: IngressRoute
 metadata:
   name: hermes-cloudflare-mcp-oauth-callback
   namespace: hermes
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [hermes]
   routes:
     - match: (Host(`hermes.mia.cx`) || Host(`hermes.yggdrasil.mia.cx`)) && Path(`/mcp-oauth/cloudflare-api/callback`)
       kind: Rule
       services:
         - name: hermes-cloudflare-mcp-oauth-callback
           port: 18766
-  tls: {}
+  tls:
+    secretName: hermes-tls

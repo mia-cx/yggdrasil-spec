@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: defriend
+  namespace: traefik-internal
+spec:
+  type: ClusterIP
+  clusterIP: 10.43.0.153
+  ports:
+    - name: https
+      port: 443
+      targetPort: defriend
+  selector:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik-internal-traefik-internal

@@ -3,15 +3,31 @@ kind: IngressRoute
 metadata:
   name: lidarr
   namespace: media
+  # Mesh-only: served by the private Traefik, see
+  # argocd/traefik-internal/README.md.
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
 spec:
-  entryPoints: [websecure]
+  entryPoints: [lidarr]
   routes:
     - match: Host(`lidarr.yggdrasil.mia.cx`)
       kind: Rule
       middlewares:
         - name: authentik
-          namespace: kube-system
       services:
         - name: lidarr
           port: 8686
-  tls: {}
+  tls:
+    secretName: lidarr-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: lidarr-tls
+  namespace: media
+spec:
+  secretName: lidarr-tls
+  dnsNames: [lidarr.yggdrasil.mia.cx]
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer
