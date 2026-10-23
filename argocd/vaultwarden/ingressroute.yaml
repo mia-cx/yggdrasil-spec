@@ -1,5 +1,22 @@
 ## No auth middleware — Vaultwarden handles its own auth via native SSO + master password.
-## Mesh-only: served by the private Traefik, see argocd/traefik-internal/README.md.
+## Public, and on the mesh: mesh devices resolve these names to the private
+## Traefik (see argocd/traefik-internal/README.md); everyone else reaches the
+## public route below.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: vaultwarden-public
+  namespace: vaultwarden
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`warden.mia.cx`) || Host(`vaultwarden.yggdrasil.mia.cx`)
+      kind: Rule
+      services:
+        - name: vaultwarden
+          port: 80
+  tls: {}
+---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
