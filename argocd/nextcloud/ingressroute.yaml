@@ -1,10 +1,33 @@
+## Public, and on the mesh: mesh devices resolve cloud.mia.cx to the private
+## Traefik (see argocd/traefik-internal/README.md); everyone else reaches the
+## public route below.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nextcloud-public
+  namespace: nextcloud
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`cloud.mia.cx`)
+      kind: Rule
+      middlewares:
+        - name: nextcloud-dav-redirect
+          namespace: nextcloud
+        - name: nextcloud-ios-dav-legacy-redirect
+          namespace: nextcloud
+        - name: nextcloud-headers
+          namespace: nextcloud
+      services:
+        - name: nextcloud
+          port: 8080
+  tls: {}
+---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: nextcloud
   namespace: nextcloud
-  # Mesh-only since PHP2Shell (CVE-2026-109618/9): served by the private
-  # Traefik, see argocd/traefik-internal/README.md.
   annotations:
     kubernetes.io/ingress.class: traefik-internal
 spec:
