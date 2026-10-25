@@ -1,6 +1,6 @@
-## Public, and on the mesh: mesh devices resolve cloud.mia.cx to the private
-## Traefik (see argocd/traefik-internal/README.md); everyone else reaches the
-## public route below.
+## Public, and on the mesh: peers in svc-nextcloud resolve cloud.mia.cx to the
+## private Traefik (see argocd/traefik-internal/README.md); everyone else
+## reaches the public route below.
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
