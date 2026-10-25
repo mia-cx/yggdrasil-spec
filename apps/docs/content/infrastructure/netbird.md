@@ -127,7 +127,7 @@ TV peers have no owning user, so the job sets their group membership directly an
 
 Enforcement is the [per-service network cutoff](#per-service-network-destinations) below: removing a permission cuts NetBird access to that one service within the hourly sync. Before cutover, test old credentials, reconnects, stale group claims, and unaffected users on each private service; include shared TVs where relevant. Record removal and enforcement times; expose failed or delayed enforcement instead of reporting success.
 
-Immich, Nextcloud, and Vaultwarden were [out of scope](https://github.com/mia-cx/yggdrasil-spec/issues/13#issuecomment-5848330338) as public services. Since 2026-10-22 they are mesh-only like everything else, so the per-service cutoff below covers them too. Only Hecate, NetBird, and the exceptions in [What stays public](https://github.com/mia-cx/yggdrasil-spec/blob/main/argocd/traefik-internal/README.md#what-stays-public) remain reachable without NetBird.
+Immich, Nextcloud, and Vaultwarden were [out of scope](https://github.com/mia-cx/yggdrasil-spec/issues/13#issuecomment-5848330338) as public services. Since 2026-10-22 they are on the mesh like everything else, so the per-service cutoff below covers them too; Vaultwarden and Nextcloud are also public again. Only Hecate, NetBird, and the exceptions in [What stays public](https://github.com/mia-cx/yggdrasil-spec/blob/main/argocd/traefik-internal/README.md#what-stays-public) remain reachable without NetBird.
 
 ### Per-service network destinations
 
