@@ -172,8 +172,19 @@ sed -i 's/127.0.0.1/10.0.128.1/g' ~/.kube/config
 **Longhorn (distributed storage):**
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.6.0/deploy/longhorn.yaml
+kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.7.3/deploy/longhorn.yaml
 ```
+
+The stock `longhorn` StorageClass asks for 3 replicas, which two nodes can never satisfy, so every new volume stays degraded. Longhorn rebuilds the StorageClass from the `longhorn-storageclass` ConfigMap, so set 2 there, after the install and after every reapply of `longhorn.yaml`:
+
+```bash
+kubectl get cm -n longhorn-system longhorn-storageclass -o jsonpath='{.data.storageclass\.yaml}' \
+  | sed 's/numberOfReplicas: "3"/numberOfReplicas: "2"/' > /tmp/longhorn-sc.yaml
+kubectl create cm longhorn-storageclass -n longhorn-system \
+  --from-file=storageclass.yaml=/tmp/longhorn-sc.yaml --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Volumes created before that change keep their count; set it per volume with `kubectl patch volumes.longhorn.io -n longhorn-system <pvc-id> --type merge -p '{"spec":{"numberOfReplicas":2}}'`.
 
 **cert-manager:**
 
