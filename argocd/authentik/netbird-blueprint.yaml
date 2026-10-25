@@ -88,6 +88,8 @@ data:
           parents:
             - !KeyOf svc-jellyfin
             - !KeyOf svc-seerr
+            - !KeyOf svc-immich
+            - !KeyOf svc-nextcloud
             - !KeyOf netbird-enroll
 
       # NetBird-only authorization flow: asks for consent on every
