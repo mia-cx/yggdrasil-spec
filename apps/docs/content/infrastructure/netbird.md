@@ -105,7 +105,7 @@ Selected hosts run an independent Repair client: `netbird-repair.service`, one u
 
 Every private service has a `svc-<service>` group in Hecate: `svc-prowlarr`, `svc-sonarr`, `svc-radarr`, `svc-lidarr`, `svc-readarr`, `svc-sabnzbd`, `svc-qbittorrent`, `svc-tunarr`, `svc-longhorn`, `svc-argocd`, `svc-proxmox`, `svc-pelican`, `svc-hermes`, `svc-seerr`, `svc-jellyfin`, `svc-lan`, `svc-ssh`, `svc-canary`, `svc-open-wearables`, `svc-oddreads`, and `svc-cliproxyapi`. The CPA permission grants both the proxy and its usage dashboard. The `netbird-enroll` group is the enrollment permission; the NetBird application requires it.
 
-Two role presets assign permissions in one step. A member inherits every parent group, so a role's parents are the permissions it grants. `role-admin` parents are every `svc-*` group plus `netbird-enroll`. `role-family` parents are `svc-jellyfin`, `svc-seerr`, and `netbird-enroll`.
+Two role presets assign permissions in one step. A member inherits every parent group, so a role's parents are the permissions it grants. `role-admin` parents are every `svc-*` group plus `netbird-enroll`. `role-family` parents are `svc-jellyfin`, `svc-seerr`, `svc-immich`, `svc-nextcloud`, and `netbird-enroll`.
 
 The NetBird profile scope emits a `groups` claim with only these permission names. NetBird never sees `role-*` presets or other Hecate groups, and no permission grants admin inside an application. NetBird creates each name as a JWT-issued group the first time a user holding it signs in; never create these groups through the NetBird API or dashboard. The hourly sync job edits membership only.
 
