@@ -34,7 +34,7 @@ spec:
                     operator: Exists
       initContainers:
         - name: seed-config
-          image: eceasy/cli-proxy-api:v8.0.36@sha256:bc25ea627f675e4e3714f48d3b1dd22643e45464dcc1c3c7c5688f51bc6b49fb
+          image: eceasy/cli-proxy-api:v8.0.44@sha256:be365a6b3ca2b54947e9248c7bb7e1cdb974f66c922d2354b85daec2ad5cc201
           command: [/bin/sh, -ec]
           args:
             - |
@@ -57,7 +57,7 @@ spec:
               readOnly: true
       containers:
         - name: proxy
-          image: eceasy/cli-proxy-api:v8.0.36@sha256:bc25ea627f675e4e3714f48d3b1dd22643e45464dcc1c3c7c5688f51bc6b49fb
+          image: eceasy/cli-proxy-api:v8.0.44@sha256:be365a6b3ca2b54947e9248c7bb7e1cdb974f66c922d2354b85daec2ad5cc201
           command: [/CLIProxyAPI/CLIProxyAPI]
           args: [--config, /data/config.yaml]
           workingDir: /data
