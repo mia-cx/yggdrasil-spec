@@ -71,7 +71,9 @@ Each private service gets its own enforceable network destination:
 ² An API-issued group for the Grok bot's setup-key peer, not a Hecate
 permission. The route serves only T3 Code's `/mcp` endpoint; the bot
 authenticates with a T3 bearer token scoped to `orchestration:read` and
-`orchestration:operate`.
+`orchestration:operate`. Those scopes let it start agent threads on
+Hephaestus, which can read anything Mia's user can there, including the
+kubeconfig and other credentials. Mia accepted this access on 2026-10-30.
 
 ## What stays public
 

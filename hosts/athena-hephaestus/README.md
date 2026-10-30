@@ -19,10 +19,11 @@ groups grant:
 - `t3-fleet`: policy `t3-fleet`, all traffic in both directions between fleet
   hosts (with Pegasus), for the T3 Code fleet.
 
-The client disables server routes and receives no Internet exit route. It
-manages DNS in resolv.conf mode: NetBird's resolver answers
-`*.netbird.mia.cx` peer names and forwards everything else to the original
-public resolvers, saved in `/etc/resolv.conf.original.netbird`. An explicit
+The client disables server routes and receives no Internet exit route. Host
+DNS runs through systemd-resolved, with upstreams `1.1.1.1 1.0.0.1 8.8.8.8
+8.8.4.4` in `/etc/systemd/resolved.conf.d/upstream.conf`. NetBird registers
+only `netbird.mia.cx` on `wt0`, so its resolver answers peer names and every
+other lookup, including the Repair client's, bypasses it. An explicit
 `/etc/hosts` entry maps `cpa.mia.cx` to the pinned private ingress Service at
 `10.43.0.131`, preserving the canonical HTTPS name for shell clients.
 
@@ -44,8 +45,10 @@ name as the site, under the launch agent `cx.mia.caddy-t3`.
 
 Mesh peers in `agent-grok` reach only the MCP endpoint, at
 `https://t3.yggdrasil.mia.cx/mcp`, through the private Traefik
-(`argocd/t3code`). Issue their token here; T3 accepts MCP bearer tokens only
-with subject `mcp-client`:
+(`argocd/t3code`). The token lets the bot start agent threads here, and those
+agents can read anything Mia's user can, including the kubeconfig and the
+Cloudflare token; Mia accepted this on 2026-10-30. Issue the token here; T3
+accepts MCP bearer tokens only with subject `mcp-client`:
 
 ```sh
 t3 auth session issue --label grok-bot --ttl 30d --subject mcp-client \
