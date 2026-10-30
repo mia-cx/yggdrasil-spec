@@ -63,9 +63,15 @@ Each private service gets its own enforceable network destination:
 | speedtest      | 10024           | 10.43.0.151 | res-speedtest      | svc-speedtest      | speedtest.mia.cx                  |
 | vaultwarden    | 10025           | 10.43.0.152 | res-vaultwarden    | svc-vaultwarden    | warden.mia.cx ¹                   |
 | defriend       | 10026           | 10.43.0.153 | res-defriend       | svc-defriend       | defriend.mia.cx                   |
+| t3code         | 10027           | 10.43.0.154 | res-t3code         | agent-grok ²       | t3.yggdrasil.mia.cx               |
 
 ¹ Also answers on its `*.yggdrasil.mia.cx` alias (`jellyfin.`, `seerr.`,
 `hermes.`, `vaultwarden.`), with a DNS zone per name.
+
+² An API-issued group for the Grok bot's setup-key peer, not a Hecate
+permission. The route serves only T3 Code's MCP endpoint and its OAuth
+paths; the bot authenticates with a T3 bearer token scoped to
+`orchestration:read` and `orchestration:operate`.
 
 ## What stays public
 

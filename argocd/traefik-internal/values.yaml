@@ -33,6 +33,7 @@ providers:
       - speedtest
       - vaultwarden
       - defriend
+      - t3code
     allowCrossNamespace: false
   kubernetesIngress:
     enabled: false
@@ -189,6 +190,11 @@ ports:
     protocol: TCP
   defriend:
     port: 10026
+    expose:
+      default: false
+    protocol: TCP
+  t3code:
+    port: 10027
     expose:
       default: false
     protocol: TCP

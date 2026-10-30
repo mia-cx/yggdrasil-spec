@@ -1,0 +1,23 @@
+# agent-grok peers get TCP 443 to res-t3code via policy `t3code`.
+apiVersion: netbird.io/v1alpha1
+kind: Group
+metadata:
+  name: res-t3code
+  namespace: traefik-internal
+spec:
+  name: res-t3code
+---
+apiVersion: netbird.io/v1alpha1
+kind: NetworkResource
+metadata:
+  name: t3code
+  namespace: traefik-internal
+spec:
+  serviceRef:
+    name: t3code
+  networkRouterRef:
+    name: k8s-routers
+    namespace: netbird-operator
+  groups:
+    - localRef:
+        name: res-t3code

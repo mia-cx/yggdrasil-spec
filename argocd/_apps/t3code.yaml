@@ -1,0 +1,21 @@
+## t3code — mesh-only route to the T3 Code MCP server on athena-hephaestus, behind the private Traefik.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: t3code
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+    targetRevision: main
+    path: argocd/t3code
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: t3code
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

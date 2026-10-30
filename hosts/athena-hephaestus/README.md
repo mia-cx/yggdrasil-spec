@@ -24,6 +24,20 @@ The client receives no Internet exit route.
 The independent, unprivileged `netbird-repair.service` remains on UDP 51821.
 Its installation and recovery contract live in [repair-clients](../repair-clients/README.md).
 
+## T3 Code MCP
+
+The user unit `t3code.service` runs `t3 serve` on `0.0.0.0:3773`. Mesh peers
+in `agent-grok` reach its MCP endpoint at `https://t3.yggdrasil.mia.cx/mcp`
+through the private Traefik (`argocd/t3code`), not through this host's NetBird
+client, which keeps blocking inbound connections.
+
+Issue a client token here, and revoke it with `t3 auth session revoke`:
+
+```sh
+t3 auth session issue --label grok-bot --ttl 30d \
+  --scope orchestration:read --scope orchestration:operate --token-only
+```
+
 ## Agent clients
 
 Mia's local commands are:
