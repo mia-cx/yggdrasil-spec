@@ -3,26 +3,60 @@
 The development VM runs at `10.0.3.2`. Its primary and Repair NetBird clients
 use separate identities, state, sockets and UDP ports.
 
-## Primary mesh for CPA
+## Primary mesh
 
 The primary client is NetBird 0.79.0, installed at `/usr/local/bin/netbird`
 and supervised by the enabled `netbird.service`. It uses normal kernel
 networking on `wt0`, UDP 51820, and the primary management server at
-`https://netbird.mia.cx`. The peer is `hephaestus-cpa`.
+`https://netbird.mia.cx`. The peer is `hephaestus.netbird.mia.cx`.
 
-This machine enrolls through a one-use setup key into the API-issued group
-`cpa-clients-hephaestus`. It does not inherit Mia's human-device permissions or
-AdGuard assignment. Policy `hephaestus-cpa` grants this group unidirectional
-TCP 443 to `res-cliproxyapi` only.
+This machine enrolls through a one-use setup key, never SSO, so it does not
+inherit Mia's human-device permissions or AdGuard assignment. Its API-issued
+groups grant:
 
-Client flags block inbound connections, disable server routes, and disable OS
-DNS management. The host keeps its public resolvers and normal WAN gateway.
-An explicit `/etc/hosts` entry maps `cpa.mia.cx` to the pinned private ingress
-Service at `10.43.0.131`, preserving the canonical HTTPS name for shell clients.
-The client receives no Internet exit route.
+- `cpa-clients-hephaestus`: policy `hephaestus-cpa`, unidirectional TCP 443 to
+  `res-cliproxyapi` only.
+- `t3-fleet`: policy `t3-fleet`, all traffic in both directions between fleet
+  hosts (with Pegasus), for the T3 Code fleet.
+
+The client disables server routes and receives no Internet exit route. Host
+DNS runs through systemd-resolved, with upstreams `1.1.1.1 1.0.0.1 8.8.8.8
+8.8.4.4` in `/etc/systemd/resolved.conf.d/upstream.conf`. NetBird registers
+`netbird.mia.cx` (also a search domain) and the mesh reverse zones on `wt0`;
+every other lookup, including the Repair client's, bypasses it. An explicit
+`/etc/hosts` entry maps `cpa.mia.cx` to the pinned private ingress Service at
+`10.43.0.131`, preserving the canonical HTTPS name for shell clients.
 
 The independent, unprivileged `netbird-repair.service` remains on UDP 51821.
 Its installation and recovery contract live in [repair-clients](../repair-clients/README.md).
+
+## T3 Code
+
+The user unit `t3code.service` runs `t3 serve` on `0.0.0.0:3773`.
+
+`t3-fleet` hosts reach it at `https://hephaestus.netbird.mia.cx`. The user
+unit `caddy-t3.service` terminates TLS there and proxies to `127.0.0.1:3773`:
+Caddy (`~/.local/bin/caddy`, built with `caddy-dns/cloudflare`) obtains a
+Let's Encrypt certificate through Cloudflare DNS-01, with a mia.cx DNS-edit
+token in `~/.config/caddy/cloudflare.env` (mode 0600). Binding 443 as the
+user needs `sudo setcap cap_net_bind_service=+ep ~/.local/bin/caddy`, again
+after every Caddy upgrade. Pegasus runs the same setup, with its own host
+name as the site, under the launch agent `cx.mia.caddy-t3`.
+
+Mesh peers in `agent-grok` reach only the MCP endpoint, at
+`https://t3.yggdrasil.mia.cx/mcp`, through the private Traefik
+(`argocd/t3code`). The token lets the bot start agent threads here, and those
+agents can read anything Mia's user can, including the kubeconfig and the
+Cloudflare token; Mia accepted this on 2026-10-30. Issue the token here; T3
+accepts MCP bearer tokens only with subject `mcp-client`:
+
+```sh
+t3 auth session issue --label grok-bot --ttl 30d --subject mcp-client \
+  --scope orchestration:read --scope orchestration:operate --token-only
+```
+
+To revoke it, find the `grok-bot` session ID with `t3 auth session list` and
+pass it to `t3 auth session revoke`.
 
 ## Agent clients
 

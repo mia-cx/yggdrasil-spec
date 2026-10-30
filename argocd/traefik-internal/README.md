@@ -63,9 +63,17 @@ Each private service gets its own enforceable network destination:
 | speedtest      | 10024           | 10.43.0.151 | res-speedtest      | svc-speedtest      | speedtest.mia.cx                  |
 | vaultwarden    | 10025           | 10.43.0.152 | res-vaultwarden    | svc-vaultwarden    | warden.mia.cx ¹                   |
 | defriend       | 10026           | 10.43.0.153 | res-defriend       | svc-defriend       | defriend.mia.cx                   |
+| t3code         | 10027           | 10.43.0.154 | res-t3code         | agent-grok ²       | t3.yggdrasil.mia.cx               |
 
 ¹ Also answers on its `*.yggdrasil.mia.cx` alias (`jellyfin.`, `seerr.`,
 `hermes.`, `vaultwarden.`), with a DNS zone per name.
+
+² An API-issued group for the Grok bot's setup-key peer, not a Hecate
+permission. The route serves only T3 Code's `/mcp` endpoint; the bot
+authenticates with a T3 bearer token scoped to `orchestration:read` and
+`orchestration:operate`. Those scopes let it start agent threads on
+Hephaestus, which can read anything Mia's user can there, including the
+kubeconfig and other credentials. Mia accepted this access on 2026-10-30.
 
 ## What stays public
 
@@ -136,6 +144,10 @@ release, in the same shape: policy `tunarr` and DNS zone
 Added on 2026-10-22, when the rest of the homelab went mesh-only, in the same
 shape: one policy per row of the table above (named after the service), and
 one DNS zone per hostname, distributed to the row's permission group.
+
+Added on 2026-10-30 in the same shape for t3code: policy `t3code`
+(`agent-grok` → `res-t3code`, unidirectional TCP 443) and DNS zone
+`t3.yggdrasil.mia.cx` → `10.43.0.154`, distributed to `agent-grok`.
 
 NetBird 0.79.0 doesn't push DNS zone or record changes to connected peers.
 The server logs `failed to get network map data ... context canceled`, and

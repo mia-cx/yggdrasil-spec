@@ -1,0 +1,13 @@
+# Namespace-local certificate for t3.yggdrasil.mia.cx; nothing outside t3code reads it.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: t3code-tls
+  namespace: t3code
+spec:
+  secretName: t3code-tls
+  dnsNames:
+    - t3.yggdrasil.mia.cx
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: ClusterIssuer

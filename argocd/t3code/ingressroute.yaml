@@ -1,0 +1,22 @@
+# The class annotation keeps this off the public Traefik; the private one
+# serves it on the `t3code` entrypoint only. Only the MCP endpoint is routed:
+# clients use a T3 bearer token, since T3's OAuth consent page lives in the
+# web app, which stays off this route.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: t3code
+  namespace: t3code
+  annotations:
+    kubernetes.io/ingress.class: traefik-internal
+spec:
+  entryPoints:
+    - t3code
+  routes:
+    - match: Host(`t3.yggdrasil.mia.cx`) && Path(`/mcp`)
+      kind: Rule
+      services:
+        - name: t3code
+          port: 3773
+  tls:
+    secretName: t3code-tls
