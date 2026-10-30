@@ -22,8 +22,8 @@ groups grant:
 The client disables server routes and receives no Internet exit route. Host
 DNS runs through systemd-resolved, with upstreams `1.1.1.1 1.0.0.1 8.8.8.8
 8.8.4.4` in `/etc/systemd/resolved.conf.d/upstream.conf`. NetBird registers
-only `netbird.mia.cx` on `wt0`, so its resolver answers peer names and every
-other lookup, including the Repair client's, bypasses it. An explicit
+`netbird.mia.cx` (also a search domain) and the mesh reverse zones on `wt0`;
+every other lookup, including the Repair client's, bypasses it. An explicit
 `/etc/hosts` entry maps `cpa.mia.cx` to the pinned private ingress Service at
 `10.43.0.131`, preserving the canonical HTTPS name for shell clients.
 
