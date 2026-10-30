@@ -45,10 +45,11 @@ agent `cx.mia.caddy-t3`.
 Mesh peers in `agent-grok` reach only the MCP endpoint, at
 `https://t3.yggdrasil.mia.cx/mcp`, through the private Traefik
 (`argocd/t3code`). Issue their token here, and revoke it with
-`t3 auth session revoke`:
+`t3 auth session revoke`. T3 accepts MCP bearer tokens only with subject
+`mcp-client`:
 
 ```sh
-t3 auth session issue --label grok-bot --ttl 30d \
+t3 auth session issue --label grok-bot --ttl 30d --subject mcp-client \
   --scope orchestration:read --scope orchestration:operate --token-only
 ```
 
