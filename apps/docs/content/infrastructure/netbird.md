@@ -22,7 +22,7 @@ Access is granted only by the `olympus-lan` policy, whose source group is the JW
 
 ## Peer names
 
-Every peer resolves as `<name>.netbird.mia.cx` (account DNS domain), but only from peers a policy connects it to. Clients from 0.78 resolve the management host `netbird.mia.cx` itself through their management-domain cache, which outranks the peer zone. Policy `t3-fleet` connects the T3 Code fleet hosts (`t3-fleet` group: Hephaestus, Pegasus) in both directions.
+Every peer resolves as `<name>.netbird.mia.cx` (account DNS domain), but only from peers a policy connects it to. Clients from 0.78 resolve the management host `netbird.mia.cx` itself through their management-domain cache, which outranks the peer zone. Policy `t3-fleet` connects the T3 Code fleet hosts (`t3-fleet` group: Hephaestus, Pegasus) in both directions; each serves its T3 server at `https://<name>.netbird.mia.cx` through Caddy, as described in the [Hephaestus README](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/athena-hephaestus/README.md#t3-code).
 
 ## AdGuard DNS
 

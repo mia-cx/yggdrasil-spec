@@ -69,9 +69,9 @@ Each private service gets its own enforceable network destination:
 `hermes.`, `vaultwarden.`), with a DNS zone per name.
 
 ² An API-issued group for the Grok bot's setup-key peer, not a Hecate
-permission. The route serves only T3 Code's MCP endpoint and its OAuth
-paths; the bot authenticates with a T3 bearer token scoped to
-`orchestration:read` and `orchestration:operate`.
+permission. The route serves only T3 Code's `/mcp` endpoint; the bot
+authenticates with a T3 bearer token scoped to `orchestration:read` and
+`orchestration:operate`.
 
 ## What stays public
 
@@ -142,6 +142,10 @@ release, in the same shape: policy `tunarr` and DNS zone
 Added on 2026-10-22, when the rest of the homelab went mesh-only, in the same
 shape: one policy per row of the table above (named after the service), and
 one DNS zone per hostname, distributed to the row's permission group.
+
+Added on 2026-10-30 in the same shape for t3code: policy `t3code`
+(`agent-grok` → `res-t3code`, unidirectional TCP 443) and DNS zone
+`t3.yggdrasil.mia.cx` → `10.43.0.154`, distributed to `agent-grok`.
 
 NetBird 0.79.0 doesn't push DNS zone or record changes to connected peers.
 The server logs `failed to get network map data ... context canceled`, and

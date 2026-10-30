@@ -29,14 +29,23 @@ public resolvers, saved in `/etc/resolv.conf.original.netbird`. An explicit
 The independent, unprivileged `netbird-repair.service` remains on UDP 51821.
 Its installation and recovery contract live in [repair-clients](../repair-clients/README.md).
 
-## T3 Code MCP
+## T3 Code
 
-The user unit `t3code.service` runs `t3 serve` on `0.0.0.0:3773`. Mesh peers
-in `agent-grok` reach its MCP endpoint at `https://t3.yggdrasil.mia.cx/mcp`
-through the private Traefik (`argocd/t3code`). `t3-fleet` hosts reach it
-directly at `hephaestus.netbird.mia.cx:3773`.
+The user unit `t3code.service` runs `t3 serve` on `0.0.0.0:3773`.
 
-Issue a client token here, and revoke it with `t3 auth session revoke`:
+`t3-fleet` hosts reach it at `https://hephaestus.netbird.mia.cx`. The user
+unit `caddy-t3.service` terminates TLS there and proxies to `127.0.0.1:3773`:
+Caddy (`~/.local/bin/caddy`, built with `caddy-dns/cloudflare`) obtains a
+Let's Encrypt certificate through Cloudflare DNS-01, with a mia.cx DNS-edit
+token in `~/.config/caddy/cloudflare.env` (mode 0600). Binding 443 as the
+user needs `sudo setcap cap_net_bind_service=+ep ~/.local/bin/caddy`, again
+after every Caddy upgrade. Pegasus runs the same Caddyfile under the launch
+agent `cx.mia.caddy-t3`.
+
+Mesh peers in `agent-grok` reach only the MCP endpoint, at
+`https://t3.yggdrasil.mia.cx/mcp`, through the private Traefik
+(`argocd/t3code`). Issue their token here, and revoke it with
+`t3 auth session revoke`:
 
 ```sh
 t3 auth session issue --label grok-bot --ttl 30d \
