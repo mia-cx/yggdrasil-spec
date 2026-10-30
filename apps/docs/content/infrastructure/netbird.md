@@ -20,6 +20,10 @@ Deployed: a `netbird-router` client container on `yggdrasil-olympus-1` routes th
 
 Access is granted only by the `olympus-lan` policy, whose source group is the JWT-issued `svc-lan`. The primary mesh has no `Default` policy: network resources are reachable only through policies that target them. A second policy, `lan-to-netbird-vm` (`svc-lan` → group `routers-olympus`, all protocols, unidirectional), covers the router host itself: `netbird-router` runs with host networking, so mesh traffic to 10.0.1.4 lands on the VM's local input path, which drops wt0 input unless a peer policy allows it. Operations are in the [host README](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/yggdrasil-olympus-1/README.md#lan-routing-client).
 
+## Peer names
+
+Every peer resolves as `<name>.netbird.mia.cx` (account DNS domain), but only from peers a policy connects it to. Clients from 0.78 resolve the management host `netbird.mia.cx` itself through their management-domain cache, which outranks the peer zone. Policy `t3-fleet` connects the T3 Code fleet hosts (`t3-fleet` group: Hephaestus, Pegasus) in both directions.
+
 ## AdGuard DNS
 
 Deployed: an AdGuard Home container shares the `olympus-dns` sidecar peer's network namespace, so its `:53` answers on the peer's mesh address with no host DNS port. The NetBird nameserver group `adguard` (primary, all domains) is distributed only to the JWT-issued `netbird-enroll`. Servers, routers and other service peers always enroll with setup keys, never with SSO, so they never carry `netbird-enroll`: group propagation copies a signing-in user's JWT groups onto the peer, which would give a server the filter and every `netbird-enroll` grant.

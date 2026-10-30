@@ -3,23 +3,28 @@
 The development VM runs at `10.0.3.2`. Its primary and Repair NetBird clients
 use separate identities, state, sockets and UDP ports.
 
-## Primary mesh for CPA
+## Primary mesh
 
 The primary client is NetBird 0.79.0, installed at `/usr/local/bin/netbird`
 and supervised by the enabled `netbird.service`. It uses normal kernel
 networking on `wt0`, UDP 51820, and the primary management server at
-`https://netbird.mia.cx`. The peer is `hephaestus-cpa`.
+`https://netbird.mia.cx`. The peer is `hephaestus.netbird.mia.cx`.
 
-This machine enrolls through a one-use setup key into the API-issued group
-`cpa-clients-hephaestus`. It does not inherit Mia's human-device permissions or
-AdGuard assignment. Policy `hephaestus-cpa` grants this group unidirectional
-TCP 443 to `res-cliproxyapi` only.
+This machine enrolls through a one-use setup key, never SSO, so it does not
+inherit Mia's human-device permissions or AdGuard assignment. Its API-issued
+groups grant:
 
-Client flags block inbound connections, disable server routes, and disable OS
-DNS management. The host keeps its public resolvers and normal WAN gateway.
-An explicit `/etc/hosts` entry maps `cpa.mia.cx` to the pinned private ingress
-Service at `10.43.0.131`, preserving the canonical HTTPS name for shell clients.
-The client receives no Internet exit route.
+- `cpa-clients-hephaestus`: policy `hephaestus-cpa`, unidirectional TCP 443 to
+  `res-cliproxyapi` only.
+- `t3-fleet`: policy `t3-fleet`, all traffic in both directions between fleet
+  hosts (with Pegasus), for the T3 Code fleet.
+
+The client disables server routes and receives no Internet exit route. It
+manages DNS in resolv.conf mode: NetBird's resolver answers
+`*.netbird.mia.cx` peer names and forwards everything else to the original
+public resolvers, saved in `/etc/resolv.conf.original.netbird`. An explicit
+`/etc/hosts` entry maps `cpa.mia.cx` to the pinned private ingress Service at
+`10.43.0.131`, preserving the canonical HTTPS name for shell clients.
 
 The independent, unprivileged `netbird-repair.service` remains on UDP 51821.
 Its installation and recovery contract live in [repair-clients](../repair-clients/README.md).
@@ -28,8 +33,8 @@ Its installation and recovery contract live in [repair-clients](../repair-client
 
 The user unit `t3code.service` runs `t3 serve` on `0.0.0.0:3773`. Mesh peers
 in `agent-grok` reach its MCP endpoint at `https://t3.yggdrasil.mia.cx/mcp`
-through the private Traefik (`argocd/t3code`), not through this host's NetBird
-client, which keeps blocking inbound connections.
+through the private Traefik (`argocd/t3code`). `t3-fleet` hosts reach it
+directly at `hephaestus.netbird.mia.cx:3773`.
 
 Issue a client token here, and revoke it with `t3 auth session revoke`:
 
