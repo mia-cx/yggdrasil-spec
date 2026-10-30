@@ -39,19 +39,21 @@ Caddy (`~/.local/bin/caddy`, built with `caddy-dns/cloudflare`) obtains a
 Let's Encrypt certificate through Cloudflare DNS-01, with a mia.cx DNS-edit
 token in `~/.config/caddy/cloudflare.env` (mode 0600). Binding 443 as the
 user needs `sudo setcap cap_net_bind_service=+ep ~/.local/bin/caddy`, again
-after every Caddy upgrade. Pegasus runs the same Caddyfile under the launch
-agent `cx.mia.caddy-t3`.
+after every Caddy upgrade. Pegasus runs the same setup, with its own host
+name as the site, under the launch agent `cx.mia.caddy-t3`.
 
 Mesh peers in `agent-grok` reach only the MCP endpoint, at
 `https://t3.yggdrasil.mia.cx/mcp`, through the private Traefik
-(`argocd/t3code`). Issue their token here, and revoke it with
-`t3 auth session revoke`. T3 accepts MCP bearer tokens only with subject
-`mcp-client`:
+(`argocd/t3code`). Issue their token here; T3 accepts MCP bearer tokens only
+with subject `mcp-client`:
 
 ```sh
 t3 auth session issue --label grok-bot --ttl 30d --subject mcp-client \
   --scope orchestration:read --scope orchestration:operate --token-only
 ```
+
+To revoke it, find the `grok-bot` session ID with `t3 auth session list` and
+pass it to `t3 auth session revoke`.
 
 ## Agent clients
 
