@@ -149,6 +149,13 @@ curl -sfL https://get.k3s.io | sh -s - server \
   --disable=servicelb
 ```
 
+Longhorn's `longhorn` is the only default StorageClass. K3s marks its own `local-path` as default too and re-applies that at every start, so on every server node, stop K3s from re-applying the `local-storage` manifest, then unmark `local-path` once:
+
+```bash
+sudo touch /var/lib/rancher/k3s/server/manifests/local-storage.yaml.skip
+kubectl annotate sc local-path storageclass.kubernetes.io/is-default-class=false --overwrite
+```
+
 ### LoadBalancer IP Pool
 
 ```bash
