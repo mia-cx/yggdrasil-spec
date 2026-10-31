@@ -1,4 +1,4 @@
-# agent-grok peers get TCP 443 to res-t3code via policy `t3code`.
+# agent-grok and agent-superdevin peers get TCP 443 to res-t3code via policy `t3code`.
 apiVersion: netbird.io/v1alpha1
 kind: Group
 metadata:
