@@ -24,7 +24,7 @@ The Application syncs manually until the first sync is verified.
 
 1. Check nothing moved since the dry run: `kubectl get ds -n longhorn-system longhorn-manager -o jsonpath='{.spec.template.spec.containers[0].image}'` prints `longhornio/longhorn-manager:v1.7.3`.
 2. Merge. The `root` app creates the `longhorn` Application, which shows OutOfSync and does nothing on its own.
-3. Open the `longhorn` app's diff in ArgoCD. Expect exactly the two changes above. If anything else differs, stop and don't sync.
+3. Open the `longhorn` app's diff in ArgoCD. Expect the two changes above, plus the `argocd.argoproj.io/tracking-id` annotation added to objects without an `app.kubernetes.io/instance` label, such as the `longhorn-system` Namespace. If anything else differs, stop and don't sync.
 4. Sync with prune off.
 5. Watch:
    - The app reaches Synced and Healthy.
