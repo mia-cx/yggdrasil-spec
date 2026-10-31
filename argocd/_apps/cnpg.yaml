@@ -1,5 +1,4 @@
-## CloudNativePG operator, adopted from the hand install in place.
-## Sync is manual until the first sync is verified; see argocd/cnpg/README.md.
+## CloudNativePG operator, upstream release manifest; see argocd/cnpg/README.md.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -20,6 +19,10 @@ spec:
     server: https://kubernetes.default.svc
     namespace: cnpg-system
   syncPolicy:
+    automated:
+      # Never delete the operator or its CRDs because they left the manifest.
+      prune: false
+      selfHeal: true
     syncOptions:
       # CRDs are too large for client-side apply annotations.
       - ServerSideApply=true
