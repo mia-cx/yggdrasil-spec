@@ -12,10 +12,10 @@ The frontend handles its public read-only WebSocket endpoint at `/api/v1/telemet
 HTTP redirects to HTTPS. The `caelestis-tls` certificate covers `caelest.is` and `*.caelest.is` and renews
 through the existing `letsencrypt-cloudflare` issuer.
 
-The Bun backend is version `0.9.5` and the frontend is version `0.7.6`, both on Node.js 24.22.1.
+The Bun backend is version `0.10.0` and the frontend is version `0.9.0`, both on Node.js 24.22.1.
 Values pin their Docker Hub manifest digests; the Application pins the chart to release commit
-`fa01303415a4e5b89a38ba3e6f8dca06eaed4ac7`. Both Yggdrasil nodes run the amd64 variant.
-The images come from [the release run](https://github.com/mia-cx/Caelestis/actions/runs/39637268221).
+`4cea0ad18c969ac27aa4c7fd9cfd94aebf9792f8`. Both Yggdrasil nodes run the amd64 variant.
+The images come from [the release run](https://github.com/mia-cx/Caelestis/actions/runs/40327936986).
 
 Provisioning:
 
