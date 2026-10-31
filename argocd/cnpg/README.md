@@ -12,7 +12,7 @@ The Application syncs manually until the first sync is verified.
 
 1. Check nothing moved since the dry run: `kubectl get deploy -n cnpg-system cnpg-controller-manager -o jsonpath='{.spec.template.spec.containers[0].image}'` prints `ghcr.io/cloudnative-pg/cloudnative-pg:1.30.1`.
 2. Merge. The `root` app creates the `cnpg` Application, which shows OutOfSync and does nothing on its own.
-3. Open the `cnpg` app's diff in ArgoCD. Expect no changes to any object. If anything differs, stop and don't sync.
+3. Open the `cnpg` app's diff in ArgoCD. Expect no change except the `argocd.argoproj.io/tracking-id` annotation added to objects' metadata. If anything else differs, stop and don't sync.
 4. Sync with prune off.
 5. Watch:
    - The app reaches Synced and Healthy.
