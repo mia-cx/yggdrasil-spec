@@ -1,0 +1,41 @@
+## Two nodes can hold two replicas, never the stock three.
+## Longhorn rebuilds the `longhorn` StorageClass from longhorn-storageclass and
+## loads longhorn-default-setting into its settings (default-replica-count covers
+## volumes created without a StorageClass count, such as through longhorn-static).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: longhorn-storageclass
+  namespace: longhorn-system
+data:
+  storageclass.yaml: |
+    kind: StorageClass
+    apiVersion: storage.k8s.io/v1
+    metadata:
+      name: longhorn
+      annotations:
+        storageclass.kubernetes.io/is-default-class: "true"
+    provisioner: driver.longhorn.io
+    allowVolumeExpansion: true
+    reclaimPolicy: "Delete"
+    volumeBindingMode: Immediate
+    parameters:
+      numberOfReplicas: "2"
+      staleReplicaTimeout: "30"
+      fromBackup: ""
+      fsType: "ext4"
+      dataLocality: "disabled"
+      unmapMarkSnapChainRemoved: "ignored"
+      disableRevisionCounter: "true"
+      dataEngine: "v1"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: longhorn-default-setting
+  namespace: longhorn-system
+data:
+  default-setting.yaml: |-
+    priority-class: longhorn-critical
+    disable-revision-counter: true
+    default-replica-count: 2

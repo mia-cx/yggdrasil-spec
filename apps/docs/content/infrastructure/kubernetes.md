@@ -169,10 +169,11 @@ sed -i 's/127.0.0.1/10.0.128.1/g' ~/.kube/config
 
 ### Core Components
 
-**Longhorn (distributed storage):**
+**Longhorn (distributed storage):** the `longhorn` ArgoCD app installs the upstream manifest with 2 replicas as the default for new volumes. See [argocd/longhorn/README.md](https://github.com/mia-cx/yggdrasil-spec/blob/main/argocd/longhorn/README.md).
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.6.0/deploy/longhorn.yaml
+kubectl get application -n argocd longhorn
+kubectl rollout status -n longhorn-system daemonset/longhorn-manager --timeout=300s
 ```
 
 **cert-manager:**

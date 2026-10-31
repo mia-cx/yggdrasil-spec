@@ -1,0 +1,8 @@
+## Longhorn: the upstream install manifest at the running version, plus our defaults.
+## Bump by changing the tag; an upgrade is its own PR.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - https://raw.githubusercontent.com/longhorn/longhorn/v1.7.3/deploy/longhorn.yaml
+patches:
+  - path: two-replicas.yaml
