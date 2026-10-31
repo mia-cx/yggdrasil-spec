@@ -149,6 +149,13 @@ curl -sfL https://get.k3s.io | sh -s - server \
   --disable=servicelb
 ```
 
+Longhorn's `longhorn` is the only default StorageClass. K3s marks its own `local-path` as default too and re-applies that at every start, so on every server node, stop K3s from re-applying the `local-storage` manifest, then unmark `local-path` once:
+
+```bash
+sudo touch /var/lib/rancher/k3s/server/manifests/local-storage.yaml.skip
+sudo kubectl annotate sc local-path storageclass.kubernetes.io/is-default-class=false --overwrite
+```
+
 ### LoadBalancer IP Pool
 
 ```bash
@@ -215,9 +222,11 @@ kubectl apply -f argocd/k3s/nfs-pvs.yaml
     --token <token>
   ```
 
-- **Server (control-plane) nodes:** Install kube-vip on the new node **before** joining (same steps as [kube-vip](#kube-vip) above: RBAC + static pod in `agent/pod-manifests`). Then join as server so the new node can participate in VIP leader election:
+- **Server (control-plane) nodes:** Install kube-vip on the new node **before** joining (same steps as [kube-vip](#kube-vip) above: RBAC + static pod in `agent/pod-manifests`). Create the `local-storage` skip file too, so the new node never marks `local-path` as default. Then join as server so the new node can participate in VIP leader election:
 
   ```bash
+  sudo mkdir -p /var/lib/rancher/k3s/server/manifests
+  sudo touch /var/lib/rancher/k3s/server/manifests/local-storage.yaml.skip
   curl -sfL https://get.k3s.io | sh -s - server \
     --server https://10.0.128.1:6443 \
     --token <token> \

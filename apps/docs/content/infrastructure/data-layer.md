@@ -22,9 +22,7 @@ Database and caching architecture for K3s services. Follows three patterns: shar
 
 ## Setup
 
-```bash
-kubectl apply -f argocd/databases/storage.yaml
-```
+Each service declares its own CloudNativePG `Cluster` in its ArgoCD app, such as `argocd/pelican/postgresql.yaml`. The `cnpg` app installs the operator; see [argocd/cnpg/README.md](https://github.com/mia-cx/yggdrasil-spec/blob/main/argocd/cnpg/README.md).
 
 ## Configuration
 
