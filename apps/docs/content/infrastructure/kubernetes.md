@@ -184,6 +184,13 @@ kubectl wait --for=condition=Available -n cert-manager deployment/cert-manager-w
 
 **Cloudflare ClusterIssuer:** See [Traefik -- TLS](./traefik.md#setup).
 
+**CloudNativePG (PostgreSQL operator):** the `cnpg` ArgoCD app installs the upstream operator manifest. See [argocd/cnpg/README.md](https://github.com/mia-cx/yggdrasil-spec/blob/main/argocd/cnpg/README.md).
+
+```bash
+kubectl get application -n argocd cnpg
+kubectl rollout status -n cnpg-system deployment/cnpg-controller-manager --timeout=120s
+```
+
 ### NFS PersistentVolumes
 
 | Source      | IP       | Export         | Contents         |

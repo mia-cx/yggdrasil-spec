@@ -1,0 +1,25 @@
+## CloudNativePG operator, adopted from the hand install in place.
+## Sync is manual until the first sync is verified; see argocd/cnpg/README.md.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cnpg
+  namespace: argocd
+  annotations:
+    # CRDs and the operator before any app that declares a database Cluster.
+    argocd.argoproj.io/sync-wave: "-1"
+    # The operator injects caBundles into its webhooks; a server-side diff leaves fields the operator owns alone.
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+    targetRevision: main
+    path: argocd/cnpg
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cnpg-system
+  syncPolicy:
+    syncOptions:
+      # CRDs are too large for client-side apply annotations.
+      - ServerSideApply=true
