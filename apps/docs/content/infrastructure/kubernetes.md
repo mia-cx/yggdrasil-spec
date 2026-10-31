@@ -174,6 +174,7 @@ sed -i 's/127.0.0.1/10.0.128.1/g' ~/.kube/config
 ```bash
 kubectl get application -n argocd longhorn
 kubectl rollout status -n longhorn-system daemonset/longhorn-manager --timeout=300s
+kubectl get settings.longhorn.io -n longhorn-system default-replica-count -o jsonpath='{.value}'  # 2
 ```
 
 **cert-manager:**
