@@ -17,6 +17,10 @@ Cursor accounts. CPA Usage Keeper preserves usage history and exposes six
 overview metrics with angular sparklines and a daily-average strip. Account
 sign-ins remain under Mia's control.
 
+Codex banked reset tickets are for confirmed weekly quota exhaustion. The
+proxy's error path checks the account's current weekly limit before redeeming
+one and retrying. Five-hour limits and capacity errors preserve tickets.
+
 NetBird carries incoming connections only. Provider traffic exits through the
 normal cluster WAN gateway, with explicit egress policies excluding unrelated
 private destinations. Credentials and OAuth state stay outside Git.
