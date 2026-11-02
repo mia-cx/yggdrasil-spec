@@ -43,12 +43,13 @@ user needs `sudo setcap cap_net_bind_service=+ep ~/.local/bin/caddy`, again
 after every Caddy upgrade. Pegasus runs the same setup, with its own host
 name as the site, under the launch agent `cx.mia.caddy-t3`.
 
-Mesh peers in `agent-grok` reach only the MCP endpoint, at
-`https://t3.yggdrasil.mia.cx/mcp`, through the private Traefik
-(`argocd/t3code`). The token lets the bot start agent threads here, and those
+Mesh peers in `agent-grok` and `agent-superdevin` reach only the MCP endpoint,
+at `https://t3.yggdrasil.mia.cx/mcp`, through the private Traefik
+(`argocd/t3code`). Each bot's token lets it start agent threads here, and those
 agents can read anything Mia's user can, including the kubeconfig and the
-Cloudflare token; Mia accepted this on 2026-10-30. Issue the token here; T3
-accepts MCP bearer tokens only with subject `mcp-client`:
+Cloudflare token; Mia accepted this for Grok on 2026-10-30 and for superdevin
+on 2026-10-31. Issue each bot its own token here, labelled `grok-bot` or
+`superdevin`; T3 accepts MCP bearer tokens only with subject `mcp-client`:
 
 ```sh
 t3 auth session issue --label grok-bot --ttl 30d --subject mcp-client \
