@@ -19,6 +19,9 @@ routing:
   session-affinity: true
 requests:
   proxy-url: ""
+upstream:
+  codex:
+    auto-reset-weekly-limit: true
 observability:
   logs:
     logging-to-file: false

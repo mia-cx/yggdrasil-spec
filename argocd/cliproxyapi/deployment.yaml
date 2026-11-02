@@ -57,7 +57,8 @@ spec:
               readOnly: true
       containers:
         - name: proxy
-          image: eceasy/cli-proxy-api:v8.0.45@sha256:ce9583e43fb56e632a279b79e6203bbdedc34f09900a60fc0ced0e3f255bc63c
+          # v8.0.45 plus weekly-only banked Codex reset recovery.
+          image: ghcr.io/mia-cx/yggdrasil-cliproxyapi@sha256:7d69fbebbc9148243e290c582255301086988ec3d90b758d6c779ab6fc040953
           command: [/CLIProxyAPI/CLIProxyAPI]
           args: [--config, /data/config.yaml]
           workingDir: /data

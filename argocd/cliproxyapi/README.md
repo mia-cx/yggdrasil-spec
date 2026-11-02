@@ -61,6 +61,24 @@ Full request/response logging stays disabled in CPA.
 Claude Code, Codex and Devin use CPA's native account setup. Add the accounts
 in `/management.html`; this deployment imports no desktop credentials.
 
+### Codex banked resets
+
+The proxy uses [our v8.0.45 fork](../../apps/cliproxyapi/README.md) to redeem
+banked Codex reset tickets automatically. A `usage_limit_reached` error
+triggers a fresh quota check for that account. An exhausted weekly window and
+an available ticket allow one redemption, followed by cooldown clearance and
+one retry. Five-hour limits, code review limits and capacity errors preserve
+tickets.
+
+Concurrent failures share an account lock. Redemption IDs persist under
+`/data/auths/.codex-weekly-resets` so uncertain responses and restarts reuse
+the same ID. A failure keeps normal account fallback behavior. Errors after
+generated output restore quota for the next request without replaying output.
+
+The setting is `upstream.codex.auto-reset-weekly-limit`. The seed config enables
+it for fresh installations; existing installations use the management config
+endpoint described in the image README. Keeper's manual reset remains available.
+
 Cursor uses the community [`auth-cursor` plugin](https://github.com/UNICKCHENG/cliproxyapi-plugins/tree/main/auth-cursor).
 Its store is configured and `/data/plugins` and `/data/cache` are persistent.
 The initial deployment installs `auth-cursor` 2.1.1 through that store; a fresh
