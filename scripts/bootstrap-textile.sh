@@ -361,14 +361,18 @@ pause
 stage "Token vault key (textile-vault)"
 say "This key encrypts every stored bot token and Gateway session. Without it,"
 say "a restored database is unreadable, so it lives in two places off the cluster."
+# Its own assignment, so set -e stops the wizard when the query fails rather
+# than reading the failure as "no database" and generating a new key.
+existing_db=$(kubectl -n "$NAMESPACE" get clusters.postgresql.cnpg.io textile-db --ignore-not-found -o name)
 if keep_existing textile-vault; then
   :
-elif [[ -n "$(kubectl -n "$NAMESPACE" get clusters.postgresql.cnpg.io textile-db --ignore-not-found -o name)" ]]; then
+elif [[ -n "$existing_db" ]]; then
   # The database already holds tokens sealed with the saved key; a new key could not read them.
   say "Database textile-db already exists, so restore the saved key instead of making one."
   step "Copy it from iCloud Keychain ('Textile staging TOKEN_VAULT_KEY') or your offline copy."
   ask_secret TOKEN_VAULT_KEY "Paste the saved TOKEN_VAULT_KEY:"
-  if [[ "$(base64 -d <<<"$TOKEN_VAULT_KEY" 2>/dev/null | wc -c)" -ne 32 ]]; then
+  # 32 bytes encode to exactly 43 Base64 characters and one '='; nothing else is a key.
+  if [[ ! "$TOKEN_VAULT_KEY" =~ ^[A-Za-z0-9+/]{43}=$ ]]; then
     warn "That isn't a base64-encoded 32-byte key. Nothing created."
     exit 1
   fi
