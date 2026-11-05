@@ -6,13 +6,13 @@ Textile staging on olympus, mesh-only at `https://staging.textile.cx`. It is sep
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `central.yaml`      | `textile-central`, a Deployment of 2: MCP, OAuth, voice sockets and workflow routes. Holds no bot tokens.                                                                                                                |
 | `bot-host.yaml`     | `textile-bot-host`, a StatefulSet of 2, one per node: stored bot tokens, Gateway shards, voice, and the workerd processes that run scripts and workflows.                                                                |
-| `postgresql.yaml`   | `textile-db`, a two-instance CloudNativePG `Cluster` with synchronous replication (`dataDurability: preferred`) on node-local `longhorn-local` volumes, plus its Barman Cloud `ObjectStore` and daily `ScheduledBackup`. |
+| `postgresql.yaml`   | `textile-db`, a two-instance CloudNativePG `Cluster` with synchronous replication (`dataDurability: preferred`) on node-local `longhorn-local` volumes, plus its Barman Cloud `ObjectStore` and weekly `ScheduledBackup`. |
 | `rustfs.yaml`       | RustFS, the S3-compatible store the database backs up to, on a two-replica Longhorn volume.                                                                                                                              |
 | `ingressroute.yaml` | The private Traefik route and its certificate.                                                                                                                                                                           |
 
 Both tiers run `ghcr.io/mia-cx/textile/server`, pinned by digest. CI publishes it on every push to the `textile` branch, tagged `sha-<commit>`. To deploy a newer build, copy the digest from that run's summary, or `docker buildx imagetools inspect ghcr.io/mia-cx/textile/server:sha-<commit>`, into both manifests.
 
-Backups use the [Barman Cloud plugin](../cnpg-barman-cloud/README.md): WAL is archived continuously and a base backup runs daily at 03:00 UTC, kept 14 days, in bucket `textile-backups`. RustFS lives on the same cluster, so backups are not off-site yet.
+Backups use the [Barman Cloud plugin](../cnpg-barman-cloud/README.md): WAL is archived continuously and a base backup runs weekly, Sundays at 03:00 UTC, kept 14 days, in bucket `textile-backups`. RustFS lives on the same cluster, so backups are not off-site yet.
 
 ## Before the first sync
 

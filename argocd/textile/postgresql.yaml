@@ -74,14 +74,18 @@ spec:
     data:
       compression: gzip
 ---
-# A base backup daily at 03:00 UTC, and one as soon as the cluster exists.
+# A base backup weekly, Sundays at 03:00 UTC, and one as soon as the cluster
+# exists. Continuous WAL archiving still restores to any point in the 14-day
+# window. Weekly keeps about three base backups instead of fifteen, so RustFS's
+# 20Gi holds them even near the database's 10Gi. A full store would stop WAL
+# archiving, and unarchived WAL would then fill the primary.
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
 metadata:
-  name: textile-db-daily
+  name: textile-db-weekly
   namespace: textile
 spec:
-  schedule: "0 0 3 * * *"
+  schedule: "0 0 3 * * 0"
   immediate: true
   backupOwnerReference: self
   cluster:

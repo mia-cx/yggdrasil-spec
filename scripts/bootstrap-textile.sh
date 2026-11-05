@@ -218,23 +218,65 @@ put_secret() {
   printf '  %s✓ created%s Secret %s/%s\n' "$GREEN" "$RESET" "$NAMESPACE" "$name"
 }
 
-# keep_existing NAME: true, with a note, when NAME already exists.
+# The keys each Secret must hold: the workloads read them with secretKeyRef and
+# no `optional`, so a missing key stops their pods from starting.
+# A case, not an associative array, so macOS's bash 3.2 runs it.
+required_keys() {
+  case "$1" in
+    textile-oauth) echo DISCORD_OAUTH_CLIENT_SECRET DISCORD_OAUTH_ALLOWED_USER_IDS ;;
+    textile-crypto) echo OAUTH_ENCRYPTION_KEY ;;
+    textile-bot-hosts) echo BOT_HOST_SECRET ;;
+    textile-vault) echo TOKEN_VAULT_KEY ;;
+    textile-rustfs) echo RUSTFS_ACCESS_KEY RUSTFS_SECRET_KEY ;;
+  esac
+}
+
+# missing_keys NAME prints the required keys Secret NAME lacks, one per line.
+missing_keys() {
+  local present key
+  # shellcheck disable=SC2016 # a Go template, not shell expansion
+  present=$(kubectl -n "$NAMESPACE" get secret "$1" -o go-template='{{range $k, $v := .data}}{{$k}}{{"\n"}}{{end}}')
+  for key in $(required_keys "$1"); do
+    grep -qxF "$key" <<<"$present" || printf '%s\n' "$key"
+  done
+}
+
+# keep_existing NAME: true, with a note, when NAME already exists. An existing
+# Secret missing a required key is reported, not replaced.
 keep_existing() {
   has_secret "$1" || return 1
+  local missing; missing=$(missing_keys "$1")
+  if [[ -n "$missing" ]]; then
+    warn "Secret $1 exists but lacks: $(tr '\n' ' ' <<<"$missing")"
+    warn "Delete it (kubectl -n $NAMESPACE delete secret $1) and run this wizard again."
+    return 0
+  fi
   KEPT+=("$1")
   note "Secret $1 already exists; keeping it. Delete it yourself to replace it."
   return 0
 }
 
-# to_clipboard VAR copies the variable's value to the clipboard.
+# to_clipboard VAR copies the variable's value to the clipboard, recording the
+# tool in CLIPBOARD_TOOL so clear_clipboard can clear the same one.
+CLIPBOARD_TOOL=""
 to_clipboard() {
   local tool
   for tool in pbcopy wl-copy "xclip -selection clipboard" "xsel --clipboard --input"; do
     if command -v "${tool%% *}" >/dev/null 2>&1; then
-      printf '%s' "${!1}" | $tool && return 0
+      printf '%s' "${!1}" | $tool && CLIPBOARD_TOOL="${tool%% *}" && return 0
     fi
   done
   return 1
+}
+
+# clear_clipboard empties the clipboard to_clipboard wrote to.
+clear_clipboard() {
+  case "$CLIPBOARD_TOOL" in
+    pbcopy) printf '' | pbcopy ;;
+    wl-copy) wl-copy --clear ;;
+    xclip) printf '' | xclip -selection clipboard ;;
+    xsel) xsel --clipboard --clear ;;
+  esac
 }
 
 TOTAL_STAGES=7
@@ -319,7 +361,20 @@ pause
 stage "Token vault key (textile-vault)"
 say "This key encrypts every stored bot token and Gateway session. Without it,"
 say "a restored database is unreadable, so it lives in two places off the cluster."
-if ! keep_existing textile-vault; then
+if keep_existing textile-vault; then
+  :
+elif [[ -n "$(kubectl -n "$NAMESPACE" get clusters.postgresql.cnpg.io textile-db --ignore-not-found -o name)" ]]; then
+  # The database already holds tokens sealed with the saved key; a new key could not read them.
+  say "Database textile-db already exists, so restore the saved key instead of making one."
+  step "Copy it from iCloud Keychain ('Textile staging TOKEN_VAULT_KEY') or your offline copy."
+  ask_secret TOKEN_VAULT_KEY "Paste the saved TOKEN_VAULT_KEY:"
+  if [[ "$(base64 -d <<<"$TOKEN_VAULT_KEY" 2>/dev/null | wc -c)" -ne 32 ]]; then
+    warn "That isn't a base64-encoded 32-byte key. Nothing created."
+    exit 1
+  fi
+  put_secret textile-vault TOKEN_VAULT_KEY TOKEN_VAULT_KEY
+  unset TOKEN_VAULT_KEY
+else
   TOKEN_VAULT_KEY=$(openssl rand -base64 32)
   if to_clipboard TOKEN_VAULT_KEY; then
     printf '  %s✓ copied%s the new key to your clipboard\n' "$GREEN" "$RESET"
@@ -335,9 +390,7 @@ if ! keep_existing textile-vault; then
   confirm "Are both copies saved?" || { warn "Nothing created; the key is discarded."; exit 1; }
   put_secret textile-vault TOKEN_VAULT_KEY TOKEN_VAULT_KEY
   unset TOKEN_VAULT_KEY
-  if command -v pbcopy >/dev/null 2>&1; then printf '' | pbcopy
-  elif command -v wl-copy >/dev/null 2>&1; then wl-copy --clear
-  fi
+  clear_clipboard
   _clear
   note "Key stored; clipboard and screen cleared."
 fi
@@ -362,11 +415,14 @@ pause
 # ── 7 ─────────────────────────────────────────────────────────────────────
 stage "Check"
 for name in textile-oauth textile-crypto textile-bot-hosts textile-vault textile-rustfs; do
-  if has_secret "$name"; then
-    printf '  %s✓%s %s\n' "$GREEN" "$RESET" "$name"
-  else
+  if ! has_secret "$name"; then
     printf '  %s✗%s %s missing\n' "$RED" "$RESET" "$name"
     SKIPPED+=("Secret $name: run this wizard again")
+  elif missing=$(missing_keys "$name") && [[ -n "$missing" ]]; then
+    printf '  %s✗%s %s lacks %s\n' "$RED" "$RESET" "$name" "$(tr '\n' ' ' <<<"$missing")"
+    SKIPPED+=("Secret $name: delete it and run this wizard again")
+  else
+    printf '  %s✓%s %s\n' "$GREEN" "$RESET" "$name"
   fi
 done
 note "CloudNativePG creates textile-db-app itself."
