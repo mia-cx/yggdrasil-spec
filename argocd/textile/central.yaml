@@ -1,0 +1,155 @@
+# Central: MCP, OAuth, voice sockets and workflow routes. Stateless: it holds
+# no bot tokens, and login state travels in encrypted tokens, so any replica
+# finishes any login. It forwards each bot's requests to the bot host that
+# owns it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: textile-central
+  namespace: textile
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: textile-central
+  template:
+    metadata:
+      labels:
+        app: textile-central
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10000
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app: textile-central
+      containers:
+        - name: server
+          # textile 22f0435: the textile branch at 8930fd8 plus its image workflow (mia-cx/textile ops/staging-image).
+          image: ghcr.io/mia-cx/textile/server@sha256:bb3e1bf1b83825e5c71916a80077beef34ff94c3b5cd2f0a1bb5089364ac597d
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: DISCORD_MCP_TIER
+              value: central
+            - name: MCP_TRANSPORT
+              value: http
+            - name: MCP_HTTP_HOST
+              value: 0.0.0.0
+            - name: MCP_HTTP_PORT
+              value: "3000"
+            - name: PUBLIC_BASE_URL
+              value: https://staging.textile.cx
+            - name: ALLOWED_HOSTS
+              value: staging.textile.cx
+            - name: BOT_HOSTS
+              value: http://textile-bot-host-0.textile-bot-host.textile.svc.cluster.local:3000,http://textile-bot-host-1.textile-bot-host.textile.svc.cluster.local:3000
+            - name: BOT_HOST_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: textile-bot-hosts
+                  key: BOT_HOST_SECRET
+            # The Textile Discord application.
+            - name: DISCORD_OAUTH_CLIENT_ID
+              value: "1162037890742759424"
+            - name: DISCORD_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: textile-oauth
+                  key: DISCORD_OAUTH_CLIENT_SECRET
+            - name: DISCORD_OAUTH_ALLOWED_USER_IDS
+              valueFrom:
+                secretKeyRef:
+                  name: textile-oauth
+                  key: DISCORD_OAUTH_ALLOWED_USER_IDS
+            - name: OAUTH_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: textile-crypto
+                  key: OAUTH_ENCRYPTION_KEY
+          # Central answers only its public hostname, health checks included.
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: staging.textile.cx
+            periodSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: staging.textile.cx
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: staging.textile.cx
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: textile-central
+  namespace: textile
+spec:
+  selector:
+    app: textile-central
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+---
+# Mesh-only: central admits only the private Traefik, per
+# argocd/traefik-internal/README.md.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: textile-central
+  namespace: textile
+spec:
+  podSelector:
+    matchLabels:
+      app: textile-central
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-internal
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: traefik-internal-traefik-internal
+      ports:
+        - protocol: TCP
+          port: 3000

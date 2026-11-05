@@ -64,6 +64,7 @@ Each private service gets its own enforceable network destination:
 | vaultwarden    | 10025           | 10.43.0.152 | res-vaultwarden    | svc-vaultwarden    | warden.mia.cx ¹                   |
 | defriend       | 10026           | 10.43.0.153 | res-defriend       | svc-defriend       | defriend.mia.cx                   |
 | t3code         | 10027           | 10.43.0.154 | res-t3code         | agent-grok ²       | t3.yggdrasil.mia.cx               |
+| textile        | 10028           | 10.43.0.155 | res-textile        | svc-textile        | staging.textile.cx                |
 
 ¹ Also answers on its `*.yggdrasil.mia.cx` alias (`jellyfin.`, `seerr.`,
 `hermes.`, `vaultwarden.`), with a DNS zone per name.

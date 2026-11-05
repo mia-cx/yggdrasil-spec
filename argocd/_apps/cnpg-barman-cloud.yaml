@@ -1,0 +1,25 @@
+## CloudNativePG Barman Cloud plugin, upstream release manifest; see argocd/cnpg-barman-cloud/README.md.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cnpg-barman-cloud
+  namespace: argocd
+  annotations:
+    # With the operator, before any app whose Cluster backs up through it.
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+    targetRevision: main
+    path: argocd/cnpg-barman-cloud
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cnpg-system
+  syncPolicy:
+    automated:
+      # Never delete the plugin or its CRD because they left the manifest.
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

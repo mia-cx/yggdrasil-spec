@@ -1,0 +1,17 @@
+## Single-replica Longhorn StorageClass whose replica stays on the pod's node —
+## for databases that replicate themselves, such as a two-instance CNPG Cluster,
+## so losing a node never takes an instance's storage with the other instance.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-local
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+# Strict-local volumes must be created where their pod lands.
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  numberOfReplicas: "1"
+  dataLocality: strict-local
+  staleReplicaTimeout: "30"
+  fsType: "ext4"

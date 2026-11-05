@@ -34,6 +34,7 @@ providers:
       - vaultwarden
       - defriend
       - t3code
+      - textile
     allowCrossNamespace: false
   kubernetesIngress:
     enabled: false
@@ -198,6 +199,16 @@ ports:
     expose:
       default: false
     protocol: TCP
+  textile:
+    port: 10028
+    expose:
+      default: false
+    protocol: TCP
+    # Voice WebSockets and MCP event streams stay open for long periods.
+    transport:
+      respondingTimeouts:
+        readTimeout: 0
+        writeTimeout: 0
 
 # Same HA shape as the public instance.
 deployment:
