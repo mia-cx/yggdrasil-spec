@@ -1,0 +1,33 @@
+## Textile staging — central, bot hosts, CloudNativePG and RustFS; see argocd/textile/README.md.
+## Separate from the live relay in argocd/discord-mcp.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: textile
+  namespace: argocd
+  annotations:
+    # After cnpg and cnpg-barman-cloud (wave -1), whose CRDs this app uses.
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+    targetRevision: main
+    path: argocd/textile
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: textile
+  # CNPG operator adds default affinity; ArgoCD would see drift.
+  ignoreDifferences:
+    - group: postgresql.cnpg.io
+      kind: Cluster
+      namespace: textile
+      name: textile-db
+      jqPathExpressions:
+        - .spec.affinity
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

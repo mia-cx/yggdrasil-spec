@@ -1,0 +1,158 @@
+# Bot hosts: each owns the bots that rendezvous hashing over BOT_HOSTS gives
+# it, holding their decrypted tokens, rate limiters, Gateway shards, voice and
+# workflows. Scripts and workflows run in workerd processes inside this pod.
+# One host per node; a stopped host's shards resume on the other within
+# seconds. Each host applies pending migrations at startup, in a transaction,
+# so a host that loses that race on a fresh database restarts and finds them
+# applied. BOT_HOSTS must match central's; change both together.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: textile-bot-host
+  namespace: textile
+spec:
+  serviceName: textile-bot-host
+  replicas: 2
+  # A host waiting for its node never holds back the other.
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: textile-bot-host
+  template:
+    metadata:
+      labels:
+        app: textile-bot-host
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10000
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app: textile-bot-host
+      containers:
+        - name: server
+          # textile 22f0435: the textile branch at 8930fd8 plus its image workflow (mia-cx/textile ops/staging-image).
+          image: ghcr.io/mia-cx/textile/server@sha256:bb3e1bf1b83825e5c71916a80077beef34ff94c3b5cd2f0a1bb5089364ac597d
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: DISCORD_MCP_TIER
+              value: bot-host
+            - name: MCP_TRANSPORT
+              value: http
+            - name: MCP_HTTP_HOST
+              value: 0.0.0.0
+            - name: MCP_HTTP_PORT
+              value: "3000"
+            - name: BOT_HOSTS
+              value: http://textile-bot-host-0.textile-bot-host.textile.svc.cluster.local:3000,http://textile-bot-host-1.textile-bot-host.textile.svc.cluster.local:3000
+            - name: BOT_HOST_URL
+              value: http://$(POD_NAME).textile-bot-host.textile.svc.cluster.local:3000
+            - name: BOT_HOST_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: textile-bot-hosts
+                  key: BOT_HOST_SECRET
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: textile-db-app
+                  key: uri
+            - name: TOKEN_VAULT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: textile-vault
+                  key: TOKEN_VAULT_KEY
+            # Bot hosting, scripts and workflows stay off without an allowlist.
+            - name: DISCORD_OAUTH_ALLOWED_USER_IDS
+              valueFrom:
+                secretKeyRef:
+                  name: textile-oauth
+                  key: DISCORD_OAUTH_ALLOWED_USER_IDS
+          volumeMounts:
+            # workerd configs, script working directories, and npm installs for workflow publishing.
+            - name: tmp
+              mountPath: /tmp
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            periodSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 2Gi
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 2Gi
+---
+# Headless: gives each bot host the stable name BOT_HOSTS lists.
+apiVersion: v1
+kind: Service
+metadata:
+  name: textile-bot-host
+  namespace: textile
+spec:
+  clusterIP: None
+  selector:
+    app: textile-bot-host
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+---
+# The hop from central is plain HTTP carrying bot tokens: only central and the
+# other bot host, which forwards its shards' events, reach a bot host.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: textile-bot-host
+  namespace: textile
+spec:
+  podSelector:
+    matchLabels:
+      app: textile-bot-host
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values: [textile-central, textile-bot-host]
+      ports:
+        - protocol: TCP
+          port: 3000

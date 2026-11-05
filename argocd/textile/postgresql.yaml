@@ -1,0 +1,91 @@
+# Textile's database: two instances, one per node, with synchronous
+# replication that falls back to async while one instance is down. Each
+# instance keeps a single node-local Longhorn replica, because the instances
+# already replicate each other. Only the bot hosts connect, as the generated
+# `textile` owner (Secret `textile-db-app`), straight to the primary: no pooler.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: textile-db
+  namespace: textile
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"  # Before the bot hosts, which migrate it at startup.
+spec:
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.6-standard-trixie
+  instances: 2
+
+  postgresql:
+    synchronous:
+      method: any
+      number: 1
+      dataDurability: preferred
+
+  affinity:
+    enablePodAntiAffinity: true
+    podAntiAffinityType: required
+    topologyKey: kubernetes.io/hostname
+
+  storage:
+    size: 10Gi
+    storageClass: longhorn-local
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+
+  bootstrap:
+    initdb:
+      database: textile
+      owner: textile
+
+  # WAL archiving and base backups go to RustFS through the Barman Cloud plugin.
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: textile-backups
+---
+# The bucket is created on first use: barman-cloud checks the WAL archive
+# before the first upload, and creates a missing bucket.
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: textile-backups
+  namespace: textile
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  retentionPolicy: 14d
+  configuration:
+    destinationPath: s3://textile-backups/
+    endpointURL: http://rustfs.textile.svc.cluster.local:9000
+    s3Credentials:
+      accessKeyId:
+        name: textile-rustfs
+        key: RUSTFS_ACCESS_KEY
+      secretAccessKey:
+        name: textile-rustfs
+        key: RUSTFS_SECRET_KEY
+    wal:
+      compression: gzip
+    data:
+      compression: gzip
+---
+# A base backup daily at 03:00 UTC, and one as soon as the cluster exists.
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: textile-db-daily
+  namespace: textile
+spec:
+  schedule: "0 0 3 * * *"
+  immediate: true
+  backupOwnerReference: self
+  cluster:
+    name: textile-db
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
