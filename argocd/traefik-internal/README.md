@@ -153,7 +153,10 @@ Added on 2026-10-30 in the same shape for t3code: policy `t3code`
 Added on 2026-11-05 in the same shape for textile, once Hecate sign-in created
 the JWT-issued `svc-textile` group: policy `textile` (`svc-textile` →
 `res-textile`, unidirectional TCP 443) and DNS zone `staging.textile.cx`
-(search domain off) → `10.43.0.155`, distributed to `svc-textile`.
+(search domain off) → `10.43.0.155`, distributed to `svc-textile`. Hephaestus,
+a setup-key peer with no user, gets in through the API-issued group
+`textile-clients-hephaestus` and its policy `hephaestus-textile` (TCP 443 to
+`res-textile`); the zone is also distributed to that group.
 
 NetBird 0.79.0 doesn't push DNS zone or record changes to connected peers.
 The server logs `failed to get network map data ... context canceled`, and
