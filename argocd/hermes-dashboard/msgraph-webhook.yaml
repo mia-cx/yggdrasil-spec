@@ -1,0 +1,47 @@
+## Microsoft Graph change-notification listener running inside the Hermes gateway
+## on athena-hephaestus. Traefik terminates TLS and forwards only this exact path.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hermes-msgraph-webhook
+  namespace: hermes
+spec:
+  ports:
+    - name: http
+      port: 8646
+      targetPort: 8646
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: hermes-msgraph-webhook-external
+  namespace: hermes
+  labels:
+    kubernetes.io/service-name: hermes-msgraph-webhook
+addressType: IPv4
+endpoints:
+  - addresses:
+      - "10.0.3.2" # athena-hephaestus
+    conditions:
+      ready: true
+ports:
+  - name: http
+    port: 8646
+    protocol: TCP
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: hermes-msgraph-webhook
+  namespace: hermes
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: (Host(`hermes.mia.cx`) || Host(`hermes.yggdrasil.mia.cx`)) && Path(`/msgraph/webhook`)
+      kind: Rule
+      priority: 100
+      services:
+        - name: hermes-msgraph-webhook
+          port: 8646
+  tls: {}
