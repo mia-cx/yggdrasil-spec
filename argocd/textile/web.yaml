@@ -40,8 +40,8 @@ spec:
                   app: textile-web
       containers:
         - name: web
-          # textile 8fade5e: mia-cx/textile#72 (textile-web-staging), built by a dispatched CI run.
-          image: ghcr.io/mia-cx/textile/web@sha256:c018d5877fa14c0d262de14afef7277f879f7726e7b2c9a2ff3562756643d797
+          # textile 02083bd: mia-cx/textile#72 (textile-web-staging), built by a dispatched CI run.
+          image: ghcr.io/mia-cx/textile/web@sha256:51bd176fc329c7536b2bde61a81d2587a8bd18c9570aa2761e86ed5406d6c3f4
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -63,6 +63,20 @@ spec:
                 secretKeyRef:
                   name: textile-web
                   key: SESSION_KEY
+          # workerd resolves central's address once, at startup, and keeps a failed lookup, as
+          # when this pod starts before cluster DNS after a node reboot. Starting counts only
+          # once /login reaches central (a 303 to its /authorize); until then the pod restarts.
+          startupProbe:
+            httpGet:
+              path: /login
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: staging.textile.cx
+                - name: X-Forwarded-Proto
+                  value: https
+            periodSeconds: 2
+            failureThreshold: 30
           # The site has no health route; robots.txt answers from the Worker itself.
           readinessProbe:
             httpGet:
