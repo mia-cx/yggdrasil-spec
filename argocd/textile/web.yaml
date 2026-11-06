@@ -40,8 +40,8 @@ spec:
                   app: textile-web
       containers:
         - name: web
-          # textile 02083bd: mia-cx/textile#72 (textile-web-staging), built by a dispatched CI run.
-          image: ghcr.io/mia-cx/textile/web@sha256:51bd176fc329c7536b2bde61a81d2587a8bd18c9570aa2761e86ed5406d6c3f4
+          # textile 1c99b54: mia-cx/textile#72 (textile-web-staging), built by a dispatched CI run.
+          image: ghcr.io/mia-cx/textile/web@sha256:ab09aa1ef443e912386f0b477857b9959fd8bbf7e30813280eaeeef3c0df988d
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
