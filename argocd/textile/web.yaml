@@ -1,6 +1,6 @@
 # The website (mia-cx/textile apps/web): the Worker build production uploads to
 # Cloudflare, served by self-hosted workerd. Stateless: sessions live in
-# encrypted cookies, and the access list is central's allowlist.
+# encrypted cookies, and people sign in through central's OAuth.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -40,32 +40,24 @@ spec:
                   app: textile-web
       containers:
         - name: web
-          # textile 4c5c422: mia-cx/textile#72 (textile-web-staging), built by a dispatched CI run.
-          image: ghcr.io/mia-cx/textile/web@sha256:1363e14fa18ff032c7845ca2951836046e504a8137ab5b0e33e14c0183006390
+          # textile 8fade5e: mia-cx/textile#72 (textile-web-staging), built by a dispatched CI run.
+          image: ghcr.io/mia-cx/textile/web@sha256:c018d5877fa14c0d262de14afef7277f879f7726e7b2c9a2ff3562756643d797
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
+          # The site registers with central and redeems codes server-side. The mesh-only route
+          # refuses pods, so those requests go to central's Service directly, still for its host.
+          args: ["--external-addr", "central=textile-central.textile.svc.cluster.local:3000"]
           ports:
             - name: http
               containerPort: 8080
           env:
-            # The Textile Discord application, which central signs in with too.
-            - name: DISCORD_CLIENT_ID
-              value: "1162037890742759424"
-            - name: DISCORD_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: textile-oauth
-                  key: DISCORD_OAUTH_CLIENT_SECRET
-            # Central's allowlist: whoever may use staging sees that they have access.
-            - name: ACCESS_LIST
-              valueFrom:
-                secretKeyRef:
-                  name: textile-oauth
-                  key: DISCORD_OAUTH_ALLOWED_USER_IDS
+            # Central is the site's OAuth issuer: one login, and central's allowlist decides access.
+            - name: CENTRAL_URL
+              value: https://staging.textile.cx
             - name: SESSION_KEY
               valueFrom:
                 secretKeyRef:

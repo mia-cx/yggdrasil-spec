@@ -13,7 +13,7 @@ Textile staging on olympus, mesh-only at `https://staging.textile.cx`. It is sep
 
 Both tiers run `ghcr.io/mia-cx/textile/server`, and the website runs `ghcr.io/mia-cx/textile/web`, each pinned by digest. CI publishes both on every push to the `textile` branch, tagged `sha-<commit>`. To deploy a newer build, copy the digest from that run's summary, or `docker buildx imagetools inspect ghcr.io/mia-cx/textile/<image>:sha-<commit>`, into the manifests that run it.
 
-One host serves both. The route sends central's paths to central: `/mcp`, `/voice`, `/register`, `/authorize`, `/token`, `/auth/discord/`, the OAuth discovery documents under `/.well-known/`, `/workflows/`, and `/health/`. Everything else goes to the website, which asks search engines not to index it.
+One host serves both. The route sends central's paths to central: `/mcp`, `/voice`, `/register`, `/authorize`, `/token`, `/auth/discord/`, the OAuth discovery documents under `/.well-known/`, `/workflows/`, and `/health/`. Everything else goes to the website, which asks search engines not to index it. The website signs people in through central's OAuth, so there is one login and one Discord redirect; it reaches central's Service directly for registration and tokens, which central's NetworkPolicy allows.
 
 Backups use the [Barman Cloud plugin](../cnpg-barman-cloud/README.md): WAL is archived continuously and a base backup runs weekly, Sundays at 03:00 UTC, kept 14 days, in bucket `textile-backups`. RustFS lives on the same cluster, so backups are not off-site yet.
 
@@ -23,7 +23,7 @@ Backups use the [Barman Cloud plugin](../cnpg-barman-cloud/README.md): WAL is ar
 
    | Secret              | Keys                                                            | Read by                                                                                            |
    | ------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-   | `textile-oauth`     | `DISCORD_OAUTH_CLIENT_SECRET`, `DISCORD_OAUTH_ALLOWED_USER_IDS` | central and the website; bot hosts read the allowlist                                              |
+   | `textile-oauth`     | `DISCORD_OAUTH_CLIENT_SECRET`, `DISCORD_OAUTH_ALLOWED_USER_IDS` | central; bot hosts read the allowlist                                                              |
    | `textile-crypto`    | `OAUTH_ENCRYPTION_KEY`                                          | central                                                                                            |
    | `textile-bot-hosts` | `BOT_HOST_SECRET`                                               | both tiers                                                                                         |
    | `textile-vault`     | `TOKEN_VAULT_KEY`                                               | bot hosts. Its copies in iCloud Keychain and offline are the only way to read a restored database. |
@@ -32,7 +32,7 @@ Backups use the [Barman Cloud plugin](../cnpg-barman-cloud/README.md): WAL is ar
 
    CloudNativePG creates `textile-db-app`, whose `uri` the bot hosts use.
 
-2. In the Discord Developer Portal, the Textile application (`1162037890742759424`) needs the redirects `https://staging.textile.cx/auth/discord/callback` for central and `https://staging.textile.cx/auth/callback` for the website. The wizard opens the page.
+2. In the Discord Developer Portal, the Textile application (`1162037890742759424`) needs the redirect `https://staging.textile.cx/auth/discord/callback`. The wizard opens the page.
 3. Give the mesh a way in, as for every row in [the private Traefik's table](../traefik-internal/README.md#per-service-shape): add yourself to `svc-textile` in Authentik (`role-admin` includes it) and sign in to NetBird again so the group arrives. Then create NetBird policy `textile` (source `svc-textile`, destination `res-textile`, unidirectional TCP 443) and DNS zone `staging.textile.cx` (distribution group `svc-textile`, search domain off) with an apex A record to `10.43.0.155`.
 4. cert-manager issues the certificate by DNS-01 through Cloudflare, so `textile.cx` must be a zone that the `cloudflare-api-token` Secret in `cert-manager` can edit.
 

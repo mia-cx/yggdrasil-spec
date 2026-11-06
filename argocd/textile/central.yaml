@@ -131,7 +131,8 @@ spec:
       targetPort: http
 ---
 # Mesh-only: central admits only the private Traefik, per
-# argocd/traefik-internal/README.md.
+# argocd/traefik-internal/README.md, and the website, which signs people in
+# through central's OAuth (web.yaml).
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -150,6 +151,9 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/instance: traefik-internal-traefik-internal
+        - podSelector:
+            matchLabels:
+              app: textile-web
       ports:
         - protocol: TCP
           port: 3000
