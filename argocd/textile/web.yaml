@@ -1,0 +1,122 @@
+# The website (mia-cx/textile apps/web): the Worker build production uploads to
+# Cloudflare, served by self-hosted workerd. Stateless: sessions live in
+# encrypted cookies, and the access list is central's allowlist.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: textile-web
+  namespace: textile
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: textile-web
+  template:
+    metadata:
+      labels:
+        app: textile-web
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        # distroless's `nonroot`.
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app: textile-web
+      containers:
+        - name: web
+          # textile 4c5c422: mia-cx/textile#72 (textile-web-staging), built by a dispatched CI run.
+          image: ghcr.io/mia-cx/textile/web@sha256:1363e14fa18ff032c7845ca2951836046e504a8137ab5b0e33e14c0183006390
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            # The Textile Discord application, which central signs in with too.
+            - name: DISCORD_CLIENT_ID
+              value: "1162037890742759424"
+            - name: DISCORD_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: textile-oauth
+                  key: DISCORD_OAUTH_CLIENT_SECRET
+            # Central's allowlist: whoever may use staging sees that they have access.
+            - name: ACCESS_LIST
+              valueFrom:
+                secretKeyRef:
+                  name: textile-oauth
+                  key: DISCORD_OAUTH_ALLOWED_USER_IDS
+            - name: SESSION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: textile-web
+                  key: SESSION_KEY
+          # The site has no health route; robots.txt answers from the Worker itself.
+          readinessProbe:
+            httpGet:
+              path: /robots.txt
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /robots.txt
+              port: http
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: textile-web
+  namespace: textile
+spec:
+  selector:
+    app: textile-web
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+# Mesh-only: the site admits only the private Traefik, per
+# argocd/traefik-internal/README.md.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: textile-web
+  namespace: textile
+spec:
+  podSelector:
+    matchLabels:
+      app: textile-web
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-internal
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: traefik-internal-traefik-internal
+      ports:
+        - protocol: TCP
+          port: 8080

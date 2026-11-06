@@ -228,6 +228,7 @@ required_keys() {
     textile-bot-hosts) echo BOT_HOST_SECRET ;;
     textile-vault) echo TOKEN_VAULT_KEY ;;
     textile-rustfs) echo RUSTFS_ACCESS_KEY RUSTFS_SECRET_KEY ;;
+    textile-web) echo SESSION_KEY ;;
   esac
 }
 
@@ -279,7 +280,7 @@ clear_clipboard() {
   esac
 }
 
-TOTAL_STAGES=7
+TOTAL_STAGES=8
 
 banner "Textile staging secrets"
 
@@ -417,8 +418,25 @@ fi
 pause
 
 # ── 7 ─────────────────────────────────────────────────────────────────────
+stage "Website: sign-in redirect and session key (textile-web)"
+say "The website signs people in with the same Discord application, on its own callback."
+open_url "https://discord.com/developers/applications/$APP_ID/oauth2"
+step "Under Redirects, unless it's already there, click Add Redirect and enter:"
+say "    ${BOLD}https://staging.textile.cx/auth/callback${RESET}"
+step "Click Save Changes."
+pause "Done?"
+say "The website seals its sign-in cookies with this key. Rotating it signs everyone out."
+if ! keep_existing textile-web; then
+  # shellcheck disable=SC2034 # put_secret reads it by name
+  SESSION_KEY=$(openssl rand -base64 32)
+  put_secret textile-web SESSION_KEY SESSION_KEY
+  unset SESSION_KEY
+fi
+pause
+
+# ── 8 ─────────────────────────────────────────────────────────────────────
 stage "Check"
-for name in textile-oauth textile-crypto textile-bot-hosts textile-vault textile-rustfs; do
+for name in textile-oauth textile-crypto textile-bot-hosts textile-vault textile-rustfs textile-web; do
   if ! has_secret "$name"; then
     printf '  %s✗%s %s missing\n' "$RED" "$RESET" "$name"
     SKIPPED+=("Secret $name: run this wizard again")
