@@ -1,0 +1,133 @@
+# The website (mia-cx/textile apps/web): the Worker build production uploads to
+# Cloudflare, served by self-hosted workerd. Stateless: sessions live in
+# encrypted cookies, and people sign in through central's OAuth.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: textile-web
+  namespace: textile
+spec:
+  replicas: 2
+  # With one pod per node and two nodes, a surge pod has nowhere to go: replace one at a time.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: textile-web
+  template:
+    metadata:
+      labels:
+        app: textile-web
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        # distroless's `nonroot`.
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      # One per node. A node that comes back gets its pod back.
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app: textile-web
+      containers:
+        - name: web
+          # textile 1c99b54: mia-cx/textile#72 (textile-web-staging), built by a dispatched CI run.
+          image: ghcr.io/mia-cx/textile/web@sha256:ab09aa1ef443e912386f0b477857b9959fd8bbf7e30813280eaeeef3c0df988d
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          # The site registers with central and redeems codes server-side. The mesh-only route
+          # refuses pods, so those requests go to central's Service directly, still for its host.
+          args: ["--external-addr", "central=textile-central.textile.svc.cluster.local:3000"]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            # Central is the site's OAuth issuer: one login, and central's allowlist decides access.
+            - name: CENTRAL_URL
+              value: https://staging.textile.cx
+            - name: SESSION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: textile-web
+                  key: SESSION_KEY
+          # workerd resolves central's address once, at startup, and keeps a failed lookup, as
+          # when this pod starts before cluster DNS after a node reboot. Starting counts only
+          # once /login reaches central (a 303 to its /authorize); until then the pod restarts.
+          startupProbe:
+            httpGet:
+              path: /login
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: staging.textile.cx
+                - name: X-Forwarded-Proto
+                  value: https
+            periodSeconds: 2
+            failureThreshold: 30
+          # The site has no health route; robots.txt answers from the Worker itself.
+          readinessProbe:
+            httpGet:
+              path: /robots.txt
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /robots.txt
+              port: http
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: textile-web
+  namespace: textile
+spec:
+  selector:
+    app: textile-web
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+# Mesh-only: the site admits only the private Traefik, per
+# argocd/traefik-internal/README.md.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: textile-web
+  namespace: textile
+spec:
+  podSelector:
+    matchLabels:
+      app: textile-web
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-internal
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: traefik-internal-traefik-internal
+      ports:
+        - protocol: TCP
+          port: 8080
