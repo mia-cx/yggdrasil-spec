@@ -8,6 +8,12 @@ metadata:
   namespace: textile
 spec:
   replicas: 2
+  # With one pod per node and two nodes, a surge pod has nowhere to go: replace one at a time.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: textile-web
@@ -24,15 +30,14 @@ spec:
         runAsGroup: 65532
         seccompProfile:
           type: RuntimeDefault
+      # One per node. A node that comes back gets its pod back.
       affinity:
         podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                topologyKey: kubernetes.io/hostname
-                labelSelector:
-                  matchLabels:
-                    app: textile-web
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app: textile-web
       containers:
         - name: web
           # textile 4c5c422: mia-cx/textile#72 (textile-web-staging), built by a dispatched CI run.
