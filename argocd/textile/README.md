@@ -48,7 +48,7 @@ kubectl -n textile get cluster textile-db \
   -o jsonpath='{.status.conditions[?(@.type=="ContinuousArchiving")].status}'   # True
 kubectl -n textile logs statefulset/textile-bot-host | head   # "discord-mcp bot-host listening"
 curl -sf https://staging.textile.cx/health/ready     # from a mesh device in svc-textile
-curl -sI https://staging.textile.cx/ | grep -i x-robots-tag   # the website: "noindex"
+curl -sI https://staging.textile.cx/ | grep -iE '^(HTTP|x-robots-tag)'   # the website: 200, "noindex"
 ```
 
 Sign in to the website at `https://staging.textile.cx/access`: it goes through central and Discord and ends on "You're in". That proves the website reaches central and that `textile-web` holds a working `SESSION_KEY`.
