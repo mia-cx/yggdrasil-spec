@@ -30,6 +30,8 @@ Backups use the [Barman Cloud plugin](../cnpg-barman-cloud/README.md): WAL is ar
    | `textile-rustfs`    | `RUSTFS_ACCESS_KEY`, `RUSTFS_SECRET_KEY`                        | RustFS and the database's backups                                                                  |
    | `textile-web`       | `SESSION_KEY`                                                   | the website, which seals its sign-in cookies with it                                               |
 
+   Optionally, `textile-community` holds `DISCORD_COMMUNITY_GUILD_ID`, `DISCORD_COMMUNITY_WAITLIST_ROLE_ID` and `DISCORD_COMMUNITY_BOT_TOKEN`: the Textile Discord server, its Waitlist role, and the Textile application's bot token. With it, central adds everyone who signs in to the server with that role, which makes them the closed alpha's waitlist. The Textile bot must be in the server with Create Instant Invite and Manage Roles, its role above Waitlist. Create it by hand with `kubectl -n textile create secret generic textile-community --from-literal=...`; without it, central adds nobody.
+
    CloudNativePG creates `textile-db-app`, whose `uri` the bot hosts use.
 
 2. In the Discord Developer Portal, the Textile application (`1162037890742759424`) needs the redirect `https://staging.textile.cx/auth/discord/callback`. The wizard opens the page.

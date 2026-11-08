@@ -84,6 +84,26 @@ spec:
                 secretKeyRef:
                   name: textile-crypto
                   key: OAUTH_ENCRYPTION_KEY
+            # The Textile Discord server everyone who signs in joins, with its Waitlist role. All three or none: without
+            # the Secret, sign-in asks only for `identify` and adds nobody.
+            - name: DISCORD_COMMUNITY_GUILD_ID
+              valueFrom:
+                secretKeyRef:
+                  name: textile-community
+                  key: DISCORD_COMMUNITY_GUILD_ID
+                  optional: true
+            - name: DISCORD_COMMUNITY_WAITLIST_ROLE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: textile-community
+                  key: DISCORD_COMMUNITY_WAITLIST_ROLE_ID
+                  optional: true
+            - name: DISCORD_COMMUNITY_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: textile-community
+                  key: DISCORD_COMMUNITY_BOT_TOKEN
+                  optional: true
           # Central answers only its public hostname, health checks included.
           startupProbe:
             httpGet:
