@@ -91,7 +91,7 @@ This repository currently includes the OpenTofu scaffold and example Cloudflare 
 
 ## AdGuard filtering boundary
 
-- Scope (live): human mesh devices (`netbird-enroll`) get AdGuard filtering; services and infrastructure use unfiltered DNS.
+- Scope (live): human mesh devices (`netbird-enroll` and `guest`) get AdGuard filtering; services and infrastructure use unfiltered DNS.
 - Outage policy (live): human devices fall back to Cloudflare malware-blocking DNS (no ad blocking) when AdGuard is unavailable, through `1.1.1.2` as the second nameserver in the same `adguard` nameserver group. Re-verify failover after changing that group.
 - Placement (live): AdGuard Home runs in Docker on the primary NetBird VM, outside K3s, in the network namespace of the `olympus-dns` NetBird sidecar; no host DNS port is published.
 - Distribute the AdGuard primary nameserver to human-device groups, not `All`. Keep service peers outside those groups, including administrator-owned servers.

@@ -26,7 +26,7 @@ Every peer resolves as `<name>.netbird.mia.cx` (account DNS domain), but only fr
 
 ## AdGuard DNS
 
-Deployed: an AdGuard Home container shares the `olympus-dns` sidecar peer's network namespace, so its `:53` answers on the peer's mesh address with no host DNS port. The NetBird nameserver group `adguard` (primary, all domains) is distributed only to the JWT-issued `netbird-enroll`. Servers, routers and other service peers always enroll with setup keys, never with SSO, so they never carry `netbird-enroll`: group propagation copies a signing-in user's JWT groups onto the peer, which would give a server the filter and every `netbird-enroll` grant.
+Deployed: an AdGuard Home container shares the `olympus-dns` sidecar peer's network namespace, so its `:53` answers on the peer's mesh address with no host DNS port. The NetBird nameserver group `adguard` (primary, all domains) is distributed only to the JWT-issued human groups `netbird-enroll` and [`guest`](#guests). Servers, routers and other service peers always enroll with setup keys, never with SSO, so they carry neither group: group propagation copies a signing-in user's JWT groups onto the peer, which would give a server the filter and every `netbird-enroll` grant.
 
 The outage fallback is the second nameserver _inside the same group_ (`1.1.1.2`, Cloudflare's malware-blocking resolver; ads are not blocked during an outage): NetBird 0.79 tries a group's nameservers in order and fails over only on errors, while two nameserver groups covering the same domain race in parallel — a second group would bypass filtering. Private zones stay NetBird DNS records. Operations are in the [host README](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/yggdrasil-olympus-1/README.md#adguard-dns-for-human-devices).
 
@@ -117,9 +117,11 @@ The blueprint at `argocd/authentik/netbird-blueprint.yaml` defines every group a
 
 ## Guests
 
-Anyone with a guest sign-up link can create a Hecate account in the `guest` group. Guests sign in to NetBird, and their devices reach only other guests' devices. They get no services, LAN, or AdGuard DNS, and the NetBird dashboard shows them only their own peers. Never give a guest `netbird-enroll` or a `svc-*` group.
+Anyone with a guest sign-up link can create a Hecate account in the `guest` group. Guests sign in to NetBird, and their devices reach only other guests' devices and [AdGuard DNS](#adguard-dns). The NetBird dashboard shows them only their own peers.
 
-The `guest` claim passes NetBird's `jwt_allow_groups`, and policy `guests` connects the JWT-issued `guest` group to itself in both directions on all protocols. The hourly sync job removes deactivated or deleted guests from the group.
+Private service records stay out of reach: each zone is distributed to its `svc-*` group, and `svc.olympus.yggdrasil.mia.cx` to `netbird-enroll`. To share a service with a guest, add them to its `svc-*` group in Hecate. Never give a guest `netbird-enroll`.
+
+The `guest` claim passes NetBird's `jwt_allow_groups`. Policy `guests` connects the JWT-issued `guest` group to itself in both directions on all protocols, and `guest` is a source of both `dns-adguard` policies and receives the `adguard` nameserver group. The hourly sync job removes deactivated or deleted guests from the group.
 
 ### Create a sign-up link
 
@@ -132,19 +134,32 @@ To end a link early, delete the invitation.
 
 A seat is used when a guest finishes setting up a passkey or authenticator app, so abandoned sign-ups free their seat. Guests choose their own email address. Hecate doesn't verify it, but refuses one that already belongs to an account. The flow and its checks live in `argocd/authentik/guest-blueprint.yaml`.
 
-### Recreate the guests policy
+### Wire up the guest group
 
-NetBird creates the `guest` group at the first guest's sign-in. Then create the policy with an admin PAT:
+NetBird creates the `guest` group at the first guest's sign-in. Then, with an admin PAT, create the `guests` policy and add `guest` to AdGuard DNS:
 
 ```bash
+set -euo pipefail
 api=https://netbird.mia.cx/api
 auth="Authorization: Token $ADMIN_PAT"
+json='Content-Type: application/json'
 guest=$(curl -sf -H "$auth" $api/groups | jq -r '.[] | select(.name == "guest" and .issued == "jwt") | .id')
-curl -sf -H "$auth" -H 'Content-Type: application/json' $api/policies -d "{
-  \"name\": \"guests\", \"enabled\": true,
-  \"rules\": [{\"name\": \"guests\", \"enabled\": true, \"action\": \"accept\",
-    \"bidirectional\": true, \"protocol\": \"all\",
-    \"sources\": [\"$guest\"], \"destinations\": [\"$guest\"]}]}"
+test -n "$guest"
+
+jq -n --arg g "$guest" '{name: "guests", enabled: true, rules: [{name: "guests", enabled: true,
+  action: "accept", bidirectional: true, protocol: "all", sources: [$g], destinations: [$g]}]}' |
+  curl -sf -H "$auth" -H "$json" -d @- $api/policies > /dev/null
+
+curl -sf -H "$auth" $api/policies | jq -c --arg g "$guest" '.[] | select(.name | test("^dns-adguard"))
+  | {id, body: {name, description, enabled, rules: (.rules | map(
+      .sources = ([.sources[].id, $g] | unique) | .destinations = [.destinations[].id]))}}' |
+  while read -r p; do
+    jq .body <<<"$p" | curl -sf -X PUT -H "$auth" -H "$json" -d @- "$api/policies/$(jq -r .id <<<"$p")" > /dev/null
+  done
+
+ns=$(curl -sf -H "$auth" $api/dns/nameservers | jq -c '.[] | select(.name == "adguard")')
+jq --arg g "$guest" 'del(.id) | .groups = (.groups + [$g] | unique)' <<<"$ns" |
+  curl -sf -X PUT -H "$auth" -H "$json" -d @- "$api/dns/nameservers/$(jq -r .id <<<"$ns")" > /dev/null
 ```
 
 ## Permission revocation
