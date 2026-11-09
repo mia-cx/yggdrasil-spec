@@ -56,6 +56,7 @@ blueprints:
     - authentik-blueprint-netbird  # netbird-blueprint.yaml
     - authentik-blueprint-netbird-sync  # netbird-sync-blueprint.yaml
     - authentik-blueprint-sources  # sources-blueprint.yaml
+    - authentik-blueprint-guests  # guest-blueprint.yaml
 
 server:
   replicas: 1

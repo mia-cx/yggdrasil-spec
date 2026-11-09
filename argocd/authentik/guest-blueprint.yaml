@@ -1,0 +1,204 @@
+## Guest sign-up: a shareable invitation link creates accounts in the `guest`
+## group (defined in netbird-blueprint.yaml). A link ends at its native expiry
+## (Authentik sets 24 hours when left empty) or after `max_uses` activated
+## accounts, whichever comes first. Accounts stay inactive until the guest sets up a passkey or authenticator
+## app. Links and guests stay out of the repo; create links in Hecate.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-guests
+  namespace: authentik
+data:
+  guests.yaml: |
+    version: 1
+    metadata:
+      name: Guest sign-up
+      labels:
+        blueprints.goauthentik.io/description: guest sign-up flow for shareable invitation links
+    entries:
+      - model: authentik_flows.flow
+        id: flow
+        identifiers: {slug: hecate-guest-enrollment}
+        attrs:
+          name: Hecate guest sign-up
+          title: Create your guest account
+          designation: enrollment
+          authentication: require_unauthenticated
+          denied_action: message
+
+      # Checks the link before showing the form. Expired invitations are
+      # already invisible to Invitation.objects. Seats count activated
+      # accounts, so abandoned sign-ups don't use one up.
+      - model: authentik_policies_expression.expressionpolicy
+        id: link
+        identifiers: {name: hecate-guest-link}
+        attrs:
+          expression: |
+            from django.core.exceptions import ValidationError
+            from authentik.core.models import User
+            from authentik.flows.views.executor import SESSION_KEY_GET
+            from authentik.stages.invitation.models import Invitation
+
+            token = request.http_request.session.get(SESSION_KEY_GET, {}).get("itoken", "")
+            try:
+                invitation = Invitation.objects.filter(
+                    pk=token, flow__slug="hecate-guest-enrollment"
+                ).first()
+            except (ValueError, ValidationError):
+                invitation = None
+            max_uses = invitation.fixed_data.get("max_uses") if invitation else None
+            valid = (
+                invitation is not None
+                # Single-use invitations are deleted before activation; use max_uses: 1.
+                and not invitation.single_use
+                and (max_uses is None or (type(max_uses) is int and max_uses > 0))
+                and (
+                    max_uses is None
+                    or User.objects.filter(attributes__guest_invitation=str(invitation.pk)).count() < max_uses
+                )
+            )
+            if not valid:
+                ak_message("This sign-up link is no longer valid. Ask Mia for a new one.")
+            return bool(valid)
+      - model: authentik_policies.policybinding
+        identifiers: {target: !KeyOf flow, order: 0}
+        attrs: {policy: !KeyOf link}
+
+      - model: authentik_stages_prompt.prompt
+        id: name
+        identifiers: {name: hecate-guest-name}
+        attrs: {field_key: name, label: Name, type: text, required: true, order: 0}
+      - model: authentik_stages_prompt.prompt
+        id: username
+        identifiers: {name: hecate-guest-username}
+        attrs: {field_key: username, label: Username, type: username, required: true, order: 1}
+      - model: authentik_stages_prompt.prompt
+        id: email
+        identifiers: {name: hecate-guest-email}
+        attrs: {field_key: email, label: Email, type: email, required: true, order: 2}
+      - model: authentik_stages_prompt.prompt
+        id: password
+        identifiers: {name: hecate-guest-password}
+        attrs: {field_key: password, label: Password, type: password, required: true, order: 3}
+      - model: authentik_stages_prompt.prompt
+        id: password-repeat
+        identifiers: {name: hecate-guest-password-repeat}
+        attrs: {field_key: password_repeat, label: Confirm password, type: password, required: true, order: 4}
+      - model: authentik_policies_password.passwordpolicy
+        id: password-policy
+        identifiers: {name: hecate-guest-password-policy}
+        attrs:
+          length_min: 12
+          error_message: Use a password with at least 12 characters.
+      # Guest emails are unverified, so they may never match an existing account.
+      - model: authentik_policies_expression.expressionpolicy
+        id: new-email
+        identifiers: {name: hecate-guest-new-email}
+        attrs:
+          expression: |
+            from authentik.core.models import User
+
+            email = request.context["prompt_data"].get("email", "")
+            if User.objects.filter(email__iexact=email).exists():
+                ak_message("This email address already has an account.")
+                return False
+            return True
+      - model: authentik_stages_prompt.promptstage
+        id: profile
+        identifiers: {name: hecate-guest-profile}
+        attrs:
+          fields: [!KeyOf name, !KeyOf username, !KeyOf email, !KeyOf password, !KeyOf password-repeat]
+          validation_policies: [!KeyOf password-policy, !KeyOf new-email]
+
+      - model: authentik_stages_invitation.invitationstage
+        id: invitation
+        identifiers: {name: hecate-guest-accept}
+        attrs: {continue_flow_without_invitation: false}
+      - model: authentik_stages_user_write.userwritestage
+        id: create-user
+        identifiers: {name: hecate-guest-create-user}
+        attrs:
+          user_creation_mode: always_create
+          create_users_as_inactive: true
+          user_type: internal
+          user_path_template: users/guests
+
+      - model: authentik_stages_authenticator_totp.authenticatortotpstage
+        id: totp
+        identifiers: {name: hecate-guest-totp}
+        attrs: {friendly_name: Authenticator app, digits: 6}
+      - model: authentik_stages_authenticator_webauthn.authenticatorwebauthnstage
+        id: passkey
+        identifiers: {name: hecate-guest-passkey}
+        attrs:
+          friendly_name: Passkey
+          user_verification: required
+          resident_key_requirement: required
+          authenticator_attachment: null
+      - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
+        id: mfa
+        identifiers: {name: hecate-guest-mfa}
+        attrs:
+          device_classes: [totp, webauthn]
+          not_configured_action: configure
+          configuration_stages: [!KeyOf passkey, !KeyOf totp]
+          webauthn_user_verification: required
+          last_auth_threshold: seconds=0
+
+      # Re-reads the invitation, so a link revoked or filled during sign-up
+      # stops activation. Tagging the account with the invitation takes the seat.
+      - model: authentik_policies_expression.expressionpolicy
+        id: activate
+        identifiers: {name: hecate-guest-activate}
+        attrs:
+          expression: |
+            from authentik.core.models import Group, User
+            from authentik.stages.invitation.models import Invitation
+
+            user = request.context.get("pending_user")
+            if not user or not (
+                ak_user_has_authenticator(user, "totp")
+                or ak_user_has_authenticator(user, "webauthn")
+            ):
+                return False
+            accepted = request.context["flow_plan"].context.get("invitation")
+            invitation = accepted and Invitation.objects.filter(pk=accepted.pk).first()
+            if not invitation:
+                ak_message("This sign-up link expired during sign-up. Ask Mia for a new one.")
+                return False
+            max_uses = invitation.fixed_data.get("max_uses")
+            if max_uses and User.objects.filter(attributes__guest_invitation=str(invitation.pk)).count() >= max_uses:
+                ak_message("This sign-up link filled up during sign-up. Ask Mia for a new one.")
+                return False
+            plan = request.context["flow_plan"]
+            plan.context["groups"] = [Group.objects.get(name="guest")]
+            plan.context["prompt_data"] = {
+                "is_active": True,
+                "attributes.guest_invitation": str(invitation.pk),
+            }
+            return True
+      - model: authentik_stages_user_write.userwritestage
+        id: activate-user
+        identifiers: {name: hecate-guest-activate-user}
+        attrs: {user_creation_mode: never_create}
+      - model: authentik_stages_user_login.userloginstage
+        id: login
+        identifiers: {name: hecate-guest-login}
+
+      - model: authentik_flows.flowstagebinding
+        identifiers: {target: !KeyOf flow, stage: !KeyOf profile, order: 10}
+      - model: authentik_flows.flowstagebinding
+        identifiers: {target: !KeyOf flow, stage: !KeyOf invitation, order: 20}
+      - model: authentik_flows.flowstagebinding
+        identifiers: {target: !KeyOf flow, stage: !KeyOf create-user, order: 30}
+      - model: authentik_flows.flowstagebinding
+        identifiers: {target: !KeyOf flow, stage: !KeyOf mfa, order: 40}
+      - model: authentik_flows.flowstagebinding
+        id: activation-binding
+        identifiers: {target: !KeyOf flow, stage: !KeyOf activate-user, order: 50}
+        attrs: {evaluate_on_plan: false, re_evaluate_policies: true}
+      - model: authentik_policies.policybinding
+        identifiers: {target: !KeyOf activation-binding, order: 0}
+        attrs: {policy: !KeyOf activate}
+      - model: authentik_flows.flowstagebinding
+        identifiers: {target: !KeyOf flow, stage: !KeyOf login, order: 60}
