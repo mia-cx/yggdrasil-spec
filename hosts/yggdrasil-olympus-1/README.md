@@ -110,7 +110,7 @@ in `config.yaml.tmpl`, so a rebuild must recreate them:
    echo "$account" | jq '{settings: (.settings + {
        jwt_groups_enabled: true,
        jwt_groups_claim_name: "groups",
-       jwt_allow_groups: ["netbird-enroll"],
+       jwt_allow_groups: ["netbird-enroll", "guest"],
        groups_propagation_enabled: true,
        peer_login_expiration_enabled: true,
        peer_login_expiration: 2592000
@@ -120,10 +120,12 @@ in `config.yaml.tmpl`, so a rebuild must recreate them:
    ```
 
    `peer_login_expiration` is in seconds; 2592000 is 30 days.
-   `jwt_allow_groups` blocks sign-in for users without `netbird-enroll`.
+   `jwt_allow_groups` blocks sign-in for users with neither `netbird-enroll`
+   nor `guest`.
 
 3. Sign in once through Hecate with an account in `role-admin` so NetBird
-   recreates the JWT-issued groups.
+   recreates the JWT-issued groups. `guest` returns with the first guest
+   sign-in; then recreate the [guests policy](../../apps/docs/content/infrastructure/netbird.md#guests).
 
 ## LAN routing client
 

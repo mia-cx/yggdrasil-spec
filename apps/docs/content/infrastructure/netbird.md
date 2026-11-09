@@ -115,6 +115,38 @@ The NetBird profile scope emits a `groups` claim with only these permission name
 
 The blueprint at `argocd/authentik/netbird-blueprint.yaml` defines every group and preset. The `Hecate login` section in `hosts/yggdrasil-olympus-1/README.md` covers recreating the connector and re-seeding the JWT-issued groups after a rebuild.
 
+## Guests
+
+Anyone with a guest sign-up link can create a Hecate account in the `guest` group. Guests sign in to NetBird, and their devices reach only other guests' devices. They get no services, LAN, or AdGuard DNS, and the NetBird dashboard shows them only their own peers. Never give a guest `netbird-enroll` or a `svc-*` group.
+
+The `guest` claim passes NetBird's `jwt_allow_groups`, and policy `guests` connects the JWT-issued `guest` group to itself in both directions on all protocols. The hourly sync job removes deactivated or deleted guests from the group.
+
+### Create a sign-up link
+
+1. In Hecate, open **Directory > Invitations** and select **Create**.
+2. Choose the flow **Hecate guest sign-up** and leave **Single use** off.
+3. Set **Expires**; left empty, the link lasts 24 hours. To also cap sign-ups, set **Custom attributes** to `max_uses: 5`. The link ends at whichever limit comes first.
+4. Save, expand the invitation's row, and copy its link.
+
+To end a link early, delete the invitation.
+
+A seat is used when a guest finishes setting up a passkey or authenticator app, so abandoned sign-ups free their seat. Guests choose their own email address. Hecate doesn't verify it, but refuses one that already belongs to an account. The flow and its checks live in `argocd/authentik/guest-blueprint.yaml`.
+
+### Recreate the guests policy
+
+NetBird creates the `guest` group at the first guest's sign-in. Then create the policy with an admin PAT:
+
+```bash
+api=https://netbird.mia.cx/api
+auth="Authorization: Token $ADMIN_PAT"
+guest=$(curl -sf -H "$auth" $api/groups | jq -r '.[] | select(.name == "guest" and .issued == "jwt") | .id')
+curl -sf -H "$auth" -H 'Content-Type: application/json' $api/policies -d "{
+  \"name\": \"guests\", \"enabled\": true,
+  \"rules\": [{\"name\": \"guests\", \"enabled\": true, \"action\": \"accept\",
+    \"bidirectional\": true, \"protocol\": \"all\",
+    \"sources\": [\"$guest\"], \"destinations\": [\"$guest\"]}]}"
+```
+
 ## Permission revocation
 
 Mia approved a [24-hour revocation bound](https://github.com/mia-cx/yggdrasil-spec/issues/13#issuecomment-5848158959) for NetBird access to private services, replacing the earlier immediate-revocation requirement. After a permission removal in Hecate, running streams and sessions may finish, but new requests must fail within 24 hours. Unrelated grants and other users' access stay intact.
