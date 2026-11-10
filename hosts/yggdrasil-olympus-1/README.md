@@ -110,7 +110,7 @@ in `config.yaml.tmpl`, so a rebuild must recreate them:
    echo "$account" | jq '{settings: (.settings + {
        jwt_groups_enabled: true,
        jwt_groups_claim_name: "groups",
-       jwt_allow_groups: ["netbird-enroll"],
+       jwt_allow_groups: ["netbird-enroll", "guest"],
        groups_propagation_enabled: true,
        peer_login_expiration_enabled: true,
        peer_login_expiration: 2592000
@@ -120,10 +120,21 @@ in `config.yaml.tmpl`, so a rebuild must recreate them:
    ```
 
    `peer_login_expiration` is in seconds; 2592000 is 30 days.
-   `jwt_allow_groups` blocks sign-in for users without `netbird-enroll`.
+   `jwt_allow_groups` blocks sign-in for users with neither `netbird-enroll`
+   nor `guest`.
+
+   A new account ships an all-to-all `Default` policy. Delete it before
+   anyone signs in, or guests reach every peer:
+
+   ```bash
+   curl -sf -H "$auth" $api/policies |
+     jq -r '.[] | select(.name == "Default") | .id' |
+     while read -r id; do curl -sf -X DELETE -H "$auth" "$api/policies/$id"; done
+   ```
 
 3. Sign in once through Hecate with an account in `role-admin` so NetBird
-   recreates the JWT-issued groups.
+   recreates the JWT-issued groups. `guest` returns with the first guest
+   sign-in; then [wire up the guest group](../../apps/docs/content/infrastructure/netbird.md#wire-up-the-guest-group).
 
 ## LAN routing client
 
@@ -173,14 +184,14 @@ NetBird objects (by name): group `dns-adguard`; nameserver group `adguard`
 with upstreams `[<sidecar mesh IP>:53, 1.1.1.2:53]` — ordered within one
 group, so 1.1.1.2 only answers when AdGuard fails (outage fallback:
 Cloudflare blocks malware, not ads); policies `dns-adguard` (UDP 53) and
-`dns-adguard-tcp` (TCP 53) allow the human group -> `dns-adguard`. The API
+`dns-adguard-tcp` (TCP 53) allow the human groups -> `dns-adguard`. The API
 silently drops a second protocol rule inside one policy, so each protocol
 gets its own policy. The
-nameserver group and both policy sources are `netbird-enroll`. Every SSO
-personal device carries it, because group propagation copies the
-signing-in user's JWT groups onto the peer. So servers, routers, sidecars,
-K3s nodes and other service peers always enroll with setup keys, never
-with SSO: they never carry `netbird-enroll` and keep unfiltered host DNS.
+nameserver group and both policy sources are `netbird-enroll` and `guest`.
+Every SSO personal device carries one of them, because group propagation
+copies the signing-in user's JWT groups onto the peer. So servers, routers,
+sidecars, K3s nodes and other service peers always enroll with setup keys,
+never with SSO: they carry neither group and keep unfiltered host DNS.
 
 `adguard/conf/AdGuardHome.yaml` is rendered from `adguard.yaml.tmpl` (minimal
 file; v0.107.79 writes `schema_version: 34` and fills defaults). AdGuard

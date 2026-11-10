@@ -47,6 +47,10 @@ data:
       # Permission to enroll a personal device; the NetBird application is
       # bound to it below.
       - {model: authentik_core.group, id: netbird-enroll, identifiers: {name: netbird-enroll}, attrs: {is_superuser: false}}
+      # Guests from a guest sign-up link (guest-blueprint.yaml). They may
+      # enroll devices, which reach only other guests' devices and AdGuard.
+      # Never combine with netbird-enroll: that adds private service DNS.
+      - {model: authentik_core.group, id: guest, identifiers: {name: guest}, attrs: {is_superuser: false}}
 
       # Role presets. A member inherits every parent group, so the parents
       # are the permissions the role grants.
@@ -126,7 +130,7 @@ data:
                 "groups": sorted(
                     group.name
                     for group in request.user.all_groups()
-                    if group.name.startswith("svc-") or group.name == "netbird-enroll"
+                    if group.name.startswith("svc-") or group.name in ("netbird-enroll", "guest")
                 ),
             }
       - model: authentik_providers_oauth2.oauth2provider
@@ -160,3 +164,6 @@ data:
       - model: authentik_policies.policybinding
         identifiers: {target: !KeyOf app, order: 0}
         attrs: {group: !KeyOf netbird-enroll}
+      - model: authentik_policies.policybinding
+        identifiers: {target: !KeyOf app, order: 1}
+        attrs: {group: !KeyOf guest}

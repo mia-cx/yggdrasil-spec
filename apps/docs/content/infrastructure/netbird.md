@@ -26,7 +26,7 @@ Every peer resolves as `<name>.netbird.mia.cx` (account DNS domain), but only fr
 
 ## AdGuard DNS
 
-Deployed: an AdGuard Home container shares the `olympus-dns` sidecar peer's network namespace, so its `:53` answers on the peer's mesh address with no host DNS port. The NetBird nameserver group `adguard` (primary, all domains) is distributed only to the JWT-issued `netbird-enroll`. Servers, routers and other service peers always enroll with setup keys, never with SSO, so they never carry `netbird-enroll`: group propagation copies a signing-in user's JWT groups onto the peer, which would give a server the filter and every `netbird-enroll` grant.
+Deployed: an AdGuard Home container shares the `olympus-dns` sidecar peer's network namespace, so its `:53` answers on the peer's mesh address with no host DNS port. The NetBird nameserver group `adguard` (primary, all domains) is distributed only to the JWT-issued human groups `netbird-enroll` and [`guest`](#guests). Servers, routers and other service peers always enroll with setup keys, never with SSO, so they carry neither group: group propagation copies a signing-in user's JWT groups onto the peer, which would give a server the filter and every `netbird-enroll` grant.
 
 The outage fallback is the second nameserver _inside the same group_ (`1.1.1.2`, Cloudflare's malware-blocking resolver; ads are not blocked during an outage): NetBird 0.79 tries a group's nameservers in order and fails over only on errors, while two nameserver groups covering the same domain race in parallel — a second group would bypass filtering. Private zones stay NetBird DNS records. Operations are in the [host README](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/yggdrasil-olympus-1/README.md#adguard-dns-for-human-devices).
 
@@ -107,13 +107,72 @@ Selected hosts run an independent Repair client: `netbird-repair.service`, one u
 
 ## Hecate permission groups
 
-Every private service has a `svc-<service>` group in Hecate: `svc-prowlarr`, `svc-sonarr`, `svc-radarr`, `svc-lidarr`, `svc-readarr`, `svc-sabnzbd`, `svc-qbittorrent`, `svc-tunarr`, `svc-longhorn`, `svc-argocd`, `svc-proxmox`, `svc-pelican`, `svc-hermes`, `svc-seerr`, `svc-jellyfin`, `svc-lan`, `svc-ssh`, `svc-canary`, `svc-open-wearables`, `svc-oddreads`, `svc-cliproxyapi`, `svc-nextcloud`, `svc-immich`, `svc-vaultwarden`, `svc-speedtest`, and `svc-defriend`. The CPA permission grants both the proxy and its usage dashboard. The `netbird-enroll` group is the enrollment permission; the NetBird application requires it.
+Every private service has a `svc-<service>` group in Hecate: `svc-prowlarr`, `svc-sonarr`, `svc-radarr`, `svc-lidarr`, `svc-readarr`, `svc-sabnzbd`, `svc-qbittorrent`, `svc-tunarr`, `svc-longhorn`, `svc-argocd`, `svc-proxmox`, `svc-pelican`, `svc-hermes`, `svc-seerr`, `svc-jellyfin`, `svc-lan`, `svc-ssh`, `svc-canary`, `svc-open-wearables`, `svc-oddreads`, `svc-cliproxyapi`, `svc-nextcloud`, `svc-immich`, `svc-vaultwarden`, `svc-speedtest`, and `svc-defriend`. The CPA permission grants both the proxy and its usage dashboard. The `netbird-enroll` group is the enrollment permission. The NetBird application admits it and the restricted [`guest`](#guests) group.
 
 Two role presets assign permissions in one step. A member inherits every parent group, so a role's parents are the permissions it grants. `role-admin` parents are every `svc-*` group plus `netbird-enroll`. `role-family` parents are `svc-jellyfin`, `svc-seerr`, `svc-immich`, `svc-nextcloud`, and `netbird-enroll`.
 
-The NetBird profile scope emits a `groups` claim with only these permission names. NetBird never sees `role-*` presets or other Hecate groups, and no permission grants admin inside an application. NetBird creates each name as a JWT-issued group the first time a user holding it signs in; never create these groups through the NetBird API or dashboard. The hourly sync job edits membership only.
+The NetBird profile scope emits a `groups` claim with only these permission names and `guest`. NetBird never sees `role-*` presets or other Hecate groups, and no permission grants admin inside an application. NetBird creates each name as a JWT-issued group the first time a user holding it signs in; never create these groups through the NetBird API or dashboard. The hourly sync job edits membership only.
 
 The blueprint at `argocd/authentik/netbird-blueprint.yaml` defines every group and preset. The `Hecate login` section in `hosts/yggdrasil-olympus-1/README.md` covers recreating the connector and re-seeding the JWT-issued groups after a rebuild.
+
+## Guests
+
+Anyone with a guest sign-up link can create a Hecate account in the `guest` group. Guests sign in to NetBird, and their devices reach only other guests' devices and [AdGuard DNS](#adguard-dns). The NetBird dashboard shows them only their own peers.
+
+Private service records stay out of reach: each zone is distributed to its `svc-*` group, and `svc.olympus.yggdrasil.mia.cx` to `netbird-enroll`. To share a service with a guest, add them to its `svc-*` group in Hecate. Never give a guest `netbird-enroll`.
+
+The `guest` claim passes NetBird's `jwt_allow_groups`. Policy `guests` connects the JWT-issued `guest` group to itself in both directions on all protocols, and `guest` is a source of both `dns-adguard` policies and receives the `adguard` nameserver group. The hourly sync job removes deactivated or deleted guests from the group.
+
+### Create a sign-up link
+
+1. In Hecate, open **Directory > Invitations** and select **Create**.
+2. Choose the flow **Hecate guest sign-up** and leave **Single use** off.
+3. Set **Expires**; Hecate requires it and suggests 48 hours. To also cap sign-ups, set **Custom attributes** to `max_uses: 5`. The link ends at whichever limit comes first.
+4. Save, expand the invitation's row, and copy its link.
+
+To end a link early, delete the invitation.
+
+A seat is used when a guest finishes setting up a passkey or authenticator app, so abandoned sign-ups free their seat. Guests choose their own email address. Hecate doesn't verify it, but refuses one that already belongs to an account. The flow and its checks live in `argocd/authentik/guest-blueprint.yaml`.
+
+### Wire up the guest group
+
+Before sharing the first link, let guests sign in to NetBird. With an admin PAT, add `guest` to `jwt_allow_groups`, keeping `netbird-enroll`:
+
+```bash
+set -euo pipefail
+api=https://netbird.mia.cx/api
+auth="Authorization: Token $ADMIN_PAT"
+json='Content-Type: application/json'
+account=$(curl -sf -H "$auth" $api/accounts | jq '.[0]')
+jq '{settings: (.settings | .jwt_allow_groups = (.jwt_allow_groups + ["guest"] | unique))}' <<<"$account" |
+  curl -sf -X PUT -H "$auth" -H "$json" -d @- "$api/accounts/$(jq -r .id <<<"$account")" > /dev/null
+```
+
+NetBird creates the `guest` group at the first guest's sign-in. Then create the `guests` policy and add `guest` to AdGuard DNS:
+
+```bash
+set -euo pipefail
+api=https://netbird.mia.cx/api
+auth="Authorization: Token $ADMIN_PAT"
+json='Content-Type: application/json'
+guest=$(curl -sf -H "$auth" $api/groups | jq -r '.[] | select(.name == "guest" and .issued == "jwt") | .id')
+test -n "$guest"
+
+jq -n --arg g "$guest" '{name: "guests", enabled: true, rules: [{name: "guests", enabled: true,
+  action: "accept", bidirectional: true, protocol: "all", sources: [$g], destinations: [$g]}]}' |
+  curl -sf -H "$auth" -H "$json" -d @- $api/policies > /dev/null
+
+curl -sf -H "$auth" $api/policies | jq -c --arg g "$guest" '.[] | select(.name | test("^dns-adguard"))
+  | {id, body: {name, description, enabled, rules: (.rules | map(
+      .sources = ([.sources[].id, $g] | unique) | .destinations = [.destinations[].id]))}}' |
+  while read -r p; do
+    jq .body <<<"$p" | curl -sf -X PUT -H "$auth" -H "$json" -d @- "$api/policies/$(jq -r .id <<<"$p")" > /dev/null
+  done
+
+ns=$(curl -sf -H "$auth" $api/dns/nameservers | jq -c '.[] | select(.name == "adguard")')
+jq --arg g "$guest" 'del(.id) | .groups = (.groups + [$g] | unique)' <<<"$ns" |
+  curl -sf -X PUT -H "$auth" -H "$json" -d @- "$api/dns/nameservers/$(jq -r .id <<<"$ns")" > /dev/null
+```
 
 ## Permission revocation
 
