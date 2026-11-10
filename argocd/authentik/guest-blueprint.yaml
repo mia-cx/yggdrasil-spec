@@ -1,7 +1,7 @@
 ## Guest sign-up: a shareable invitation link creates accounts in the `guest`
-## group (defined in netbird-blueprint.yaml). A link ends at its native expiry
-## (Authentik sets 24 hours when left empty) or after `max_uses` activated
-## accounts, whichever comes first. Accounts stay inactive until the guest sets up a passkey or authenticator
+## group (defined in netbird-blueprint.yaml). A link ends at its required
+## expiry or after `max_uses` activated accounts, whichever comes first.
+## Accounts stay inactive until the guest sets up a passkey or authenticator
 ## app. Links and guests stay out of the repo; create links in Hecate.
 apiVersion: v1
 kind: ConfigMap
@@ -167,7 +167,12 @@ data:
                 ak_message("This sign-up link expired during sign-up. Ask Mia for a new one.")
                 return False
             max_uses = invitation.fixed_data.get("max_uses")
-            if max_uses and User.objects.filter(attributes__guest_invitation=str(invitation.pk)).count() >= max_uses:
+            # Re-validated: the invitation may have been edited during sign-up.
+            if max_uses is not None and (
+                type(max_uses) is not int
+                or max_uses < 1
+                or User.objects.filter(attributes__guest_invitation=str(invitation.pk)).count() >= max_uses
+            ):
                 ak_message("This sign-up link filled up during sign-up. Ask Mia for a new one.")
                 return False
             plan = request.context["flow_plan"]

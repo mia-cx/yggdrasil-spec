@@ -171,6 +171,14 @@ shell(f'from authentik.stages.invitation.models import Invitation; Invitation.ob
 c = g.mfa()
 check("revoked link stops activation", not done(c) and user_state("guest-revoked")["active"] is False, c)
 
+# 4b. Edited to an invalid limit during sign-up.
+t = invite({"max_uses": 5})
+g = Guest(t)
+g.profile("guest-zeroed")
+shell(f'from authentik.stages.invitation.models import Invitation; Invitation.objects.filter(pk="{t}").update(fixed_data={{"max_uses": 0}}); print("RESULT ok")')
+c = g.mfa()
+check("limit edited to 0 stops activation", not done(c) and user_state("guest-zeroed")["active"] is False, c)
+
 # 5. Time-limited links.
 check("time-only link works", done(signup(invite(expires_hours=24), "guest-time")))
 check("time + uses link works", done(signup(invite({"max_uses": 3}, expires_hours=24), "guest-both")))
