@@ -107,11 +107,11 @@ Selected hosts run an independent Repair client: `netbird-repair.service`, one u
 
 ## Hecate permission groups
 
-Every private service has a `svc-<service>` group in Hecate: `svc-prowlarr`, `svc-sonarr`, `svc-radarr`, `svc-lidarr`, `svc-readarr`, `svc-sabnzbd`, `svc-qbittorrent`, `svc-tunarr`, `svc-longhorn`, `svc-argocd`, `svc-proxmox`, `svc-pelican`, `svc-hermes`, `svc-seerr`, `svc-jellyfin`, `svc-lan`, `svc-ssh`, `svc-canary`, `svc-open-wearables`, `svc-oddreads`, `svc-cliproxyapi`, `svc-nextcloud`, `svc-immich`, `svc-vaultwarden`, `svc-speedtest`, and `svc-defriend`. The CPA permission grants both the proxy and its usage dashboard. The `netbird-enroll` group is the enrollment permission; the NetBird application requires it.
+Every private service has a `svc-<service>` group in Hecate: `svc-prowlarr`, `svc-sonarr`, `svc-radarr`, `svc-lidarr`, `svc-readarr`, `svc-sabnzbd`, `svc-qbittorrent`, `svc-tunarr`, `svc-longhorn`, `svc-argocd`, `svc-proxmox`, `svc-pelican`, `svc-hermes`, `svc-seerr`, `svc-jellyfin`, `svc-lan`, `svc-ssh`, `svc-canary`, `svc-open-wearables`, `svc-oddreads`, `svc-cliproxyapi`, `svc-nextcloud`, `svc-immich`, `svc-vaultwarden`, `svc-speedtest`, and `svc-defriend`. The CPA permission grants both the proxy and its usage dashboard. The `netbird-enroll` group is the enrollment permission. The NetBird application admits it and the restricted [`guest`](#guests) group.
 
 Two role presets assign permissions in one step. A member inherits every parent group, so a role's parents are the permissions it grants. `role-admin` parents are every `svc-*` group plus `netbird-enroll`. `role-family` parents are `svc-jellyfin`, `svc-seerr`, `svc-immich`, `svc-nextcloud`, and `netbird-enroll`.
 
-The NetBird profile scope emits a `groups` claim with only these permission names. NetBird never sees `role-*` presets or other Hecate groups, and no permission grants admin inside an application. NetBird creates each name as a JWT-issued group the first time a user holding it signs in; never create these groups through the NetBird API or dashboard. The hourly sync job edits membership only.
+The NetBird profile scope emits a `groups` claim with only these permission names and `guest`. NetBird never sees `role-*` presets or other Hecate groups, and no permission grants admin inside an application. NetBird creates each name as a JWT-issued group the first time a user holding it signs in; never create these groups through the NetBird API or dashboard. The hourly sync job edits membership only.
 
 The blueprint at `argocd/authentik/netbird-blueprint.yaml` defines every group and preset. The `Hecate login` section in `hosts/yggdrasil-olympus-1/README.md` covers recreating the connector and re-seeding the JWT-issued groups after a rebuild.
 
@@ -127,7 +127,7 @@ The `guest` claim passes NetBird's `jwt_allow_groups`. Policy `guests` connects 
 
 1. In Hecate, open **Directory > Invitations** and select **Create**.
 2. Choose the flow **Hecate guest sign-up** and leave **Single use** off.
-3. Set **Expires**; left empty, the link lasts 24 hours. To also cap sign-ups, set **Custom attributes** to `max_uses: 5`. The link ends at whichever limit comes first.
+3. Set **Expires**; Hecate requires it and suggests 48 hours. To also cap sign-ups, set **Custom attributes** to `max_uses: 5`. The link ends at whichever limit comes first.
 4. Save, expand the invitation's row, and copy its link.
 
 To end a link early, delete the invitation.
@@ -136,7 +136,19 @@ A seat is used when a guest finishes setting up a passkey or authenticator app, 
 
 ### Wire up the guest group
 
-NetBird creates the `guest` group at the first guest's sign-in. Then, with an admin PAT, create the `guests` policy and add `guest` to AdGuard DNS:
+Before sharing the first link, let guests sign in to NetBird. With an admin PAT, add `guest` to `jwt_allow_groups`, keeping `netbird-enroll`:
+
+```bash
+set -euo pipefail
+api=https://netbird.mia.cx/api
+auth="Authorization: Token $ADMIN_PAT"
+json='Content-Type: application/json'
+account=$(curl -sf -H "$auth" $api/accounts | jq '.[0]')
+jq '{settings: (.settings | .jwt_allow_groups = (.jwt_allow_groups + ["guest"] | unique))}' <<<"$account" |
+  curl -sf -X PUT -H "$auth" -H "$json" -d @- "$api/accounts/$(jq -r .id <<<"$account")" > /dev/null
+```
+
+NetBird creates the `guest` group at the first guest's sign-in. Then create the `guests` policy and add `guest` to AdGuard DNS:
 
 ```bash
 set -euo pipefail

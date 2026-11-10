@@ -123,6 +123,15 @@ in `config.yaml.tmpl`, so a rebuild must recreate them:
    `jwt_allow_groups` blocks sign-in for users with neither `netbird-enroll`
    nor `guest`.
 
+   A new account ships an all-to-all `Default` policy. Delete it before
+   anyone signs in, or guests reach every peer:
+
+   ```bash
+   curl -sf -H "$auth" $api/policies |
+     jq -r '.[] | select(.name == "Default") | .id' |
+     while read -r id; do curl -sf -X DELETE -H "$auth" "$api/policies/$id"; done
+   ```
+
 3. Sign in once through Hecate with an account in `role-admin` so NetBird
    recreates the JWT-issued groups. `guest` returns with the first guest
    sign-in; then [wire up the guest group](../../apps/docs/content/infrastructure/netbird.md#wire-up-the-guest-group).
