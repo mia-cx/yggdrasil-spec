@@ -180,6 +180,15 @@ data:
             ):
                 ak_message("This sign-up link filled up during sign-up. Ask Mia for a new one.")
                 return False
+            # The form lets parallel sign-ups share an email; the first to finish keeps it.
+            taken = (
+                User.objects.filter(email__iexact=user.email)
+                .exclude(pk=user.pk)
+                .exclude(path="users/guests", is_active=False, attributes__guest_invitation__isnull=True)
+            )
+            if taken.exists():
+                ak_message("This email address already has an account.")
+                return False
             plan = request.context["flow_plan"]
             plan.context["groups"] = [Group.objects.get(name="guest")]
             plan.context["prompt_data"] = {

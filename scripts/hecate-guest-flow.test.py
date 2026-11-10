@@ -161,6 +161,17 @@ check(
     c["component"] == "ak-stage-authenticator-validate" and done(g.mfa()),
     c,
 )
+t = invite({"max_uses": 5})
+first, second = Guest(t), Guest(t)
+first.profile("guest-twin-1", email="twin@example.test")
+second.profile("guest-twin-2", email="twin@example.test")
+check("first of two parallel sign-ups with one email activates", done(first.mfa()))
+c = second.mfa()
+check(
+    "second parallel sign-up with that email is refused",
+    not done(c) and user_state("guest-twin-2")["active"] is False,
+    c,
+)
 
 # 3. Filled during sign-up: the slower person is not activated.
 t = invite({"max_uses": 1})
