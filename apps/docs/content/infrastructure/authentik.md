@@ -125,6 +125,14 @@ This repo is using the domain-level model so one Authentik forward-auth provider
 | `media-admin`   | Jellyfin admin              |
 | `netbird-users` | Netbird network access      |
 
+### Sign-in sources
+
+"Sign in with Google" works only for Hecate accounts already linked to that Google account. An unknown Google account sees "Source is not configured for enrollment." and gets no account. To link Google, sign in to Hecate first and connect it under **Settings > Connected services**.
+
+Google replaces the password, not MFA. Like the password sign-in, the `hecate-source-sign-in` flow asks for the account's second factor when it has one.
+
+`argocd/authentik/sources-blueprint.yaml` keeps the Google source's enrollment flow empty and sets its sign-in flow. The source and its OAuth client exist only in Hecate, so the blueprint updates them in place.
+
 ### Creating OIDC Applications
 
 For each service:
