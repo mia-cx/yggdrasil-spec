@@ -154,6 +154,13 @@ g = Guest(t)
 g.profile("guest-abandon")
 check("abandoned account stays inactive", user_state("guest-abandon")["active"] is False)
 check("abandoned sign-up leaves the seat free", done(signup(t, "guest-c")))
+g = Guest(invite({"max_uses": 1}))
+c = g.profile("guest-retry", email="guest-abandon@example.test")
+check(
+    "abandoned guest can retry with the same email",
+    c["component"] == "ak-stage-authenticator-validate" and done(g.mfa()),
+    c,
+)
 
 # 3. Filled during sign-up: the slower person is not activated.
 t = invite({"max_uses": 1})

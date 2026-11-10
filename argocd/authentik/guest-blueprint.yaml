@@ -91,6 +91,8 @@ data:
           length_min: 12
           error_message: Use a password with at least 12 characters.
       # Guest emails are unverified, so they may never match an existing account.
+      # Abandoned guest sign-ups (never activated, so untagged) don't count:
+      # the guest can retry with the same address.
       - model: authentik_policies_expression.expressionpolicy
         id: new-email
         identifiers: {name: hecate-guest-new-email}
@@ -99,7 +101,10 @@ data:
             from authentik.core.models import User
 
             email = request.context["prompt_data"].get("email", "")
-            if User.objects.filter(email__iexact=email).exists():
+            accounts = User.objects.filter(email__iexact=email).exclude(
+                path="users/guests", is_active=False, attributes__guest_invitation__isnull=True
+            )
+            if accounts.exists():
                 ak_message("This email address already has an account.")
                 return False
             return True
