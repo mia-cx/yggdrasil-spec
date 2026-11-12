@@ -216,29 +216,10 @@ IP — update the first nameserver in the `adguard` nameserver group.
 ## Exit node
 
 `netbird-exit` is a third NetBird peer, `olympus-exit`, on its own bridge
-network (`172.30.2.0/24`). It is offered to `guest` and `netbird-enroll`
-devices as the exit node **EU West (Netherlands, Arnhem)**. Auto Apply is
-off: each person picks it in their client's exit node selector (or `netbird
-networks select "EU West (Netherlands, Arnhem)"`), and the choice is saved per
-device. Clients do not fall back on their own: while the peer is offline,
-devices using it lose internet until the user picks another exit or none.
-
-Its entrypoint adds the `EXIT-PRIVATE` chain (mangle `FORWARD`, packets from
-`wt0`), which drops traffic to `10.0.0.0/8`, `172.16.0.0/12`,
-`192.168.0.0/16`, `100.64.0.0/10` and `169.254.0.0/16`, plus IPv6
-`fc00::/7` and `fe80::/10`. NetBird routes `::/0` through the exit too, but
-the bridge has no IPv6 uplink: IPv6 destinations fail as unreachable and
-clients fall back to IPv4. Users reach the internet through the exit, but
-not the LAN, this host, the Docker networks or other mesh peers. Each
-container start creates a fresh network namespace and adds the chain again.
-
-NetBird objects (by name): group `routers-exit` (setup key auto-group);
-network route `EU West (Netherlands, Arnhem)` (`0.0.0.0/0`, routing peers
-`routers-exit`, distributed to `guest` and `netbird-enroll`, access control
-group `exit`, masquerade on, Auto Apply off); policy `exit` (`guest` and
-`netbird-enroll` → `exit` and `routers-exit`, all protocols). Management only
-sends a route to peers that can see its routing peer, so the policy names
-both groups; without `routers-exit` nobody receives the route.
+network (`172.30.2.0/24`): the exit node **EU West (Netherlands, Arnhem)**.
+It is the same container as [`hosts/exit-node`](../exit-node/README.md),
+which documents the private-range drop, the shared NetBird objects and how
+users pick an exit. Its route has `peer` set to `olympus-exit`.
 
 Enrolling after a rebuild or a lost `netbird_exit` volume: mint a one-off
 setup key (auto-group `routers-exit`, 24h expiry), set `NB_EXIT_SETUP_KEY` in
@@ -249,6 +230,8 @@ sudo docker compose up -d netbird-exit
 sudo docker compose exec netbird-exit iptables -t mangle -S EXIT-PRIVATE
 sudo docker compose exec netbird-exit netbird status
 ```
+
+The re-enrolled peer has a new ID: point the route's `peer` at it.
 
 ## Upgrading versions
 
