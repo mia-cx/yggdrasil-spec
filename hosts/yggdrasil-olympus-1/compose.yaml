@@ -80,9 +80,10 @@ services:
       dns:
         ipv4_address: 172.30.1.2
 
-  # Internet exit node for guests. Its own bridge network keeps it off the
-  # host network; GUEST-EXIT drops forwarded mesh traffic to private ranges,
-  # so guests reach the internet but not the LAN, the host or other peers.
+  # Internet exit node "EU West (Netherlands, Arnhem)". Its own bridge network
+  # keeps it off the host network; EXIT-PRIVATE drops forwarded mesh traffic
+  # to private ranges, so users reach the internet but not the LAN, the host
+  # or other peers.
   netbird-exit:
     <<: *default
     image: netbirdio/netbird:0.79.0
@@ -93,24 +94,24 @@ services:
     environment:
       - NB_SETUP_KEY=${NB_EXIT_SETUP_KEY}
       - NB_MANAGEMENT_URL=https://netbird.mia.cx
-      - NB_HOSTNAME=olympus-guest-exit
+      - NB_HOSTNAME=olympus-exit
     entrypoint:
       - /bin/sh
       - -ec
       - |
-        iptables -t mangle -N GUEST-EXIT
+        iptables -t mangle -N EXIT-PRIVATE
         for net in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10 169.254.0.0/16; do
-          iptables -t mangle -A GUEST-EXIT -d "$$net" -j DROP
+          iptables -t mangle -A EXIT-PRIVATE -d "$$net" -j DROP
         done
-        iptables -t mangle -I FORWARD -i wt0 -j GUEST-EXIT
+        iptables -t mangle -I FORWARD -i wt0 -j EXIT-PRIVATE
         # NetBird also routes ::/0 here. With IPv6 forwarding on but no IPv6
         # uplink, the rest is refused as unreachable and clients fall back
         # to IPv4 at once.
-        ip6tables -t mangle -N GUEST-EXIT
+        ip6tables -t mangle -N EXIT-PRIVATE
         for net in fc00::/7 fe80::/10; do
-          ip6tables -t mangle -A GUEST-EXIT -d "$$net" -j DROP
+          ip6tables -t mangle -A EXIT-PRIVATE -d "$$net" -j DROP
         done
-        ip6tables -t mangle -I FORWARD -i wt0 -j GUEST-EXIT
+        ip6tables -t mangle -I FORWARD -i wt0 -j EXIT-PRIVATE
         exec /usr/local/bin/netbird-entrypoint.sh
     volumes:
       - netbird_exit:/var/lib/netbird

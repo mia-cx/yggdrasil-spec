@@ -119,7 +119,7 @@ The blueprint at `argocd/authentik/netbird-blueprint.yaml` defines every group a
 
 Anyone with a guest sign-up link can create a Hecate account in the `guest` group. Guests sign in to NetBird, and their devices reach only other guests' devices and [AdGuard DNS](#adguard-dns). The NetBird dashboard shows them only their own peers.
 
-Guest internet traffic leaves through the `olympus-guest-exit` exit node by default; guests can deselect it in their client. While the exit node is offline, guests have no internet until they deselect it. The exit node reaches the internet only, never the LAN or other peers. See the [olympus-1 README](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/yggdrasil-olympus-1/README.md#guest-exit-node).
+Guests and `netbird-enroll` devices can pick the exit node **EU West (Netherlands, Arnhem)** in their client to send internet traffic through the homelab. It is off until chosen, reaches the internet only, never the LAN or other peers, and has no automatic fallback: while it is offline, devices using it have no internet until the user picks another exit or none. See the [olympus-1 README](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/yggdrasil-olympus-1/README.md#exit-node).
 
 Private service records stay out of reach: each zone is distributed to its `svc-*` group, and `svc.olympus.yggdrasil.mia.cx` to `netbird-enroll`. To share a service with a guest, add them to its `svc-*` group in Hecate. Never give a guest `netbird-enroll`.
 
