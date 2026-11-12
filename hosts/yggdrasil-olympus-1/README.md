@@ -213,6 +213,42 @@ sudo docker compose restart adguard
 If the `netbird_dns` volume is lost, the re-enrolled sidecar gets a new mesh
 IP — update the first nameserver in the `adguard` nameserver group.
 
+## Guest exit node
+
+`netbird-exit` is a third NetBird peer, `olympus-guest-exit`, on its own
+bridge network (`172.30.2.0/24`). Guests send their internet traffic through
+it by default and can switch it off in their client. NetBird clients do not
+fall back on their own: while the peer is offline they keep the default
+route and lose internet until the guest deselects the exit node.
+
+Its entrypoint adds the `GUEST-EXIT` chain (mangle `FORWARD`, packets from
+`wt0`), which drops traffic to `10.0.0.0/8`, `172.16.0.0/12`,
+`192.168.0.0/16`, `100.64.0.0/10` and `169.254.0.0/16`, plus IPv6
+`fc00::/7` and `fe80::/10`. NetBird routes `::/0` through the exit too, but
+the bridge has no IPv6 uplink: IPv6 destinations fail as unreachable and
+clients fall back to IPv4. Guests reach the
+internet, but not the LAN, this host, the Docker networks or other mesh
+peers through the exit. Each container start creates a fresh network
+namespace and adds the chain again.
+
+NetBird objects (by name): group `routers-guest-exit` (setup key
+auto-group); network route `guest-exit` (`0.0.0.0/0`, routing peers
+`routers-guest-exit`, distributed to `guest`, access control group
+`guest-exit`, masquerade on); policy `guest-exit` (`guest` → `guest-exit`
+and `routers-guest-exit`, all protocols). Management only sends a route to
+peers that can see its routing peer, so the policy names both groups;
+without `routers-guest-exit` guests never receive the route.
+
+Enrolling after a rebuild or a lost `netbird_exit` volume: mint a one-off
+setup key (auto-group `routers-guest-exit`, 24h expiry), set
+`NB_EXIT_SETUP_KEY` in `.env`, then:
+
+```bash
+sudo docker compose up -d netbird-exit
+sudo docker compose exec netbird-exit iptables -t mangle -S GUEST-EXIT
+sudo docker compose exec netbird-exit netbird status
+```
+
 ## Upgrading versions
 
 Image tags are pinned in `compose.yaml`. Bump the tag, then

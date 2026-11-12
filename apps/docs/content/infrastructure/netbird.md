@@ -119,6 +119,8 @@ The blueprint at `argocd/authentik/netbird-blueprint.yaml` defines every group a
 
 Anyone with a guest sign-up link can create a Hecate account in the `guest` group. Guests sign in to NetBird, and their devices reach only other guests' devices and [AdGuard DNS](#adguard-dns). The NetBird dashboard shows them only their own peers.
 
+Guest internet traffic leaves through the `olympus-guest-exit` exit node by default; guests can deselect it in their client. While the exit node is offline, guests have no internet until they deselect it. The exit node reaches the internet only, never the LAN or other peers. See the [olympus-1 README](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/yggdrasil-olympus-1/README.md#guest-exit-node).
+
 Private service records stay out of reach: each zone is distributed to its `svc-*` group, and `svc.olympus.yggdrasil.mia.cx` to `netbird-enroll`. To share a service with a guest, add them to its `svc-*` group in Hecate. Never give a guest `netbird-enroll`.
 
 The `guest` claim passes NetBird's `jwt_allow_groups`. Policy `guests` connects the JWT-issued `guest` group to itself in both directions on all protocols, and `guest` is a source of both `dns-adguard` policies and receives the `adguard` nameserver group. The hourly sync job removes deactivated or deleted guests from the group.

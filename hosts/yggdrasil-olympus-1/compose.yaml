@@ -80,6 +80,42 @@ services:
       dns:
         ipv4_address: 172.30.1.2
 
+  # Internet exit node for guests. Its own bridge network keeps it off the
+  # host network; GUEST-EXIT drops forwarded mesh traffic to private ranges,
+  # so guests reach the internet but not the LAN, the host or other peers.
+  netbird-exit:
+    <<: *default
+    image: netbirdio/netbird:0.79.0
+    cap_add: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE]
+    sysctls:
+      net.ipv4.ip_forward: 1
+      net.ipv6.conf.all.forwarding: 1
+    environment:
+      - NB_SETUP_KEY=${NB_EXIT_SETUP_KEY}
+      - NB_MANAGEMENT_URL=https://netbird.mia.cx
+      - NB_HOSTNAME=olympus-guest-exit
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        iptables -t mangle -N GUEST-EXIT
+        for net in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10 169.254.0.0/16; do
+          iptables -t mangle -A GUEST-EXIT -d "$$net" -j DROP
+        done
+        iptables -t mangle -I FORWARD -i wt0 -j GUEST-EXIT
+        # NetBird also routes ::/0 here. With IPv6 forwarding on but no IPv6
+        # uplink, the rest is refused as unreachable and clients fall back
+        # to IPv4 at once.
+        ip6tables -t mangle -N GUEST-EXIT
+        for net in fc00::/7 fe80::/10; do
+          ip6tables -t mangle -A GUEST-EXIT -d "$$net" -j DROP
+        done
+        ip6tables -t mangle -I FORWARD -i wt0 -j GUEST-EXIT
+        exec /usr/local/bin/netbird-entrypoint.sh
+    volumes:
+      - netbird_exit:/var/lib/netbird
+    networks: [exit]
+
   adguard:
     <<: *default
     image: adguard/adguardhome:v0.107.79
@@ -107,6 +143,7 @@ volumes:
   netbird_data:
   netbird_router:
   netbird_dns:
+  netbird_exit:
   adguard_work:
   traefik_letsencrypt:
 
@@ -123,3 +160,9 @@ networks:
       config:
         - subnet: 172.30.1.0/24
           gateway: 172.30.1.1
+  exit:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.2.0/24
+          gateway: 172.30.2.1
