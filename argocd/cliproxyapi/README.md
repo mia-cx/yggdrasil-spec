@@ -63,7 +63,7 @@ in `/management.html`; this deployment imports no desktop credentials.
 
 ### Codex banked resets
 
-The proxy uses [our v8.0.45 fork](../../apps/cliproxyapi/README.md) to redeem
+The proxy uses [our v8.0.69 fork](../../apps/cliproxyapi/README.md) to redeem
 banked Codex reset tickets automatically. A `usage_limit_reached` error
 triggers a fresh quota check for that account. An exhausted weekly window and
 an available ticket allow one redemption, followed by cooldown clearance and

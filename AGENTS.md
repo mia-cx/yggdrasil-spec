@@ -2,6 +2,8 @@
 
 This file provides guidance to WARP (warp.dev) when working with code in this repository.
 
+The README and CONTRIBUTING.md carry the 0rwx AI:W disclosure.
+
 ## Repository overview
 
 Infrastructure-as-code for a personal homelab. The `terraform/` folder uses OpenTofu (Terraform-compatible) to manage providers like Cloudflare and Proxmox; the `docker/` folder contains a minimal containerized toolchain for running OpenTofu reproducibly.
