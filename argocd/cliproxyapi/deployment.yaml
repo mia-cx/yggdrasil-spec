@@ -57,8 +57,8 @@ spec:
               readOnly: true
       containers:
         - name: proxy
-          # v8.0.45 plus weekly-only banked Codex reset recovery.
-          image: ghcr.io/mia-cx/yggdrasil-cliproxyapi@sha256:7d69fbebbc9148243e290c582255301086988ec3d90b758d6c779ab6fc040953
+          # v8.0.69 plus weekly-only banked Codex reset recovery.
+          image: ghcr.io/mia-cx/yggdrasil-cliproxyapi@sha256:fb06bcd3f9d9d597b953cf220cf685af53898114ec75c413bd7c2b7b5a4f2830
           command: [/CLIProxyAPI/CLIProxyAPI]
           args: [--config, /data/config.yaml]
           workingDir: /data
