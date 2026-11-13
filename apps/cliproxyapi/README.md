@@ -1,7 +1,7 @@
 # CLIProxyAPI weekly reset recovery
 
 This image builds the deployed v8.0.69 release with
-[our weekly reset recovery](https://github.com/mia-riezebos/CLIProxyAPI/compare/v8.0.69...1cf6e0a75604183e462d41367716b7a2d24d46c1),
+[our weekly reset recovery](https://github.com/mia-riezebos/CLIProxyAPI/compare/f7ae8feeb3710319f524730849fbe32fde1751e4...1cf6e0a75604183e462d41367716b7a2d24d46c1),
 kept on the fork's `yggdrasil/v8.0.69` branch.
 The Dockerfile pins the fork source commit and archive checksum, then replaces
 the binary in the same upstream runtime image. Auth-manager and config tests
