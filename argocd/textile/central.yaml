@@ -56,9 +56,9 @@ spec:
             - name: MCP_HTTP_PORT
               value: "3000"
             - name: PUBLIC_BASE_URL
-              value: https://staging.textile.cx
+              value: https://textile.cx
             - name: ALLOWED_HOSTS
-              value: staging.textile.cx
+              value: textile.cx
             - name: BOT_HOSTS
               value: http://textile-bot-host-0.textile-bot-host.textile.svc.cluster.local:3000,http://textile-bot-host-1.textile-bot-host.textile.svc.cluster.local:3000
             - name: BOT_HOST_SECRET
@@ -91,7 +91,7 @@ spec:
               port: http
               httpHeaders:
                 - name: Host
-                  value: staging.textile.cx
+                  value: textile.cx
             periodSeconds: 2
             failureThreshold: 30
           readinessProbe:
@@ -100,7 +100,7 @@ spec:
               port: http
               httpHeaders:
                 - name: Host
-                  value: staging.textile.cx
+                  value: textile.cx
             periodSeconds: 5
           livenessProbe:
             httpGet:
@@ -108,7 +108,7 @@ spec:
               port: http
               httpHeaders:
                 - name: Host
-                  value: staging.textile.cx
+                  value: textile.cx
             periodSeconds: 15
           resources:
             requests:
@@ -130,9 +130,10 @@ spec:
       port: 3000
       targetPort: http
 ---
-# Mesh-only: central admits only the private Traefik, per
-# argocd/traefik-internal/README.md, and the website, which signs people in
-# through central's OAuth (web.yaml).
+# Central admits the private Traefik, per argocd/traefik-internal/README.md;
+# the public Traefik, whose route (ingressroute.yaml) passes only the sign-in
+# paths; and the website, which signs people in through central's OAuth
+# (web.yaml).
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -151,6 +152,12 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/instance: traefik-internal-traefik-internal
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: traefik-kube-system
         - podSelector:
             matchLabels:
               app: textile-web
