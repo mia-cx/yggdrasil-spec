@@ -119,6 +119,33 @@ kubectl logs -f <pod> -n <namespace>  # follow
 # Check kube-vip
 kubectl get pods -n kube-system -l app.kubernetes.io/name=kube-vip
 kubectl logs -n kube-system -l app.kubernetes.io/name=kube-vip
+
+# Which node holds the VIPs (control plane and Services)
+kubectl -n kube-system get lease plndr-cp-lock plndr-svcs-lock
+```
+
+### Move the VIPs to hydra-olympus-1
+
+hydra-olympus-1 is the stronger node, and with `externalTrafficPolicy: Local`
+the node holding the Service VIPs serves all ingress. Nothing pins the VIPs
+there: after a failover they stay wherever they landed. Restarting the
+holder's kube-vip container doesn't move them, because it comes back within
+the 5-second lease and renews it. Instead, park its static pod until the other
+node takes both leases, then restore it:
+
+```bash
+# On the current holder (e.g. hydra-olympus-2)
+sudo mv /var/lib/rancher/k3s/agent/pod-manifests/kube-vip.yaml /var/lib/rancher/k3s/agent/kube-vip.yaml.parked
+# Wait until both leases name hydra-olympus-1, then:
+sudo mv /var/lib/rancher/k3s/agent/kube-vip.yaml.parked /var/lib/rancher/k3s/agent/pod-manifests/kube-vip.yaml
+```
+
+The parked kube-vip leaves its VIPs on the interface, so both nodes answer ARP
+for them. Remove them from the old holder; hydra-olympus-1 keeps them:
+
+```bash
+ip -4 -o addr show ens18   # 10.0.128.x addresses other than the node IP
+sudo ip addr del 10.0.128.2/16 dev ens18   # repeat for each stale VIP
 ```
 
 ## Node Management
