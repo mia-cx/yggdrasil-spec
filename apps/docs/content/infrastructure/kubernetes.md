@@ -141,13 +141,18 @@ The static pod in `argocd/k3s/kube-vip.yaml` enables `svc_enable=true` without `
 
 ### K3s Installation
 
+Every server node gets `/etc/rancher/k3s/config.yaml` from [`hosts/hydra-olympus/k3s-config.yaml`](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/hydra-olympus/k3s-config.yaml) before k3s starts. Etcd shares the root disk with Longhorn replicas, and heavy storage I/O can stall it for seconds. With the default leader-election timings, the embedded cloud-controller-manager then loses its lease and the whole k3s process exits. The file stretches those timings to 60/40/5 s.
+
 ```bash
+sudo install -D -m600 hosts/hydra-olympus/k3s-config.yaml /etc/rancher/k3s/config.yaml
 curl -sfL https://get.k3s.io | sh -s - server \
   --cluster-init \
   --tls-san=${VIP} \
   --tls-san=10.0.1.3 \
   --disable=servicelb
 ```
+
+To change the file on running servers, install it and run `sudo systemctl restart k3s` on one node at a time. Wait until `kubectl get --raw /readyz` passes before the next node.
 
 Longhorn's `longhorn` is the only default StorageClass. K3s marks its own `local-path` as default too and re-applies that at every start, so on every server node, stop K3s from re-applying the `local-storage` manifest, then unmark `local-path` once:
 
