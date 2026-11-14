@@ -32,7 +32,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: sync
-              image: node:24.22.1-alpine
+              image: node:24.22.3-alpine
               command: ["node", "/app/main.ts"]
               securityContext:
                 runAsNonRoot: true
