@@ -18,10 +18,9 @@ spec:
     podTemplate:
       spec:
         containers:
-          # Operator v0.8.0 sets NB_DISABLE_UPDATE_SETTINGS=true, which makes the
-          # >=0.73 client daemon reject Login because env-provided
-          # NB_MANAGEMENT_URL counts as a config override. Fixed upstream on
-          # main, unreleased; force the gate off for these ephemeral pods.
+          # With NB_DISABLE_UPDATE_SETTINGS=true the client daemon rejects Login,
+          # because env-provided NB_MANAGEMENT_URL counts as a config override.
+          # Keep the gate off for these ephemeral pods.
           - name: netbird
             env:
               - name: NB_DISABLE_UPDATE_SETTINGS

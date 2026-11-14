@@ -1,6 +1,6 @@
 # NetBird operator
 
-Argo CD deploys the NetBird operator `0.8.0` Helm chart from the upstream OCI
+Argo CD deploys the NetBird operator `0.9.0` Helm chart from the upstream OCI
 repository. It also applies the `k8s-routers` NetworkRouter, which runs four
 routing pods. A `DoNotSchedule` topology spread keeps at most two pods per
 node. Pod DNS stays on CoreDNS and the pods use no host networking.
@@ -47,10 +47,9 @@ policies.
 - The operator also runs the legacy NBRoutingPeer, NBResource, NBGroup, and
   NBPolicy controllers unconditionally. Orphaned legacy `nb*` CRs in the
   cluster get reconciled. Remove them first.
-- Operator v0.8.0 injects `NB_DISABLE_UPDATE_SETTINGS=true` into routing
-  pods. With client 0.73+ the daemon then rejects Login because
-  `NB_MANAGEMENT_URL` counts as a config override. The NetworkRouter
-  `workloadOverride` sets it back to `false` (upstream removed it on main).
+- With `NB_DISABLE_UPDATE_SETTINGS=true` the routing client rejects Login,
+  because `NB_MANAGEMENT_URL` counts as a config override. The NetworkRouter
+  `workloadOverride` keeps it `false`.
 - Pod DNS resolves `*.mia.cx` to the Traefik VIP, but the relay/STUN server
   lives on the Repair VPS. A server block in the `mia.server` key of
   `argocd/k3s/coredns-custom.yaml` forwards `netbird-relay.mia.cx` and

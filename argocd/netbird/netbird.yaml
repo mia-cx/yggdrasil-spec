@@ -41,7 +41,7 @@ metadata:
 spec:
   entryPoints: [websecure]
   routes:
-    # gRPC services on netbird-server 0.79.0 need h2c; WebSockets cannot ride
+    # gRPC services on netbird-server need h2c; WebSockets cannot ride
     # h2c, so /relay, /ws-proxy/, /api, /oauth2, and the dashboard use the
     # plain HTTP catch-all.
     - match: Host(`netbird.mia.cx`) && (PathPrefix(`/signalexchange.SignalExchange/`) || PathPrefix(`/management.ManagementService/`) || PathPrefix(`/management.ProxyService/`))
