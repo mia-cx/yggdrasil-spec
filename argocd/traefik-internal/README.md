@@ -64,7 +64,7 @@ Each private service gets its own enforceable network destination:
 | vaultwarden    | 10025           | 10.43.0.152 | res-vaultwarden    | svc-vaultwarden    | warden.mia.cx ¹                   |
 | defriend       | 10026           | 10.43.0.153 | res-defriend       | svc-defriend       | defriend.mia.cx                   |
 | t3code         | 10027           | 10.43.0.154 | res-t3code         | agent-grok ²       | t3.yggdrasil.mia.cx               |
-| textile        | 10028           | 10.43.0.155 | res-textile        | svc-textile        | staging.textile.cx                |
+| textile        | 10028           | 10.43.0.155 | res-textile        | svc-textile        | textile.cx                        |
 
 ¹ Also answers on its `*.yggdrasil.mia.cx` alias (`jellyfin.`, `seerr.`,
 `hermes.`, `vaultwarden.`), with a DNS zone per name.
@@ -91,6 +91,9 @@ Since 2026-10-22 everything else is mesh-only. The public Traefik keeps:
   `svc-nextcloud` still resolve it to the private route.
 - Hermes' Microsoft Graph webhook (`hermes.mia.cx/msgraph/webhook`), which
   Microsoft's servers call.
+- Textile's website and its two browser sign-in paths (`textile.cx`), for
+  the closed alpha's sign-up. Peers in `svc-textile` resolve it to the private
+  route, the only one that serves MCP, voice and workflows.
 - Two `ClientIP`-restricted machine paths: Wings to the panel's remote API
   (`10.0.1.6`), and the panel to Wings (pod IPs `10.42.0.0/16`).
 
@@ -156,7 +159,9 @@ the JWT-issued `svc-textile` group: policy `textile` (`svc-textile` →
 (search domain off) → `10.43.0.155`, distributed to `svc-textile`. Hephaestus,
 a setup-key peer with no user, gets in through the API-issued group
 `textile-clients-hephaestus` and its policy `hephaestus-textile` (TCP 443 to
-`res-textile`); the zone is also distributed to that group.
+`res-textile`); the zone is also distributed to that group. When textile's
+website goes public at `textile.cx`, that zone becomes `textile.cx`, with the
+same record and groups (step 4 in `argocd/textile/README.md`).
 
 NetBird 0.79.0 doesn't push DNS zone or record changes to connected peers.
 The server logs `failed to get network map data ... context canceled`, and
