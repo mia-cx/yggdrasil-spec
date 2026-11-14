@@ -37,6 +37,6 @@ metadata:
   namespace: longhorn-system
 data:
   default-setting.yaml: |-
-    priority-class: longhorn-critical
-    disable-revision-counter: true
+    priority-class: "longhorn-critical"
+    disable-revision-counter: "{\"v1\":\"true\"}"
     default-replica-count: 2
