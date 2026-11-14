@@ -29,7 +29,7 @@ services:
   # Combined server: Management + Signal + Relay (+ embedded IdP at /oauth2).
   netbird-server:
     <<: *default
-    image: netbirdio/netbird-server:0.79.0
+    image: netbirdio/netbird-server:0.82.1
     volumes:
       - netbird_data:/var/lib/netbird
       - ./config.yaml:/etc/netbird/config.yaml:ro
@@ -38,7 +38,7 @@ services:
 
   dashboard:
     <<: *default
-    image: netbirdio/dashboard:v2.92.0
+    image: netbirdio/dashboard:v2.96.1
     env_file: ./dashboard.env
     networks: [netbird]
 
@@ -47,7 +47,7 @@ services:
   # routers-olympus. Spent after the first enrollment; state lives in the volume.
   netbird-router:
     <<: *default
-    image: netbirdio/netbird:0.79.0
+    image: netbirdio/netbird:0.82.1
     network_mode: host
     cap_add: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE]
     environment:
@@ -65,7 +65,7 @@ services:
   # it, the mesh interface does not.
   netbird-dns:
     <<: *default
-    image: netbirdio/netbird:0.79.0
+    image: netbirdio/netbird:0.82.1
     cap_add: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE]
     environment:
       - NB_SETUP_KEY=${NB_DNS_SETUP_KEY}

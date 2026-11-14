@@ -6,8 +6,8 @@ nothing migrated from it. Public HTTPS goes through the K3s Traefik, which
 forwards to the VM Traefik on `:8080`. Guest port `:8443` answers directly
 with its own certificate for diagnosis and K3s-independent access.
 
-Stack: Traefik v3.7.13, netbird-server 0.79.0, dashboard v2.92.0, and a
-netbird 0.79.0 client (netbird-router) that routes the mesh into the LAN.
+Stack: Traefik v3.7.13, netbird-server 0.82.1, dashboard v2.96.1, and a
+netbird 0.82.1 client (netbird-router) that routes the mesh into the LAN.
 Hecate SSO replaces the embedded IdP in a later step; relay/STUN moves to the
 Repair VPS later too — `config.yaml.tmpl` marks the temporary Cloudflare STUN.
 
@@ -215,8 +215,22 @@ IP — update the first nameserver in the `adguard` nameserver group.
 
 ## Upgrading versions
 
-Image tags are pinned in `compose.yaml`. Bump the tag, then
-`sudo docker compose pull && sudo docker compose up -d`. Check the NetBird
+Image tags are pinned in `compose.yaml`. Server upgrades run one-way store
+migrations, so back up the store first:
+
+```bash
+cd /opt/netbird
+B=/root/nb-backup-$(date +%F); sudo mkdir -p $B
+sudo docker compose stop netbird-server
+sudo docker run --rm -v netbird_netbird_data:/d -v $B:/b alpine \
+  tar czf /b/netbird_data.tgz -C /d .
+sudo cp -a compose.yaml config.yaml .env $B/
+```
+
+Then bump the tag and run
+`sudo docker compose pull && sudo docker compose up -d`. Recreating
+`netbird-dns` can leave AdGuard in the old container's network namespace, so follow it with
+`sudo docker compose up -d --force-recreate adguard`. Check the NetBird
 release notes for config changes; `config.yaml.tmpl` follows the combined
 server schema (`combined/config.yaml.example` in netbirdio/netbird).
 

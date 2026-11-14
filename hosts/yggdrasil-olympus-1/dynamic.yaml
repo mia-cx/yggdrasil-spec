@@ -1,6 +1,6 @@
 # Traefik dynamic config (file provider) for netbird.mia.cx.
 # Path split follows the official self-hosted Traefik template for
-# netbird-server 0.79.0: gRPC services need h2c; relay/signal/management
+# netbird-server: gRPC services need h2c; relay/signal/management
 # WebSockets, the REST API, and the embedded IdP stay plain HTTP because
 # WebSockets cannot ride h2c. The dashboard is the catch-all.
 http:
