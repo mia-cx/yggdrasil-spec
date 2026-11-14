@@ -33,7 +33,7 @@ spec:
                     operator: Exists
       containers:
         - name: ms365-mcp
-          image: node:24.22.1-alpine
+          image: node:24.22.3-alpine
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
