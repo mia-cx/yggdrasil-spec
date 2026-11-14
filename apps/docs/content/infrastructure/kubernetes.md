@@ -149,6 +149,8 @@ curl -sfL https://get.k3s.io | sh -s - server \
   --disable=servicelb
 ```
 
+Every server node also gets `/etc/rancher/k3s/config.yaml` from [`hosts/hydra-olympus/k3s-config.yaml`](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/hydra-olympus/k3s-config.yaml). Etcd shares the root disk with Longhorn replicas, and heavy storage I/O can stall it for seconds. With the default leader-election timings, the embedded cloud-controller-manager then loses its lease and the whole k3s process exits. The file stretches those timings to 60/40/5 s.
+
 Longhorn's `longhorn` is the only default StorageClass. K3s marks its own `local-path` as default too and re-applies that at every start, so on every server node, stop K3s from re-applying the `local-storage` manifest, then unmark `local-path` once:
 
 ```bash

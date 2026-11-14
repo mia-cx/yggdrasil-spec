@@ -1,0 +1,17 @@
+# /etc/rancher/k3s/config.yaml on every server node; merged with the unit's flags.
+# Etcd shares the root disk with Longhorn replicas, so heavy storage I/O can stall
+# it for seconds. With the default 15/10/2 s leader election, the embedded
+# controllers lose their lease during such a stall and k3s exits. 60/40/5 s rides
+# it out; with two etcd members there is no faster failover to lose.
+kube-controller-manager-arg:
+  - leader-elect-lease-duration=60s
+  - leader-elect-renew-deadline=40s
+  - leader-elect-retry-period=5s
+kube-scheduler-arg:
+  - leader-elect-lease-duration=60s
+  - leader-elect-renew-deadline=40s
+  - leader-elect-retry-period=5s
+kube-cloud-controller-manager-arg:
+  - leader-elect-lease-duration=60s
+  - leader-elect-renew-deadline=40s
+  - leader-elect-retry-period=5s
