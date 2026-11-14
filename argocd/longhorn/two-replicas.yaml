@@ -28,6 +28,7 @@ data:
       unmapMarkSnapChainRemoved: "ignored"
       disableRevisionCounter: "true"
       dataEngine: "v1"
+      backupTargetName: "default"
 ---
 apiVersion: v1
 kind: ConfigMap
