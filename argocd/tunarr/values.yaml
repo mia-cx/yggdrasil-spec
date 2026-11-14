@@ -21,7 +21,7 @@ controllers:
       main:
         image:
           repository: docker.io/chrisbenincasa/tunarr
-          tag: 2026.10.3
+          tag: 2026.11.2
           pullPolicy: IfNotPresent
         env:
           TZ: Europe/Amsterdam
