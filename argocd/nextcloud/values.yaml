@@ -3,7 +3,7 @@
 ## Install: helm repo add nextcloud https://nextcloud.github.io/helm/
 
 image:
-  tag: 34.0.6-apache
+  tag: 35.0.3-apache
 
 nextcloud:
   host: cloud.mia.cx
@@ -112,11 +112,13 @@ persistence:
 cronjob:
   enabled: true
 
+# The entrypoint runs `occ upgrade` before serving. A restart mid-upgrade
+# leaves the database half-migrated, so allow 30 minutes.
 startupProbe:
   enabled: true
   initialDelaySeconds: 30
   periodSeconds: 10
-  failureThreshold: 30
+  failureThreshold: 180
 
 livenessProbe:
   enabled: true
