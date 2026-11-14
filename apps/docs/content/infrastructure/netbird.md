@@ -99,7 +99,7 @@ Verify this behavior during the pilot. It does not establish availability of eve
 
 A Hetzner VPS (`yggdrasil-repair-1`, `178.105.231.90`) runs an independent NetBird stack for the Repair mesh at `netbird-repair.mia.cx`: combined `netbird-server` (Management, Signal, embedded Relay + STUN on UDP 3478, embedded IdP with a local admin), the dashboard, and Traefik with Let's Encrypt HTTP-01. It depends on nothing at home: no Hecate, no cluster, no LAN.
 
-The same VPS also runs a standalone `netbirdio/relay` for the primary mesh: `rels://netbird-relay.mia.cx:443` (WebSocket relay through Traefik) plus STUN on UDP 3479. The two roles share only the host; the Repair mesh uses its own embedded relay, and the only shared secret is `NETBIRD_RELAY_AUTH_SECRET` in each host's `/opt/netbird/.env`.
+The same VPS also runs a standalone `netbirdio/relay` for the primary mesh: `rels://netbird-relay.mia.cx:443` (WebSocket relay through Traefik) plus STUN on UDP 3479. The two roles share only the host; the Repair mesh uses its own embedded relay, and the only shared secret is `NETBIRD_RELAY_AUTH_SECRET` in each host's `/opt/netbird/.env`. It also runs the primary-mesh exit node `repair-exit` as a separate compose project in `/opt/netbird-exit` ([`hosts/exit-node`](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/exit-node/README.md)); if home is down, that exit goes offline and the Repair stack is unaffected.
 
 Host details live in `hosts/yggdrasil-repair-1/README.md` (stack, secrets, backups, device enrollment) and `hosts/yggdrasil-olympus-1/README.md` (external relay rotation). The VPS, its IPs, firewall, and DNS records are managed by `terraform/repair` (OpenTofu); rebuilds are explicit `tofu apply -replace=hcloud_server.repair`.
 
@@ -118,6 +118,8 @@ The blueprint at `argocd/authentik/netbird-blueprint.yaml` defines every group a
 ## Guests
 
 Anyone with a guest sign-up link can create a Hecate account in the `guest` group. Guests sign in to NetBird, and their devices reach only other guests' devices and [AdGuard DNS](#adguard-dns). The NetBird dashboard shows them only their own peers.
+
+Guests and `netbird-enroll` devices can pick an exit node in their client to send internet traffic through it: **EU West (Netherlands, Arnhem)** at home or **EU Central (Germany, Nuremberg)** on the Repair VPS. Exits are off until chosen, reach the internet only, never a LAN or other peers, and have no automatic fallback: while one is offline, devices using it have no internet until the user picks another exit or none. See [`hosts/exit-node`](https://github.com/mia-cx/yggdrasil-spec/blob/main/hosts/exit-node/README.md).
 
 Private service records stay out of reach: each zone is distributed to its `svc-*` group, and `svc.olympus.yggdrasil.mia.cx` to `netbird-enroll`. To share a service with a guest, add them to its `svc-*` group in Hecate. Never give a guest `netbird-enroll`.
 

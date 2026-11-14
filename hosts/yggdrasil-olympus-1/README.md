@@ -213,6 +213,26 @@ sudo docker compose restart adguard
 If the `netbird_dns` volume is lost, the re-enrolled sidecar gets a new mesh
 IP — update the first nameserver in the `adguard` nameserver group.
 
+## Exit node
+
+`netbird-exit` is a third NetBird peer, `olympus-exit`, on its own bridge
+network (`172.30.2.0/24`): the exit node **EU West (Netherlands, Arnhem)**.
+It is the same container as [`hosts/exit-node`](../exit-node/README.md),
+which documents the private-range drop, the shared NetBird objects and how
+users pick an exit. Its route has `peer` set to `olympus-exit`.
+
+Enrolling after a rebuild or a lost `netbird_exit` volume: mint a one-off
+setup key (auto-group `routers-exit`, 24h expiry), set `NB_EXIT_SETUP_KEY` in
+`.env`, then:
+
+```bash
+sudo docker compose up -d netbird-exit
+sudo docker compose exec netbird-exit iptables -t mangle -S EXIT-PRIVATE
+sudo docker compose exec netbird-exit netbird status
+```
+
+The re-enrolled peer has a new ID: point the route's `peer` at it.
+
 ## Upgrading versions
 
 Image tags are pinned in `compose.yaml`. Bump the tag, then
