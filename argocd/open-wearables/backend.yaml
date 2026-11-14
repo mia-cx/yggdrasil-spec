@@ -48,7 +48,7 @@ spec:
                     operator: Exists
       containers:
         - name: api
-          image: themomentum/open-wearables-backend:0.10.0
+          image: themomentum/open-wearables-backend:0.11.0
           command: [scripts/start/app.sh]
           ports:
             - name: http
@@ -118,7 +118,7 @@ spec:
                     operator: Exists
       containers:
         - name: worker
-          image: themomentum/open-wearables-backend:0.10.0
+          image: themomentum/open-wearables-backend:0.11.0
           command: [scripts/start/worker.sh]
           envFrom:
             - configMapRef:
@@ -165,7 +165,7 @@ spec:
                     operator: Exists
       containers:
         - name: beat
-          image: themomentum/open-wearables-backend:0.10.0
+          image: themomentum/open-wearables-backend:0.11.0
           command: [scripts/start/beat.sh]
           envFrom:
             - configMapRef:
