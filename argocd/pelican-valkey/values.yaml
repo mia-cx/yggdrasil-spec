@@ -12,7 +12,7 @@ affinity:
             - key: workloads/games
               operator: Exists
 
-dataStorage:
+persistence:
   enabled: true
-  requestedSize: 1Gi
-  className: longhorn
+  size: 1Gi
+  storageClass: longhorn
