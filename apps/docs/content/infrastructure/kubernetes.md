@@ -137,7 +137,7 @@ curl -sL https://kube-vip.io/manifests/rbac.yaml \
 sudo cp argocd/k3s/kube-vip.yaml /var/lib/rancher/k3s/agent/pod-manifests/kube-vip.yaml
 ```
 
-The static pod in `argocd/k3s/kube-vip.yaml` enables both `svc_enable=true` and `svc_election=true`. That second flag is important for `externalTrafficPolicy: Local`: kube-vip will only elect a leader for a `LoadBalancer` Service from nodes that have a local backing pod, so the Traefik VIP can fail over without landing on a node that would drop ingress traffic.
+The static pod in `argocd/k3s/kube-vip.yaml` enables `svc_enable=true` without `svc_election`, so one lease (`plndr-svcs-lock`) decides which node announces every Service VIP. kube-vip elects its leaders through the local apiserver. Its lease timings (30 s lease, 20 s renew deadline) outlast a stalled apiserver; shorter timings dropped every VIP whenever etcd slowed under load.
 
 ### K3s Installation
 
@@ -163,7 +163,7 @@ sudo kubectl create configmap -n kube-system kubevip \
   --from-literal range-global=10.0.128.2-10.0.128.60
 ```
 
-Service VIPs such as Traefik (`10.0.128.2`) are still advertised by a real node on the LAN. kube-vip elects which node owns each Service VIP; with `svc_election=true` and a Service using `externalTrafficPolicy: Local`, only nodes with a local endpoint are eligible for that VIP.
+Service VIPs such as Traefik (`10.0.128.2`) are still advertised by a real node on the LAN, whichever node holds `plndr-svcs-lock`. A Service using `externalTrafficPolicy: Local` therefore needs a backing pod on every server node.
 
 ### Local kubectl Access
 
