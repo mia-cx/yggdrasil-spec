@@ -112,11 +112,13 @@ persistence:
 cronjob:
   enabled: true
 
+# The entrypoint runs `occ upgrade` before serving. A restart mid-upgrade
+# leaves the database half-migrated, so allow 30 minutes.
 startupProbe:
   enabled: true
   initialDelaySeconds: 30
   periodSeconds: 10
-  failureThreshold: 30
+  failureThreshold: 180
 
 livenessProbe:
   enabled: true
