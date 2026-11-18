@@ -58,7 +58,7 @@ spec:
       containers:
         - name: proxy
           # v8.0.77 plus weekly-only banked Codex reset recovery.
-          image: ghcr.io/mia-cx/yggdrasil-cliproxyapi@sha256:fb06bcd3f9d9d597b953cf220cf685af53898114ec75c413bd7c2b7b5a4f2830
+          image: ghcr.io/mia-cx/yggdrasil-cliproxyapi@sha256:2a8eef546256058994b196566f4a909ec542bf5201feb2fbbb641c678f7ccf9b
           command: [/CLIProxyAPI/CLIProxyAPI]
           args: [--config, /data/config.yaml]
           workingDir: /data
