@@ -229,8 +229,9 @@ restore brings back the old value.
 
 ## Mia's devices
 
-Setup key: `mia-devices`, reusable, in
-`~/.config/yggdrasil/repair-setup-key` on the Mac.
+Setup key: `mia-devices`, reusable, `repair-operators` only, expires
+2027-11-18, in `~/.config/yggdrasil/repair-setup-key` on the Mac. Rotate it
+before it expires.
 
 Desktop (macOS/Linux) uses a second profile so the primary mesh stays
 untouched:
