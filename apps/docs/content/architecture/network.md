@@ -98,11 +98,15 @@ CIDR allocation at the primary site. Other sites follow the same /24 roles with 
 
 ## Kubernetes VIPs (10.0.128.0/24)
 
-| IP            | Purpose                                       |
-| ------------- | --------------------------------------------- |
-| 10.0.128.1    | Control plane API (kube-vip)                  |
-| 10.0.128.2    | Traefik/Ingress (router forwards 80/443 here) |
-| 10.0.128.3-60 | Future LoadBalancer services                  |
+| IP            | Purpose                                        |
+| ------------- | ---------------------------------------------- |
+| 10.0.128.1    | Control plane API (kube-vip)                   |
+| 10.0.128.2    | Traefik/Ingress (router forwards 80/443 here)  |
+| 10.0.128.3    | CoreDNS LoadBalancer (legacy exposure)         |
+| 10.0.128.4    | qBittorrent BitTorrent ports                   |
+| 10.0.128.5    | ms365-mcp private endpoint (Hermes)            |
+| 10.0.128.6    | tastebase-db Postgres LAN endpoint             |
+| 10.0.128.7-60 | Future LoadBalancer services                   |
 
 ## Proxmox Network Bridges
 
