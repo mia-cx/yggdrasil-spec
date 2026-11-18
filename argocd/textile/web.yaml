@@ -48,8 +48,9 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
-          # The site registers with central and redeems codes server-side. The mesh-only route
-          # refuses pods, so those requests go to central's Service directly, still for its host.
+          # The site registers with central and redeems codes server-side. Neither route serves
+          # /register or /token to a pod, so those requests go to central's Service directly,
+          # still for its host.
           args: ["--external-addr", "central=textile-central.textile.svc.cluster.local:3000"]
           ports:
             - name: http
@@ -57,7 +58,7 @@ spec:
           env:
             # Central is the site's OAuth issuer: one login, and central's allowlist decides access.
             - name: CENTRAL_URL
-              value: https://staging.textile.cx
+              value: https://textile.cx
             - name: SESSION_KEY
               valueFrom:
                 secretKeyRef:
@@ -72,7 +73,7 @@ spec:
               port: http
               httpHeaders:
                 - name: Host
-                  value: staging.textile.cx
+                  value: textile.cx
                 - name: X-Forwarded-Proto
                   value: https
             periodSeconds: 2
@@ -108,8 +109,8 @@ spec:
       port: 8080
       targetPort: http
 ---
-# Mesh-only: the site admits only the private Traefik, per
-# argocd/traefik-internal/README.md.
+# The site admits only the two Traefiks: the private one, per
+# argocd/traefik-internal/README.md, and the public one.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -128,6 +129,12 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/instance: traefik-internal-traefik-internal
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: traefik-kube-system
       ports:
         - protocol: TCP
           port: 8080

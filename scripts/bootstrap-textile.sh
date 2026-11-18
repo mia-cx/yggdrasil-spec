@@ -307,7 +307,7 @@ else
   say "Staging logs in through the Textile application."
   open_url "https://discord.com/developers/applications/$APP_ID/oauth2"
   step "Under Redirects, click Add Redirect and enter:"
-  say "    ${BOLD}https://staging.textile.cx/auth/discord/callback${RESET}"
+  say "    ${BOLD}https://textile.cx/auth/discord/callback${RESET}"
   step "Click Save Changes."
   step "Under Client Secret, click Reset Secret, confirm, then copy the new secret."
   warn "Resetting signs out anything else already using this application's secret."

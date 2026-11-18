@@ -1,5 +1,51 @@
-# Mesh-only: the class annotation keeps this off the public Traefik; the
-# private one serves it on the `textile` entrypoint only.
+# Public: the website and the two central paths a browser needs to sign in.
+# GET /authorize shows central's consent page and POST /authorize sends the
+# person on to Discord; Discord then returns them to /auth/discord/callback,
+# the application's only redirect. The site calls /register and /token
+# server-side through central's Service, so they stay off this route. Central's
+# other paths match neither rule and get the public Traefik's 404.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: textile-public
+  namespace: textile
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: >-
+        Host(`textile.cx`) && (Path(`/authorize`) || Path(`/auth/discord/callback`))
+      kind: Rule
+      priority: 100
+      # Shared access logs keep request headers, and the site's session cookie
+      # holds a central access token.
+      observability:
+        accessLogs: false
+      services:
+        - name: textile-central
+          port: 3000
+    # Keep this list in step with central's paths on the private route below.
+    - match: >-
+        Host(`textile.cx`) && !(
+        Path(`/mcp`) || Path(`/voice`) ||
+        Path(`/register`) || Path(`/token`) ||
+        Path(`/.well-known/oauth-authorization-server`) ||
+        PathPrefix(`/.well-known/oauth-protected-resource`) ||
+        PathPrefix(`/workflows/`) || PathPrefix(`/health/`))
+      kind: Rule
+      priority: 1
+      observability:
+        accessLogs: false
+      services:
+        - name: textile-web
+          port: 8080
+  # The wildcard in the default TLSStore is *.mia.cx, so name this one.
+  tls:
+    secretName: textile-tls
+---
+# Mesh: the class annotation keeps this off the public Traefik; the private one
+# serves it on the `textile` entrypoint only. Mesh devices resolve textile.cx
+# here, so they reach all of central, MCP included.
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -13,7 +59,7 @@ spec:
   # One host: central's paths go to central, and everything else to the site.
   routes:
     - match: >-
-        Host(`staging.textile.cx`) && (
+        Host(`textile.cx`) && (
         Path(`/mcp`) || Path(`/voice`) ||
         Path(`/register`) || Path(`/authorize`) || Path(`/token`) ||
         PathPrefix(`/auth/discord/`) ||
@@ -25,7 +71,7 @@ spec:
       services:
         - name: textile-central
           port: 3000
-    - match: Host(`staging.textile.cx`)
+    - match: Host(`textile.cx`)
       kind: Rule
       priority: 1
       services:
@@ -34,7 +80,7 @@ spec:
   tls:
     secretName: textile-tls
 ---
-# Namespace-local certificate; nothing outside textile reads it.
+# Namespace-local certificate, served by both Traefiks.
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -43,7 +89,7 @@ metadata:
 spec:
   secretName: textile-tls
   dnsNames:
-    - staging.textile.cx
+    - textile.cx
   issuerRef:
     name: letsencrypt-cloudflare
     kind: ClusterIssuer
