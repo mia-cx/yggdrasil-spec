@@ -51,11 +51,13 @@ Cloudflare token; Mia accepted this on 2026-10-30. Issue the token here; T3
 accepts MCP bearer tokens only with subject `mcp-client`:
 
 ```sh
-t3 auth session issue --label grok-bot --ttl 30d --subject mcp-client \
+t3 auth session issue --label grok-bot --ttl 3650d --subject mcp-client \
   --scope orchestration:read --scope orchestration:operate --token-only
 ```
 
-To revoke it, find the `grok-bot` session ID with `t3 auth session list` and
+The token is long-lived because T3 offers no refresh grant, and its OAuth
+sign-in needs the web app, which this route doesn't serve. Revocation is the
+control: to revoke it, find the `grok-bot` session ID with `t3 auth session list` and
 pass it to `t3 auth session revoke`.
 
 ## Agent clients
