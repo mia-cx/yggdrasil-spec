@@ -1,8 +1,8 @@
 # CLIProxyAPI weekly reset recovery
 
-This image builds the deployed v8.0.69 release with
-[our weekly reset recovery](https://github.com/mia-riezebos/CLIProxyAPI/compare/f7ae8feeb3710319f524730849fbe32fde1751e4...1cf6e0a75604183e462d41367716b7a2d24d46c1),
-kept on the fork's `yggdrasil/v8.0.69` branch.
+This image builds the deployed v8.0.77 release with
+[our weekly reset recovery](https://github.com/mia-riezebos/CLIProxyAPI/compare/a5e8f69e56309e1ef6d6872e667da81fdfbce2ce...cfb19c18378d40bfa950af1436e2d7475145a44f),
+kept on the fork's `yggdrasil/v8.0.77` branch.
 The Dockerfile pins the fork source commit and archive checksum, then replaces
 the binary in the same upstream runtime image. Auth-manager and config tests
 run during the build.
@@ -18,6 +18,6 @@ body `true` after deploying the image; this changes only that field and
 persists it on CPA's volume. Set it to `false` to disable automatic redemption.
 
 The recovery contract and journal are described in the
-[fork documentation](https://github.com/mia-riezebos/CLIProxyAPI/blob/1cf6e0a75604183e462d41367716b7a2d24d46c1/docs/codex-weekly-reset.md).
+[fork documentation](https://github.com/mia-riezebos/CLIProxyAPI/blob/cfb19c18378d40bfa950af1436e2d7475145a44f/docs/codex-weekly-reset.md).
 Keep future updates based on the selected upstream release, and retain its
 existing model catalog and provider behavior unless an upgrade is requested.
