@@ -23,6 +23,7 @@ the primary client.
 | athena (Proxmox)     | 10.0.1.1 | `root@10.0.1.1`                            |
 | yggdrasil-olympus-1  | 10.0.1.4 | `ssh -J root@10.0.1.1 mia@10.0.1.4` (sudo) |
 | hydra-olympus-1      | 10.0.1.3 | `qm guest exec 1003` on athena             |
+| yggdrasil-repair-1   | public   | `mia@178.105.231.90` (sudo)                |
 
 ## Install
 

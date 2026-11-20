@@ -1,0 +1,51 @@
+# Primary-mesh exit node for any Docker host (README.md). Its own bridge
+# network keeps it off the host network; EXIT-PRIVATE drops forwarded mesh
+# traffic to private ranges, so users reach the internet but not the host's
+# LAN, provider networks, cloud metadata or other peers.
+name: netbird-exit
+
+services:
+  netbird-exit:
+    image: netbirdio/netbird:0.79.0
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+        max-file: "2"
+    cap_add: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE]
+    sysctls:
+      net.ipv4.ip_forward: 1
+      net.ipv6.conf.all.forwarding: 1
+    environment:
+      - NB_SETUP_KEY=${NB_SETUP_KEY}
+      - NB_HOSTNAME=${NB_HOSTNAME:?set NB_HOSTNAME in .env}
+      - NB_MANAGEMENT_URL=https://netbird.mia.cx
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        iptables -t mangle -N EXIT-PRIVATE
+        for net in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10 169.254.0.0/16; do
+          iptables -t mangle -A EXIT-PRIVATE -d "$$net" -j DROP
+        done
+        iptables -t mangle -I FORWARD -i wt0 -j EXIT-PRIVATE
+        # NetBird also routes ::/0 here. With IPv6 forwarding on but no IPv6
+        # uplink, the rest is refused as unreachable and clients fall back
+        # to IPv4 at once.
+        ip6tables -t mangle -N EXIT-PRIVATE
+        for net in fc00::/7 fe80::/10; do
+          ip6tables -t mangle -A EXIT-PRIVATE -d "$$net" -j DROP
+        done
+        ip6tables -t mangle -I FORWARD -i wt0 -j EXIT-PRIVATE
+        exec /usr/local/bin/netbird-entrypoint.sh
+    volumes:
+      - state:/var/lib/netbird
+    networks: [exit]
+
+volumes:
+  state:
+
+networks:
+  exit:
+    driver: bridge

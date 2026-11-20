@@ -52,6 +52,19 @@ sudo docker compose up -d
 `.env` is sourced as shell code, so every value must stay shell-safe: no `$`,
 spaces, quotes, or backticks (hex/base64 output is safe).
 
+## Mesh clients
+
+The VPS is a client of both meshes, each isolated from the other and from
+the Repair stack:
+
+- Primary mesh: the exit node **EU Central (Germany, Nuremberg)**, peer
+  `repair-exit`, a separate compose project in `/opt/netbird-exit` with its
+  own `.env` (see [`hosts/exit-node`](../exit-node/README.md)). It needs the
+  primary mesh to work; the Repair stack does not depend on it.
+- Repair mesh: the unprivileged `netbird-repair.service` netstack client from
+  [`hosts/repair-clients`](../repair-clients/README.md), hostname
+  `yggdrasil-repair-1`.
+
 ## OpenTofu
 
 `terraform/repair` owns the VPS, its primary IPs, the Hetzner firewall, and
@@ -216,8 +229,9 @@ restore brings back the old value.
 
 ## Mia's devices
 
-Setup key: `mia-devices`, reusable, in
-`~/.config/yggdrasil/repair-setup-key` on the Mac.
+Setup key: `mia-devices`, reusable, `repair-operators` only, expires
+2027-11-18, in `~/.config/yggdrasil/repair-setup-key` on the Mac. Rotate it
+before it expires.
 
 Desktop (macOS/Linux) uses a second profile so the primary mesh stays
 untouched:
