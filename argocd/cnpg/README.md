@@ -1,6 +1,6 @@
 # CloudNativePG operator
 
-ArgoCD installs the CloudNativePG operator from the upstream release manifest at the tag in `kustomization.yaml`. The database `Cluster`s stay in their own apps (`caelestis`, `immich`, `open-wearables`, `pelican`).
+ArgoCD installs the CloudNativePG operator from the upstream release manifest at the tag in `kustomization.yaml`. The database `Cluster`s stay in their own apps (`immich`, `open-wearables`, `pelican`).
 
 An operator upgrade restarts every database `Cluster` and ends each one with a switchover. Bump the tag in a PR of its own, after reading the release notes for that version.
 

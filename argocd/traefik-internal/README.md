@@ -82,8 +82,7 @@ Since 2026-10-22 everything else is mesh-only. The public Traefik keeps:
 
 - Authentik (`id.mia.cx`, `authentik.yggdrasil.mia.cx`) and NetBird
   (`netbird.mia.cx`), which mesh sign-in needs.
-- `discord.mia.cx` (discord-mcp) and `tac.caelest.is` (Caelestis), which
-  people off the mesh use.
+- `discord.mia.cx` (discord-mcp), which people off the mesh use.
 - Vaultwarden (`warden.mia.cx`, `vaultwarden.yggdrasil.mia.cx`), public
   again since 2026-10-23 so password managers sync off the mesh. Mesh
   devices still resolve it to the private route.
