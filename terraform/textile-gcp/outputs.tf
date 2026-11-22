@@ -23,16 +23,6 @@ output "bot_host_kubernetes_service_account" {
   value       = "${local.bot_host_namespace}/${local.bot_host_service_account}"
 }
 
-output "db_google_service_account" {
-  description = "Email CNPG Cluster textile-db's service account annotates as iam.gke.io/gcp-service-account"
-  value       = google_service_account.db.email
-}
-
-output "db_backup_bucket" {
-  description = "The bucket the Barman Cloud plugin's ObjectStore points at, as gs://<bucket>"
-  value       = google_storage_bucket.db_backups.name
-}
-
 output "secret_ids" {
   description = "Secret Manager secret IDs, keyed by the bot-host env var each feeds"
   value       = { for id, env in local.bot_host_secrets : env => google_secret_manager_secret.bot_host[id].secret_id }

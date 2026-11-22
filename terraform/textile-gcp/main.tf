@@ -1,10 +1,10 @@
 # Textile production bot hosts on Google Cloud: a private GKE Autopilot
-# cluster in us-east1, next to Discord, and the bucket its CloudNativePG
-# database backs up to. Postgres runs in the cluster under CNPG, as staging
-# does on olympus. Nothing here takes inbound traffic: the dispatch Worker
-# reaches bot hosts through Cloudflare Tunnel, which a later change adds. The
-# provider authenticates via Application Default Credentials only (README
-# step 2).
+# cluster in us-east1, next to Discord. The cluster holds no database: bot
+# hosts keep their state on Cloudflare (Durable Objects and D1, pinned to
+# eastern North America). Nothing here takes inbound traffic: the dispatch
+# Worker reaches bot hosts through Cloudflare Tunnel, which a later change
+# adds. The provider authenticates via Application Default Credentials only
+# (README step 2).
 
 locals {
   project = "textile-515510"
@@ -14,13 +14,8 @@ locals {
   bot_host_namespace       = "textile"
   bot_host_service_account = "textile-bot-host"
 
-  # CNPG runs each instance of Cluster `textile-db` as a Kubernetes service
-  # account of the same name, which the Barman Cloud plugin uses for backups.
-  db_service_account = "textile-db"
-
   # Secrets bot hosts read, as Secret Manager IDs. Each maps to the env var
   # staging's bot hosts take from a Kubernetes Secret (argocd/textile/).
-  # DATABASE_URL comes from CNPG's own `textile-db-app` Secret, as on staging.
   bot_host_secrets = {
     "textile-token-vault-key"  = "TOKEN_VAULT_KEY"
     "textile-bot-host-secret"  = "BOT_HOST_SECRET"
@@ -41,7 +36,6 @@ resource "google_project_service" "apis" {
     "iam.googleapis.com",
     "iamcredentials.googleapis.com", # Workload Identity token exchange.
     "secretmanager.googleapis.com",
-    "storage.googleapis.com",
   ])
 
   service = each.value
@@ -153,50 +147,6 @@ resource "google_container_cluster" "textile" {
   # Dataplane V2, which enforces NetworkPolicy.
 
   deletion_protection = true
-}
-
-# --- Database backups --------------------------------------------------------
-
-# CNPG's Barman Cloud plugin archives WAL continuously and writes base
-# backups here, as staging does to RustFS. Barman applies the retention
-# policy itself, so the bucket keeps no lifecycle rules of its own.
-resource "google_storage_bucket" "db_backups" {
-  name                        = "${local.project}-db-backups"
-  location                    = local.region
-  storage_class               = "STANDARD"
-  uniform_bucket_level_access = true
-  public_access_prevention    = "enforced"
-
-  # Backups are the last copy of every stored bot token: never destroy them
-  # from here.
-  lifecycle {
-    prevent_destroy = true
-  }
-
-  depends_on = [google_project_service.apis]
-}
-
-resource "google_service_account" "db" {
-  account_id   = "textile-db"
-  display_name = "Textile database backups"
-
-  depends_on = [google_project_service.apis]
-}
-
-# The database pods act as this account through Workload Identity.
-resource "google_service_account_iam_member" "db_workload_identity" {
-  service_account_id = google_service_account.db.name
-  role               = "roles/iam.workloadIdentityUser"
-  member             = "serviceAccount:${local.project}.svc.id.goog[${local.bot_host_namespace}/${local.db_service_account}]"
-
-  depends_on = [google_container_cluster.textile]
-}
-
-# Barman writes, lists, reads back and prunes its own objects.
-resource "google_storage_bucket_iam_member" "db_backups" {
-  bucket = google_storage_bucket.db_backups.name
-  role   = "roles/storage.objectAdmin"
-  member = google_service_account.db.member
 }
 
 # --- Secrets and identity -----------------------------------------------------
