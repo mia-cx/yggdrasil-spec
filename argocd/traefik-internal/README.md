@@ -144,7 +144,8 @@ release, in the same shape: policy `tunarr` and DNS zone
 
 Added on 2026-10-22, when the rest of the homelab went mesh-only, in the same
 shape: one policy per row of the table above (named after the service), and
-one DNS zone per hostname, distributed to the row's permission group.
+one DNS zone per hostname, distributed to the row's permission group. The rows
+added later, t3code and textile, are dated below.
 
 Added on 2026-10-30 in the same shape for t3code: policy `t3code`
 (`agent-grok` → `res-t3code`, unidirectional TCP 443) and DNS zone
