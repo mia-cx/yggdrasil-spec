@@ -23,22 +23,14 @@ output "bot_host_kubernetes_service_account" {
   value       = "${local.bot_host_namespace}/${local.bot_host_service_account}"
 }
 
-output "sql_connection_name" {
-  description = "Instance connection name for the Cloud SQL Auth Proxy"
-  value       = google_sql_database_instance.textile.connection_name
+output "db_google_service_account" {
+  description = "Email CNPG Cluster textile-db's service account annotates as iam.gke.io/gcp-service-account"
+  value       = google_service_account.db.email
 }
 
-output "sql_private_ip" {
-  description = "The instance's private address in the VPC"
-  value       = google_sql_database_instance.textile.private_ip_address
-}
-
-output "database" {
-  description = "Database name and user for DATABASE_URL"
-  value = {
-    name = google_sql_database.textile.name
-    user = google_sql_user.textile.name
-  }
+output "db_backup_bucket" {
+  description = "The bucket the Barman Cloud plugin's ObjectStore points at, as gs://<bucket>"
+  value       = google_storage_bucket.db_backups.name
 }
 
 output "secret_ids" {

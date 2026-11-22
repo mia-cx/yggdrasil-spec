@@ -1,8 +1,10 @@
 # Textile production bot hosts on Google Cloud: a private GKE Autopilot
-# cluster and Cloud SQL for Postgres in us-east1, next to Discord. Nothing
-# here takes inbound traffic: the dispatch Worker reaches bot hosts through
-# Cloudflare Tunnel, which a later change adds. The provider authenticates
-# via Application Default Credentials only (README step 2).
+# cluster in us-east1, next to Discord, and the bucket its CloudNativePG
+# database backs up to. Postgres runs in the cluster under CNPG, as staging
+# does on olympus. Nothing here takes inbound traffic: the dispatch Worker
+# reaches bot hosts through Cloudflare Tunnel, which a later change adds. The
+# provider authenticates via Application Default Credentials only (README
+# step 2).
 
 locals {
   project = "textile-515510"
@@ -12,17 +14,17 @@ locals {
   bot_host_namespace       = "textile"
   bot_host_service_account = "textile-bot-host"
 
-  # Bump to rotate the database password: the next apply writes a new secret
-  # version and sets the same value on the database user.
-  db_password_version = 1
+  # CNPG runs each instance of Cluster `textile-db` as a Kubernetes service
+  # account of the same name, which the Barman Cloud plugin uses for backups.
+  db_service_account = "textile-db"
 
   # Secrets bot hosts read, as Secret Manager IDs. Each maps to the env var
   # staging's bot hosts take from a Kubernetes Secret (argocd/textile/).
+  # DATABASE_URL comes from CNPG's own `textile-db-app` Secret, as on staging.
   bot_host_secrets = {
     "textile-token-vault-key"  = "TOKEN_VAULT_KEY"
     "textile-bot-host-secret"  = "BOT_HOST_SECRET"
     "textile-allowed-user-ids" = "DISCORD_OAUTH_ALLOWED_USER_IDS"
-    "textile-db-password"      = "DATABASE_URL" # Its password; the URL adds host, user and database.
   }
 }
 
@@ -39,8 +41,7 @@ resource "google_project_service" "apis" {
     "iam.googleapis.com",
     "iamcredentials.googleapis.com", # Workload Identity token exchange.
     "secretmanager.googleapis.com",
-    "servicenetworking.googleapis.com",
-    "sqladmin.googleapis.com",
+    "storage.googleapis.com",
   ])
 
   service = each.value
@@ -154,106 +155,53 @@ resource "google_container_cluster" "textile" {
   deletion_protection = true
 }
 
-# --- Cloud SQL ---------------------------------------------------------------
+# --- Database backups --------------------------------------------------------
 
-# Private service access: Cloud SQL gets addresses from this range, peered
-# into the VPC.
-resource "google_compute_global_address" "sql" {
-  name          = "textile-sql"
-  purpose       = "VPC_PEERING"
-  address_type  = "INTERNAL"
-  address       = "10.16.0.0"
-  prefix_length = 20
-  network       = google_compute_network.textile.id
-}
+# CNPG's Barman Cloud plugin archives WAL continuously and writes base
+# backups here, as staging does to RustFS. Barman applies the retention
+# policy itself, so the bucket keeps no lifecycle rules of its own.
+resource "google_storage_bucket" "db_backups" {
+  name                        = "${local.project}-db-backups"
+  location                    = local.region
+  storage_class               = "STANDARD"
+  uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
 
-resource "google_service_networking_connection" "sql" {
-  network                 = google_compute_network.textile.id
-  service                 = "servicenetworking.googleapis.com"
-  reserved_peering_ranges = [google_compute_global_address.sql.name]
-
-  # Removing the peering fails while Cloud SQL still uses it; the instance's
-  # deletion protection makes that the normal case.
-  deletion_policy = "ABANDON"
-}
-
-resource "google_sql_database_instance" "textile" {
-  name                = "textile"
-  region              = local.region
-  database_version    = "POSTGRES_18" # Staging runs 18 (argocd/textile/postgresql.yaml).
-  deletion_protection = true
-
-  settings {
-    # Enterprise Plus is the default edition for new Postgres 16+ instances.
-    edition = "ENTERPRISE"
-    # The smallest dedicated-core tier, 1 vCPU and 3.75 GB, covered by the
-    # SLA. Shared-core tiers are not.
-    tier                        = "db-custom-1-3840"
-    availability_type           = "ZONAL"
-    disk_type                   = "PD_SSD"
-    disk_size                   = 10
-    disk_autoresize             = true
-    deletion_protection_enabled = true
-
-    ip_configuration {
-      ipv4_enabled    = false
-      private_network = google_compute_network.textile.id
-      # Admits the Cloud SQL Auth Proxy and direct TLS clients.
-      ssl_mode = "ENCRYPTED_ONLY"
-    }
-
-    # Times are UTC. Enterprise keeps at most 7 days of logs for
-    # point-in-time recovery; staging's window is 14.
-    backup_configuration {
-      enabled                        = true
-      start_time                     = "03:00"
-      point_in_time_recovery_enabled = true
-      transaction_log_retention_days = 7
-
-      backup_retention_settings {
-        retained_backups = 14
-      }
-    }
-
-    maintenance_window {
-      day          = 7 # Sunday.
-      hour         = 4
-      update_track = "stable"
-    }
+  # Backups are the last copy of every stored bot token: never destroy them
+  # from here.
+  lifecycle {
+    prevent_destroy = true
   }
 
-  depends_on = [google_service_networking_connection.sql]
+  depends_on = [google_project_service.apis]
 }
 
-resource "google_sql_database" "textile" {
-  name     = "textile"
-  instance = google_sql_database_instance.textile.name
+resource "google_service_account" "db" {
+  account_id   = "textile-db"
+  display_name = "Textile database backups"
+
+  depends_on = [google_project_service.apis]
 }
 
-# Generated per run and never stored: write-only arguments send it to Secret
-# Manager and the database user, and only the version number reaches state.
-ephemeral "random_password" "db" {
-  length  = 32
-  special = false
+# The database pods act as this account through Workload Identity.
+resource "google_service_account_iam_member" "db_workload_identity" {
+  service_account_id = google_service_account.db.name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${local.project}.svc.id.goog[${local.bot_host_namespace}/${local.db_service_account}]"
+
+  depends_on = [google_container_cluster.textile]
 }
 
-resource "google_sql_user" "textile" {
-  name                = "textile"
-  instance            = google_sql_database_instance.textile.name
-  password_wo         = ephemeral.random_password.db.result
-  password_wo_version = local.db_password_version
-}
-
-resource "google_secret_manager_secret_version" "db_password" {
-  secret                 = google_secret_manager_secret.bot_host["textile-db-password"].id
-  secret_data_wo         = ephemeral.random_password.db.result
-  secret_data_wo_version = local.db_password_version
+# Barman writes, lists, reads back and prunes its own objects.
+resource "google_storage_bucket_iam_member" "db_backups" {
+  bucket = google_storage_bucket.db_backups.name
+  role   = "roles/storage.objectAdmin"
+  member = google_service_account.db.member
 }
 
 # --- Secrets and identity -----------------------------------------------------
 
-# Empty containers, except the database password above. Mia adds each other
-# value (README step 5).
+# Empty containers. Mia adds each value (README step 5).
 resource "google_secret_manager_secret" "bot_host" {
   for_each  = local.bot_host_secrets
   secret_id = each.key
@@ -288,13 +236,6 @@ resource "google_service_account_iam_member" "bot_host_workload_identity" {
   member             = "serviceAccount:${local.project}.svc.id.goog[${local.bot_host_namespace}/${local.bot_host_service_account}]"
 
   depends_on = [google_container_cluster.textile]
-}
-
-# Cloud SQL grants connect per project; this project holds one instance.
-resource "google_project_iam_member" "bot_host_sql_client" {
-  project = local.project
-  role    = "roles/cloudsql.client"
-  member  = google_service_account.bot_host.member
 }
 
 resource "google_secret_manager_secret_iam_member" "bot_host" {
