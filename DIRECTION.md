@@ -40,14 +40,19 @@ The NVMe share (`10.0.1.2:/mnt/nvme`) holds hot data: Nextcloud, VM disks and
 download staging. Datasets, corpora and run outputs live on the HDD share under
 `/mnt/media/private`.
 
-Mia's Nextcloud is being restructured into a discoverable archive, in order:
+Mia's Nextcloud is a discoverable archive, built in three steps:
 
-1. Merge byte-identical duplicates and move files into the new layout. Personal
-   areas are type-first: `Photos/YYYY/YYYY-MM/`, `Documents/`, and `Videos/` for
-   screen recordings. `Projects/<name>/` holds Patch, Prism Plaza and client
-   work, organised by name, with only old versions dated. Copies inside DAW
-   projects stay, so sessions keep opening. Moves run through Nextcloud, never
-   on disk, so file IDs and share links survive.
+1. Done (2026-11-25): byte-identical duplicates were merged and files were moved
+   into the new layout, freeing 105.6 GiB. Personal areas are type-first:
+   `Photos/YYYY/YYYY-MM/`, `Documents/`, and `Videos/` for screen recordings.
+   `Projects/<name>/` holds Patch, Prism Plaza and client work, organised by
+   name. Releases are named `Releases/<release date> <title>/`, and each DAW
+   session keeps its old versions in its own `versions/` folder. `Library/`
+   holds sample packs, presets and plugin data; `Software/Config/` holds app
+   settings. Installers, DAW factory packs and build output were deleted as
+   re-findable, except the irreplaceable ASIO Link Pro patcher. Copies inside
+   DAW projects stay, so sessions keep opening. The move ran on disk followed by
+   `occ files:scan`, so Mia reshares any links she still needs.
 2. Add HDD-backed Nextcloud External Storage for archive material.
 3. Mark files untouched for 90 days as archive candidates, without moving
    them, so the first rounds show what qualifies before any migration.
