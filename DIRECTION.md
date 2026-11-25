@@ -33,3 +33,25 @@ Claude and Codex provider sign-ins work. Hephaestus has a dedicated primary
 NetBird machine identity scoped to CPA, independent of its Repair client.
 Its `claude-cpa` and `codex-cpa` launchers pass real provider requests while
 preserving the ordinary client commands and host DNS/gateway.
+
+## Storage direction
+
+The NVMe share (`10.0.1.2:/mnt/nvme`) holds hot data: Nextcloud, VM disks and
+download staging. Datasets, corpora and run outputs live on the HDD share under
+`/mnt/media/private`.
+
+Mia's Nextcloud is being restructured into a discoverable archive, in order:
+
+1. Merge byte-identical duplicates and move files into the new layout. Personal
+   areas are type-first: `Photos/YYYY/YYYY-MM/`, `Documents/`, and `Videos/` for
+   screen recordings. `Projects/<name>/` holds Patch, Prism Plaza and client
+   work, organised by name, with only old versions dated. Copies inside DAW
+   projects stay, so sessions keep opening. Moves run through Nextcloud, never
+   on disk, so file IDs and share links survive.
+2. Add HDD-backed Nextcloud External Storage for archive material.
+3. Mark files untouched for 90 days as archive candidates, without moving
+   them, so the first rounds show what qualifies before any migration.
+   Moving into External Storage changes file IDs and drops shares on the moved
+   items.
+
+Photos stay in Nextcloud for now; Immich becomes their home later.
