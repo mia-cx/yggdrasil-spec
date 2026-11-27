@@ -1,0 +1,33 @@
+## Caelestis Event — a separate Caelestis server for Wplace events, sharing nothing with caelest.is
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: caelestis-event
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/mia-cx/Caelestis.git
+      targetRevision: 09b9db87e660e35308660be8f3e073ef5e8176d8
+      path: deploy/helm/caelestis
+      helm:
+        releaseName: event
+        valueFiles:
+          - $values/argocd/caelestis-event/values.yaml
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      ref: values
+    - repoURL: git@github.com:mia-cx/yggdrasil-spec.git
+      targetRevision: main
+      path: argocd/caelestis-event
+      directory:
+        exclude: '{values.yaml,README.md}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: caelestis-event
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

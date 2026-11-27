@@ -1,0 +1,62 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: caelestis-event
+  namespace: caelestis-event
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`event.caelest.is`) && (Path(`/backend`) || PathPrefix(`/backend/`))
+      kind: Rule
+      priority: 100
+      services:
+        - name: caelestis-event-backend
+          port: 3001
+    - match: Host(`event.caelest.is`)
+      kind: Rule
+      priority: 10
+      services:
+        - name: event-caelestis
+          port: 80
+  tls:
+    secretName: caelestis-event-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: caelestis-event-backend
+  namespace: caelestis-event
+spec:
+  selector:
+    app.kubernetes.io/name: caelestis
+    app.kubernetes.io/instance: event
+  ports:
+    - name: backend
+      port: 3001
+      targetPort: backend
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: caelestis-event-https
+  namespace: caelestis-event
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: caelestis-event-http
+  namespace: caelestis-event
+spec:
+  entryPoints: [web]
+  routes:
+    - match: Host(`event.caelest.is`)
+      kind: Rule
+      middlewares:
+        - name: caelestis-event-https
+      services:
+        - name: event-caelestis
+          port: 80
