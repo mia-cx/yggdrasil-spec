@@ -1,0 +1,33 @@
+replicaCount: 1
+image:
+  repository: docker.io/miacx/caelestis-backend
+  tag: 1.1.1
+  digest: sha256:9bd8fa34895d93a69440e4ed8d07c0b621f56b0bf61a3a900f272c6a9ed68165
+  pullPolicy: IfNotPresent
+frontend:
+  image:
+    repository: docker.io/miacx/caelestis-frontend
+    tag: 1.1.0
+    digest: sha256:0029323306fc90b39a3147da9304dc3acd64a9be86c03f2ec5b71a44e17a36d7
+    pullPolicy: IfNotPresent
+
+server:
+  name: Caelestis Event
+  origin: https://event.caelest.is
+  description: Templates for Wplace events, kept apart from our main server.
+  season: 0
+  basePath: /backend
+  openAccess: false
+  existingSecret: caelestis-server
+
+database:
+  adapter: sqlite
+
+storage:
+  adapter: filesystem
+persistence:
+  storageClass: longhorn
+  size: 5Gi
+
+nodeSelector:
+  kubernetes.io/arch: amd64
