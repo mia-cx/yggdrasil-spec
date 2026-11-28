@@ -8,7 +8,7 @@ spec:
   project: default
   sources:
     - repoURL: https://github.com/mia-cx/Caelestis.git
-      targetRevision: 09b9db87e660e35308660be8f3e073ef5e8176d8
+      targetRevision: 9cf66c9138cb5dd071625152c78de68decc4106b
       path: deploy/helm/caelestis
       helm:
         releaseName: event
