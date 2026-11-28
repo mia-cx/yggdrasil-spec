@@ -11,8 +11,8 @@ objects on one 5 GiB Longhorn volume. Traefik routes `/backend` to the backend a
 the frontend; HTTP redirects to HTTPS. The `caelestis-event-tls` certificate renews through the
 `letsencrypt-cloudflare` issuer.
 
-Values pin backend 1.5.0 and frontend 1.1.0 by Docker Hub digest; the Application pins the chart to
-their release commit `b042bbdcb8adbf52bae32a7bbb3e28e22966a1a7`.
+Values pin backend 1.6.0 and frontend 1.1.0 by Docker Hub digest; the Application pins the chart to
+their release commit `48c6079d046b8be3a20a0df774ba7b0dd5e647cb`.
 
 Provisioning:
 
