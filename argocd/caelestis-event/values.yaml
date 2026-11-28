@@ -1,14 +1,14 @@
 replicaCount: 1
 image:
   repository: docker.io/miacx/caelestis-backend
-  tag: 1.7.1
-  digest: sha256:099595d3e46d68b3a9582a4d833ae658c6b5f903cc74162e88882610e43ec95e
+  tag: 1.7.2
+  digest: sha256:9dcf3110ac3db276f041fb991ff6e2793fe3a1e2a099a2fc152d8c2b5de1d16a
   pullPolicy: IfNotPresent
 frontend:
   image:
     repository: docker.io/miacx/caelestis-frontend
     tag: 1.1.0
-    digest: sha256:b865f2efb73becb4e81467f8fb6db97341ff5459af0af73d5ca78c1d59006335
+    digest: sha256:4b3c85164a67a44c5af7e55d31a0ca2ef55a3eb34ee15815b188556c60055fb8
     pullPolicy: IfNotPresent
 
 server:
